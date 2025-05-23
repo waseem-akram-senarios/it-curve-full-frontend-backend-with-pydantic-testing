@@ -110,8 +110,11 @@ async def entrypoint(ctx: agents.JobContext):
     today_date = date_time.strftime("%Y-%m-%d")
     current_time = date_time.strftime("%I:%M %p")  # 12-hour format with AM/PM
 
-    metadata = eval(participant.metadata)
-    print(f"\n\nMetadata: {metadata}\n\n")
+    try:
+        metadata = eval(participant.metadata)
+        print(f"\n\nMetadata: {metadata}\n\n")
+    except: 
+        pass
 
     starting_time = date_time.strftime("%Y-%m-%d %H:%M:%S")
 
