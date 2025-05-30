@@ -113,7 +113,7 @@ async def entrypoint(ctx: agents.JobContext):
     try:
         metadata = eval(participant.metadata)
         print(f"\n\nMetadata: {metadata}\n\n")
-    except: 
+    except:
         pass
 
     starting_time = date_time.strftime("%Y-%m-%d %H:%M:%S")
