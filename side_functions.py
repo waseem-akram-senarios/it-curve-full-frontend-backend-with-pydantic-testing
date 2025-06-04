@@ -148,7 +148,7 @@ async def search_web_manual(prompt: str):
         print(f"Error in search web: {e}")
         return "Web search failed!"
 
-async def get_historic_rides(client_id, affiliate_id):
+async def get_frequnt_addresses_manual(client_id, affiliate_id):
     url = os.getenv("GET_HISTORIC_RIDES_API")
 
     payload = {
@@ -304,13 +304,13 @@ async def fetch_affiliate_details(affiliate_id):
             
     return bounds, funding_sources, copay_fs_list
 
-def recognize_affiliate(receiver):
+async def recognize_affiliate(receiver):
     receiver = str(receiver)
     match = re.search(r'sip:(\+\d+)@', receiver)
     if match:
         receiver_number = match.group(1)
         receiver_number = "+16318022590"
-        receiver_number = extract_phone_number(receiver_number)
+        receiver_number = await extract_phone_number(receiver_number)
     else:
         return "Receiver Number not found!"
     
@@ -335,7 +335,7 @@ def recognize_affiliate(receiver):
     except Exception as e:
         return f"Error in recognizing affiliate: {e}"
 
-def extract_phone_number(phone_number):
+async def extract_phone_number(phone_number):
 
     phone_number = str(phone_number)
 
@@ -363,14 +363,9 @@ def extract_phone_number(phone_number):
     
     return phone_number
 
-def get_client_name_voice(caller_number, affiliate_id, family_id):
-
-    # Define the API endpoint
+async def get_client_name_voice(caller_number, affiliate_id, family_id):
     url = os.getenv("SEARCH_CLIENT_DATA_API")
-
     caller_number = str(caller_number)
-
-    # Create the payload (request body)
     payload = {
         "searchCriteria": "CustomerPhone",
         "searchText": caller_number,
@@ -378,52 +373,51 @@ def get_client_name_voice(caller_number, affiliate_id, family_id):
         "iATSPID": int(affiliate_id),
         "iDTSPID": int(family_id)
     }
-
-    # Define the headers
     headers = {
         "Content-Type": "application/json"
     }
 
-    # Send the POST request
-    response = requests.post(url, data=json.dumps(payload), headers=headers)
-    response = response.json()
-    result = {
-        "name": "new_rider",
-        "client_id" : -1,
-        "city": None,
-        "state": None, 
-        "current_location": None,
-        "rider_id": None
-    }
+    result = {}
+    rider_count = 0
 
     try:
-        if response["responseCode"] == 200: 
-            client_object = response["responseJSON"]
-            # print(type(client_object))
-            data = json.loads(client_object)
-            first_client = data[0]
-            client_id = first_client['Id']
-            name = first_client['FirstName'] + ' ' + first_client['LastName']
-            name = name.strip()
-            result["name"] = name
-            result["client_id"] = int(client_id)
-            result["city"] = first_client["City"]
-            result["state"] = first_client["State"]
-            result["current_location"] = first_client["Address"]
-            rider_id = int(first_client["MedicalId"])
-            if rider_id != 0:
-                result["rider_id"] = rider_id
-            else: 
-                result["rider_id"] = "Unknown"
-            return result
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url, json=payload, headers=headers) as resp:
+                response = await resp.json()
 
+        if response.get("responseCode") == 200:
+            client_list = json.loads(response.get("responseJSON", "[]"))
+            for i, client in enumerate(client_list, 1):
+                name = (client.get('FirstName', '') + ' ' + client.get('LastName', '')).strip()
+                medical_id_raw = client.get("MedicalId", "")
+                if medical_id_raw and str(medical_id_raw).isdigit():
+                    rider_id = int(medical_id_raw)
+                    rider_id = rider_id if rider_id != 0 else "Unknown"
+                else:
+                    rider_id = "Unknown"
+                
+                rider_data = {
+                    "name": name,
+                    "client_id": int(client.get('Id', 0)),
+                    "city": client.get("City", ""),
+                    "state": client.get("State", ""),
+                    "current_location/home_address": client.get("Address", ""),
+                    "rider_id": rider_id
+                }
+
+                result[f"rider_{i}"] = rider_data
+                rider_count += 1
+
+            result["number_of_riders"] = rider_count
         else:
-            print(f"Request failed!")
-            return result
-    
+            print("Request failed!")
+            result["number_of_riders"] = 0
+
     except Exception as e:
-        print(f"Error occured in getting client Name: {e}")
-        return result
+        print(f"Error occurred in getting client Name: {e}")
+        result["number_of_riders"] = rider_count
+
+    return result
 
 def calculate_cost(llm_input_tokens, llm_output_tokens, stt_audio_seconds, tts_characters):
     # Pricing per unit

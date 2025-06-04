@@ -18,14 +18,12 @@ from livekit.plugins import (
     openai,
     deepgram,
     silero,
-    turn_detector
 )
-from livekit.plugins.turn_detector.multilingual import MultilingualModel
 from livekit.plugins.turn_detector.english import EnglishModel
 from helper_functions import *
 from side_functions import *
-import sys
-from datetime import datetime, timedelta
+from datetime import datetime
+import copy
 
 load_dotenv()
 
@@ -113,13 +111,24 @@ async def entrypoint(ctx: agents.JobContext):
     try:
         metadata = eval(participant.metadata)
         print(f"\n\nMetadata: {metadata}\n\n")
-    except:
+    except: 
         pass
 
     starting_time = date_time.strftime("%Y-%m-%d %H:%M:%S")
 
-    rider = {
+    all_riders_info = {}
+    
+    unknow_rider = {
         "name" : "Unknown",
+        "client_id" : "-1",
+        "city" : "Unknown",
+        "state" : "Unknown",
+        "current_location" : "Unknown",
+        "rider_id" : "-1"
+    }
+
+    new_rider = {
+        "name" : "new_rider",
         "client_id" : "-1",
         "city" : "Unknown",
         "state" : "Unknown",
@@ -148,19 +157,20 @@ async def entrypoint(ctx: agents.JobContext):
             # Access caller and recipient information
             caller = call._from
             print(f"\n\n\nCaller: {caller}\n\n\n")
-            # caller = "+12519014915"
-            # caller = "+13855887113"
+            # caller = "+12222222222"
+            # caller = "+13012082222"
+            # caller = "+13012082252"
             recipient = str(call.to)
             # recipient = "+17172007213" 
             print(f"\n\nRecipient: {recipient}\n\n")
-            affiliate = recognize_affiliate(recipient)
+            affiliate = await recognize_affiliate(recipient)
             success = True
             affiliate_id = affiliate["AffiliateID"] 
             family_id = affiliate["AffiliateFamilyID"]
             
-            phone_number = extract_phone_number(caller)
+            phone_number = await extract_phone_number(caller)
             # print(f"\n\nPhone Number: {phone_number}")
-            rider = get_client_name_voice(phone_number, affiliate_id, family_id)
+            all_riders_info = await get_client_name_voice(phone_number, affiliate_id, family_id)
 
         except Exception as e:
             print(f"Error in recognizing affiliate from number: {e}")
@@ -172,42 +182,71 @@ async def entrypoint(ctx: agents.JobContext):
                 affiliate = await recognize_affiliate_by_ids(family_id, affiliate_id)
                 phone_number = metadata['phoneNo']
                 if phone_number != "":
-                    phone_number = extract_phone_number(phone_number)
+                    phone_number = await extract_phone_number(phone_number)
                     # print(f"\n\nPhone Number: {phone_number}")
-                    rider = get_client_name_voice(phone_number, affiliate_id, family_id)
+                    all_riders_info = await get_client_name_voice(phone_number, affiliate_id, family_id)
+                else:
+                    all_riders_info["number_of_riders"] = 1
+                    all_riders_info["rider_1"] = unknow_rider
+
             except Exception as e:
                 print(f"Error in recognizing affiliate from room matadata: {e}")
+        
+        if all_riders_info["number_of_riders"] == 0:
+            all_riders_info["number_of_riders"] = 1
+            all_riders_info["rider_1"] = new_rider
 
-        print(f"\n\nRider: {rider}\n\n")
+        print(f"\n\nRider: {all_riders_info}\n\n")
         print(f"\n\nAffiliate: {affiliate}\n\n")
     
     except Exception as e:
         print(f"Error occured in getting rider name and id: {e}")
         pass
 
-    if rider["name"] == "new_rider":
-        prompt_file = os.path.join(Agent_Directory, "prompt_new_rider.txt")
-    elif rider["name"] == "Unknown":
-        prompt_file = os.path.join(Agent_Directory, "prompt_widget.txt")
+    if all_riders_info["number_of_riders"] == 1:
+
+        if all_riders_info["rider_1"]["name"] == "new_rider":
+            print("\n\n****************New Rider Flow Selected****************\n\n")
+            prompt_file = os.path.join(Agent_Directory, "prompts", "prompt_new_rider.txt")
+
+        elif all_riders_info["rider_1"]["name"] == "Unknown":
+            print("\n\n****************Widget Flow Selected****************\n\n")
+            prompt_file = os.path.join(Agent_Directory, "prompts", "prompt_widget.txt")
+
+        else:
+            print("\n\n****************Old Rider Flow Selected****************\n\n")
+            prompt_file = os.path.join(Agent_Directory, "prompts", "prompt_old_rider.txt")
+
+    elif all_riders_info["number_of_riders"] > 1:
+        print("\n\n****************Multiple Riders Flow Selected****************\n\n")
+        prompt_file = os.path.join(Agent_Directory, "prompts", "prompt_multiple_riders.txt")
+    
     else:
-        prompt_file = os.path.join(Agent_Directory, "prompt_old_rider.txt")
+        print("\n\n****************Error in Selecting Flow****************\n\n")
+        prompt_file = os.path.join(Agent_Directory, "prompts", "prompt_new_rider.txt")
     
     with open(prompt_file) as file:
         system_prompt = file.read()
 
     try:
-        rider_name = rider['name']
-        client_id = rider['client_id']
-        rider_city = rider["city"]
-        rider_state = rider["state"]
-        rider_location = rider["current_location"]
-        rider_id = rider["rider_id"]
-        prompt = f"""{system_prompt}\n\n
-        ``Today's date is {today_date} and Current Time is {current_time}\n\n
-        ```Rider's Phone Number is {phone_number}```\n\n
-        Rider's Name is {rider_name}, Rider ID is {rider_id}, and Client id is {client_id}\n\n
-        Rider's city is {rider_city}, Rider's state is {rider_state} and Rider's current location or home address is {rider_location}``
-        """
+        if all_riders_info["number_of_riders"] == 1:
+            rider_info = all_riders_info["rider_1"]
+            rider_info["phone_number"] = phone_number
+            rider_info = json.dumps(rider_info, indent=4)
+            prompt = f"""{system_prompt}\n\n
+            ``Today's date is {today_date} and Current Time is {current_time}``\n\n
+            ``Rider's Profile: \n{rider_info}\n\n``
+            """
+            
+        elif all_riders_info["number_of_riders"] > 1:
+            riders_data_without_tally = copy.deepcopy(all_riders_info)
+            del riders_data_without_tally["number_of_riders"]
+            riders_data_without_tally["phone_number"] = phone_number
+            rider_info = json.dumps(riders_data_without_tally, indent=4)
+            prompt = f"""{system_prompt}\n\n
+            ``Today's date is {today_date} and Current Time is {current_time}``\n\n
+            ``Rider's Profile: \n{rider_info}\n\n``
+            """
 
     except Exception as e:
         print(f"Error occured in getting rider profile: {e}")
@@ -248,27 +287,30 @@ async def entrypoint(ctx: agents.JobContext):
     except Exception as e:
         print(f"\n\nError in getting greetings: {e}\n\n")
 
-    frequent_rides = ""
-    try:
-        frequent_rides = await get_historic_rides(client_id, affiliate_id)
-        if frequent_rides.strip() != "":
-            prompt = f"""{prompt}\n\n
-            {frequent_rides}
-            """ 
-        else:
+    if all_riders_info["number_of_riders"] == 1:
+        rider_info = all_riders_info["rider_1"]
+        client_id = rider_info["client_id"] 
+        frequent_rides = ""
+        try:
+            frequent_rides = await get_frequnt_addresses_manual(client_id, affiliate_id)
+            if frequent_rides.strip() != "":
+                prompt = f"""{prompt}\n\n
+                {frequent_rides}
+                """ 
+            else:
+                prompt = f"""{prompt}\n\n
+                ``Rider Historic/Past/Completed Trips are:
+                1. Only use them for address completion
+                2. Use [get_ETA] function to get latest/last trip, pickup and dropoff address: No Data Available``
+                """
+        except Exception as e:
+            print(f"\n\nError in getting frequent trips: {e}\n\n")
             prompt = f"""{prompt}\n\n
             ``Rider Historic/Past/Completed Trips are:
             1. Only use them for address completion
             2. Use [get_ETA] function to get latest/last trip, pickup and dropoff address: No Data Available``
             """
-    except Exception as e:
-        print(f"\n\nError in getting frequent trips: {e}\n\n")
-        prompt = f"""{prompt}\n\n
-        ``Rider Historic/Past/Completed Trips are:
-        1. Only use them for address completion
-        2. Use [get_ETA] function to get latest/last trip, pickup and dropoff address: No Data Available``
-        """
-        pass
+            pass
     
     print(f"\n\nPrompt: {prompt}\n\n")
 
@@ -325,7 +367,8 @@ async def entrypoint(ctx: agents.JobContext):
         print(f"\n\nError in getting greetings: {e}\n\n")
 
     try:
-        if rider:
+        if all_riders_info["number_of_riders"] == 1:
+            rider = all_riders_info["rider_1"]
             if rider["name"] == "new_rider":
                 await session.say(f"Hello! {greeting}. Can I have your name please?", allow_interruptions=allow_interruption_status)
 
@@ -334,11 +377,12 @@ async def entrypoint(ctx: agents.JobContext):
             
             elif rider["name"]:
                 try:
-                    await session.say(f"Hello {rider['name']}, this is Alina from {affiliate_name} agency. How can I help you today?", allow_interruptions=allow_interruption_status)
+                    await session.say(f"Hello {rider['name']}! {greeting}. How can I help you today?", allow_interruptions=allow_interruption_status)
                 except:
                     await session.say(f"Hello! {greeting}.", allow_interruptions=allow_interruption_status)
-        else:
-            await session.say(f"Hello! {greeting}. How can I help you today?", allow_interruptions=allow_interruption_status)
+
+        elif all_riders_info["number_of_riders"] > 1:
+            await session.say(f"Hello! {greeting}. I have multiple profiles for your number. Can I have your name please?", allow_interruptions=allow_interruption_status)
 
     except Exception as e:
         print(f"Error occured in starting initial statement: {e}")
