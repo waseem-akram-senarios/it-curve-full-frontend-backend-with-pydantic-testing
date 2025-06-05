@@ -1,3 +1,4 @@
+import json
 import os
 import pytz
 import logging
@@ -109,7 +110,10 @@ async def entrypoint(ctx: agents.JobContext):
     current_time = date_time.strftime("%I:%M %p")  # 12-hour format with AM/PM
 
     try:
-        metadata = eval(participant.metadata)
+        meta_data = participant.metadata
+        metadata = json.loads(meta_data)
+
+        # metadata = eval(meta_data_[1:-1])
         print(f"\n\nMetadata: {metadata}\n\n")
     except: 
         pass
