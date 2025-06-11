@@ -330,7 +330,7 @@ async def entrypoint(ctx: agents.JobContext):
         stt = deepgram.STT(model="nova-3",language="en-US",keyterms=["snouffer"]),
         allow_interruptions=allow_interruption_status,
         llm=openai.LLM(model="gpt-4o"),
-        tts=deepgram.TTS(model="aura-2-janus-en"),
+        tts=deepgram.TTS(model="aura-stella-en"),
         vad=silero.VAD.load(),
         # min_interruption_duration=1.0,
         # min_endpointing_delay = 1.0,
