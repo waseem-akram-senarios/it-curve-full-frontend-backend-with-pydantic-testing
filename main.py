@@ -120,7 +120,7 @@ async def entrypoint(ctx: agents.JobContext):
 
     starting_time = date_time.strftime("%Y-%m-%d %H:%M:%S")
 
-    all_riders_info = {}
+    all_riders_info = {"number_of_riders":0}
     
     unknow_rider = {
         "name" : "Unknown",
