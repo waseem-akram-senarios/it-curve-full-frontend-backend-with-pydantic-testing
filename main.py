@@ -146,6 +146,12 @@ async def entrypoint(ctx: agents.JobContext):
         "TypeForIVRAI" : "Unknown",
         "AffiliateName": "Unknown"
     }
+    affiliate = {
+        "AffiliateID": "21",
+        "AffiliateFamilyID": "-1",
+        "TypeForIVRAI": "Unknown",
+        "AffiliateName": "Barwood and Regency Taxi"
+    }
 
     room_name = ctx.room.name
     # room_name = "both-65-3-ARMON"
