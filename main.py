@@ -148,8 +148,8 @@ async def entrypoint(ctx: agents.JobContext):
     }
     affiliate = {
         "AffiliateID": "21",
-        "AffiliateFamilyID": "-1",
-        "TypeForIVRAI": "Unknown",
+        "AffiliateFamilyID": "1",
+        "TypeForIVRAI": "BOTH",
         "AffiliateName": "Barwood and Regency Taxi"
     }
 
