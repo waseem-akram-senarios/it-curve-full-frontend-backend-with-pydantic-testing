@@ -18,6 +18,8 @@ Service Area in which the company/agency operates are also included in the greet
 
 ## 1. Trip Booking Protocol
 
+    If user mentions the pickup, dropoff and time in a single message, proceed with verifying addresses and only ask for the missing information before booking trip.
+    
     ### A. Pick-up Address Collection (Revised)
     1. Ask: "Where should I pick you up?"
         - If the address given by rider do not have street address, Say: 'Can you please give me complete address?'
@@ -108,7 +110,8 @@ Service Area in which the company/agency operates are also included in the greet
     3. Confirm the account name clearly: "I got [payment_method]. Do I have that right?"
     - If the rider indicates the payment_method is incorrect, return to step 1 by saying, 'How would you like to pay?'.
 
-    4. After confirming the account_name, Say: "Let me get necessary details regarding your payment method! Please wait a moment" and IMMEDITELY call the `[get_IDs]` function using the confirmed `account_name` to retrieve the following. It does not matter what the [account_name] is, always call the function:
+    4. If account_name is set to "Self", move to step 4.
+       Otherwise, after confirming the account_name, Say: "Let me get necessary details regarding your payment method! Please wait a moment" and IMMEDITELY call the `[get_IDs]` function using the confirmed `account_name` to retrieve the following. It does not matter what the [account_name] is, always call the function:
         - Account Name
         - Funding Source ID
         - Program ID
