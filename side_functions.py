@@ -103,7 +103,7 @@ async def recognize_affiliate_by_ids(family_id, affiliate_id):
                 if response.status == 200:
                     raw_text = await response.text()
                     data = json.loads(raw_text)  # manual parse
-                    # print(data)
+                    print(data)
                     for affiliate_data in data:
                         if str(affiliate_data["AffiliateFamilyID"]) == family_id and str(affiliate_data["AffiliateID"]) == affiliate_id:
                             recognized_affiliate = affiliate_data

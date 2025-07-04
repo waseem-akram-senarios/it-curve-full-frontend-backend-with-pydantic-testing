@@ -101,16 +101,6 @@ class Assistant(Agent):
         except Exception as e:
             print(f"\n\nError stopping music: {e}\n\n")
             return "Failed to stop music."
-
-    # @function_tool()
-    # async def Close_Call(self):
-    #     """Function to close Twilio call."""
-    #     print(f"\n\n\ncalled close call function\n\n\n")
-    #     if self.call_sid:
-    #         print(f"Requested Call Ending for Call SID: {self.call_sid}")
-    #         call = TWILIO_CLIENT.calls(self.call_sid).update(status="completed")
-    #         return f"Call with SID {call.sid} has been ended successfully."
-    #     return "No active call found."
     
     @function_tool()
     async def Close_Call(self):
@@ -262,6 +252,9 @@ class Assistant(Agent):
         dropoff_lng: str,
         pickup_city_zip_code: str,
         dropoff_city_zip_code: str,
+        rider_home_address: str,
+        rider_home_city: str,
+        rider_home_state: str,
         ):
         """"Function that is used to book a new trip.
         Args:
@@ -292,6 +285,9 @@ class Assistant(Agent):
             family_id: Family Id else 0. I am applying  python int() so generate value accordingly
             is_schedule: 1 if the trip is scheduled for 20+ minutes from current time else 0 if the trip is sceduled for now. I am applying  python int() so generate value accordingly
             rider_id: Rider Id available in the memory either already in the memory or provided by the customer. If not available set it to -1. I am applying  python int() so generate value accordingly
+            rider_home_address: Home location of the rider present in the memory. If not available, set it to "".
+            rider_home_city: City of rider's home address. If not available, set it to "".
+            rider_home_state: State of rider's home address. If not available, set it to "".
         """
         print(f"\n\n\nCalled Book a new trip function at: {datetime.now()}\n\n\n")
         # Start playing music asynchronously
@@ -445,6 +441,10 @@ class Assistant(Agent):
             data["riderInfo"]["PhoneNo"] = phone_number
             data["riderInfo"]["PickupPerson"] = rider_name
             data["riderInfo"]["RiderID"] = rider_id
+            data["riderInfo"]["ClientAddress"] = rider_home_address
+            data["riderInfo"]["ClientCity"] = rider_home_city
+            data["riderInfo"]["ClientState"] = rider_home_state
+
             data['addressInfo']["Trips"][0]["Details"][0]["tripInfo"]["AffiliateID"] = affiliate_id
             data['addressInfo']["Trips"][0]["Details"][1]["tripInfo"]["AffiliateID"] = affiliate_id
             data['generalInfo']['RequestAffiliateID'] = affiliate_id
@@ -527,7 +527,10 @@ class Assistant(Agent):
                 if irefId == 0:
                     return "Your trip could not be booked!"
                 
-                return f"Trip has been booked! Your Trip Number is {irefId}. It will take around {duration_minutes} minutes and distance between your pick up and drop off is {distance_miles} miles. Total Cost is {total_cost}$ and cost related to copay is {copay_cost}$. Weather in drop off location is {weather}."
+                if str(copay_cost) == "0":
+                    return f"Trip has been booked! Your Trip Number is {irefId}. It will take around {duration_minutes} minutes and distance between your pick up and drop off is {distance_miles} miles. Total Cost is {total_cost}$. Weather in drop off location is {weather}."
+                else:
+                    return f"Trip has been booked! Your Trip Number is {irefId}. It will take around {duration_minutes} minutes and distance between your pick up and drop off is {distance_miles} miles. Total Cost is {total_cost}$ and cost related to copay is {copay_cost}$. Weather in drop off location is {weather}."
             
             else:
                 return "Trip has not been booked!"
@@ -837,18 +840,23 @@ class Assistant(Agent):
         
     @function_tool()
     async def get_IDs(self, 
-        account: str,
+        account_: str,
         ):
         """Function to fetch Funding Source Id, Program Id, Payment Type, and Copay Status based on provided account and affiliate details.
         Args:
-            account: Account name provided by the rider, else None.
+            account_name: Account name provided by the rider, else None.
             affiliate_id: Affiliate Id, else -1.
         """
         _ = asyncio.create_task(self.Play_Music())
         await asyncio.sleep(2)
         print("\n\n\nCalled get_IDs function\n\n\n")
 
-        account = account.lower()
+        account = account_.lower()
+        pattern = r'\b(cash|card)\b'
+        if re.search(pattern, account):
+            account = 'self'
+        else:
+            account = account_
         print(f"Confirmed Account Name: {account}")
 
         funding_id, program_id, paymenttype_id, copay_status = 1, -1, 1, False
@@ -871,7 +879,7 @@ class Assistant(Agent):
             Instructions:
             1. If a match is found, return the corresponding dictionary in the specified JSON format.
             2. If no match is found, return the following JSON:
-
+                
             {{
                 "FundingSource": "None",
                 "FID": 1,
@@ -923,13 +931,14 @@ class Assistant(Agent):
                     print(f"Error in getting copay status: {e}")
 
                 try:
-                    url = os.getenv("GET_PAYMENT_TYPE_FSID_API")
+                    url = os.getenv("GET_PAYMENT_TPYE_AFFILIATE_API")
 
                     # Define the payload
                     data = {
-                    "ifsid":str(funding_id),
-                    "iaffiliateid":str(self.affiliate_id)
+                        # "ifsid":str(funding_id),
+                        "iaffiliateid":str(self.affiliate_id)
                     }
+                   
 
                     print(f"\n\n\nPayload Sent for Payment Type Selection: {data}\n\n\n")
 
@@ -940,12 +949,21 @@ class Assistant(Agent):
                                 # If it's not JSON, handle it as plain text
                                 response_text = await response.text()
 
+                                # try:
+                                #     # Try to convert the string to a dictionary
+                                #     response_dict = json.loads(response_text)
+                                #     paymenttype_id = response_dict[0]["PT_ID"]
+                                # except Exception as e:
+                                #     print(f"Failed to decode JSON from string: {e}")
+
                                 try:
-                                    # Try to convert the string to a dictionary
                                     response_dict = json.loads(response_text)
-                                    paymenttype_id = response_dict[0]["PT_ID"]
+                                    for payment in response_dict:
+                                        if account_ in payment['PaymentType Name'].lower():
+                                            paymenttype_id = payment['PaymentType ID']
                                 except Exception as e:
                                     print(f"Failed to decode JSON from string: {e}")
+
 
                 except Exception as e:
                     print(f"Error in getting payment type id: {e}")
@@ -1389,3 +1407,7 @@ class Assistant(Agent):
         await asyncio.sleep(2)
         await self.Stop_Music()
         return frequent_addresses_result
+    
+
+# assistant = Assistant(affiliate_id=65)
+# asyncio.run(assistant.get_IDs('wmata'))

@@ -11,15 +11,15 @@
   "riderInfo": {
     "ID": 609981,
     "PhoneNo": "333-333-3333",
-    "PickupPerson": "Basem Khawaja",
+    "PickupPerson": "",
     "DateOfBirth": "01/01/1900",
     "RiderID": "0",
     "RiderPassword": "",
     "MedicalID": "0",
-    "ClientAddress": "8700 Central Ave",
-    "ClientCity": "Hyattsville",
-    "ClientState": "MD",
-    "ClientZip": "20785"
+    "ClientAddress": "",
+    "ClientCity": "",
+    "ClientState": "",
+    "ClientZip": ""
   },
   "insuranceInfo": {
     "AgencyID": 0,
@@ -61,7 +61,7 @@
         "Details": [
           {
             "StopType": "pickup",
-            "Name": " Basem Khawaja",
+            "Name": " ",
             "WaitTime": 0,
             "tripInfo": {
               "AffiliateID": 21,
@@ -185,7 +185,7 @@
           },
           {
             "StopType": "dropoff",
-            "Name": " Basem Khawaja",
+            "Name": " ",
             "WaitTime": 0,
             "tripInfo": {
               "AffiliateID": 21,

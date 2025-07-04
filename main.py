@@ -1,4 +1,3 @@
-import json
 import os
 import pytz
 import logging
@@ -110,17 +109,14 @@ async def entrypoint(ctx: agents.JobContext):
     current_time = date_time.strftime("%I:%M %p")  # 12-hour format with AM/PM
 
     try:
-        meta_data = participant.metadata
-        metadata = json.loads(meta_data)
-
-        # metadata = eval(meta_data_[1:-1])
+        metadata = eval(participant.metadata)
         print(f"\n\nMetadata: {metadata}\n\n")
     except: 
         pass
 
     starting_time = date_time.strftime("%Y-%m-%d %H:%M:%S")
 
-    all_riders_info = {"number_of_riders":0}
+    all_riders_info = {}
     
     unknow_rider = {
         "name" : "Unknown",
@@ -145,12 +141,6 @@ async def entrypoint(ctx: agents.JobContext):
         "AffiliateFamilyID" : "-1",
         "TypeForIVRAI" : "Unknown",
         "AffiliateName": "Unknown"
-    }
-    affiliate = {
-        "AffiliateID": "21",
-        "AffiliateFamilyID": "1",
-        "TypeForIVRAI": "BOTH",
-        "AffiliateName": "Barwood and Regency Taxi"
     }
 
     room_name = ctx.room.name
@@ -190,6 +180,7 @@ async def entrypoint(ctx: agents.JobContext):
                 family_id = metadata['familyId']
                 affiliate_id = metadata['affiliateId']
                 affiliate = await recognize_affiliate_by_ids(family_id, affiliate_id)
+                print("*************AFFILIATE*******:", affiliate)
                 phone_number = metadata['phoneNo']
                 if phone_number != "":
                     phone_number = await extract_phone_number(phone_number)
@@ -330,7 +321,7 @@ async def entrypoint(ctx: agents.JobContext):
         stt = deepgram.STT(model="nova-3",language="en-US",keyterms=["snouffer"]),
         allow_interruptions=allow_interruption_status,
         llm=openai.LLM(model="gpt-4o"),
-        tts=deepgram.TTS(model="aura-stella-en"),
+        tts=deepgram.TTS(model="aura-2-janus-en"),
         vad=silero.VAD.load(),
         # min_interruption_duration=1.0,
         # min_endpointing_delay = 1.0,
