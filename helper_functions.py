@@ -244,12 +244,12 @@ class Assistant(Agent):
         pickup_lat: str,
         pickup_lng: str,
         dropoff_lat: str,
+        dropoff_lng: str,
         rider_id: str,
         number_of_wheel_chairs: str,
         number_of_passengers: str,
         family_id: str,
         is_schedule: str,
-        dropoff_lng: str,
         pickup_city_zip_code: str,
         dropoff_city_zip_code: str,
         rider_home_address: str,
@@ -294,17 +294,19 @@ class Assistant(Agent):
         _ = asyncio.create_task(self.Play_Music())
         await asyncio.sleep(2)
 
-        async def safe_float(value):
-            try:
-                return float(value)
-            except (ValueError, TypeError):
-                return 0.0
-        
-        async def safe_int(value):
-            try:
-                return int(value)
-            except (ValueError, TypeError):
-                return 0
+        # Check Pickup Address
+        pickup_error = await check_address_validity(pickup_lat, pickup_lng, "Pick Up")
+        if pickup_error:
+            await asyncio.sleep(2)
+            await self.Stop_Music()
+            return pickup_error
+
+        # Check Dropoff Address
+        dropoff_error = await check_address_validity(dropoff_lat, dropoff_lng, "Drop Off")
+        if dropoff_error:
+            await asyncio.sleep(2)
+            await self.Stop_Music()
+            return dropoff_error
 
         distance = 0
         duration = 0
@@ -510,8 +512,21 @@ class Assistant(Agent):
             print(f"\n\nError occured in booking trip: {e}\n\n")
             pass
         
-        dropoff_complete_address = dropoff_street_address + ' ' + dropoff_city + ' ' + dropoff_state
-        prompt = f"How is the weather in {dropoff_complete_address}? Respond in one line only."
+        dropoff_complete_address = dropoff_street_address + ' ' + dropoff_city + ' ' + dropoff_state + ' ' + dropoff_city_zip_code
+        prompt = f"""What is the current weather in {dropoff_complete_address}? Provide a concise response with exactly two lines:
+
+        Line 1: State the temperature in Fahrenheit (numbers only, no unit) and current sky conditions.
+        Line 2: Give relevant weather-appropriate advice.
+
+        Format example:
+        "The temperature is 72 and the sky is clear. It's a perfect day for a ride."
+
+        Requirements:
+        - Temperature in Fahrenheit without the °F unit
+        - Current sky conditions (clear, cloudy, rainy, etc.)
+        - Practical advice based on the weather conditions
+        - Keep response to exactly two lines
+        """
         weather = await search_web_manual(prompt)
         print(f"\n\nWeather: {weather}\n\n")
 
@@ -844,8 +859,7 @@ class Assistant(Agent):
         ):
         """Function to fetch Funding Source Id, Program Id, Payment Type, and Copay Status based on provided account and affiliate details.
         Args:
-            account_name: Account name provided by the rider, else None.
-            affiliate_id: Affiliate Id, else -1.
+            account_: Account name provided by the rider, else None
         """
         _ = asyncio.create_task(self.Play_Music())
         await asyncio.sleep(2)
@@ -935,7 +949,6 @@ class Assistant(Agent):
 
                     # Define the payload
                     data = {
-                        # "ifsid":str(funding_id),
                         "iaffiliateid":str(self.affiliate_id)
                     }
                    
@@ -949,21 +962,47 @@ class Assistant(Agent):
                                 # If it's not JSON, handle it as plain text
                                 response_text = await response.text()
 
-                                # try:
-                                #     # Try to convert the string to a dictionary
-                                #     response_dict = json.loads(response_text)
-                                #     paymenttype_id = response_dict[0]["PT_ID"]
-                                # except Exception as e:
-                                #     print(f"Failed to decode JSON from string: {e}")
-
                                 try:
                                     response_dict = json.loads(response_text)
-                                    for payment in response_dict:
-                                        if account_ in payment['PaymentType Name'].lower():
-                                            paymenttype_id = payment['PaymentType ID']
+                                    paymenttype_prompt = f"""
+                                    You are given a list of dictionaries enclosed in triple backticks: ```{response_dict}```
+
+                                    Your task is to find the dictionary whose 'PaymentType Name' value closely matches the account enclosed in double quotes: ``{account_}``
+
+                                    Return the matching dictionary in JSON format with the following fields:
+
+                                    {{
+                                        "PaymentType ID": Payment Type ID Value,
+                                        "PaymentType Name": "Payment Type Name",
+                                        "Affiliate ID": Affiliate ID Value
+                                    }}
+
+                                    Instructions:
+                                    1. If a match is found, return the corresponding dictionary in the specified JSON format.
+                                    2. If no match is found, return the following JSON:
+                                        
+                                    {{
+                                        "PaymentType ID": 1,
+                                        "PaymentType Name": "None",
+                                        "Affiliate ID": -1
+                                    }}
+
+                                    # Instructions
+                                    ## Make sure the response contains only the JSON output, with nothing else.
+                                    ## Take care of spelling mistakes by STT as well. For example 'Vomata' refers to 'WMATA'.
+                                    ## Do not add backticks or 'json'. I am parsing the response with json.loads(). Make it compatible.
+                                    """
+                                    print(f"Prompt sent for matching funding sources: {paymenttype_prompt}")
+
+                                    paymenttype_response = await get_match_source(paymenttype_prompt)
+                                    print(f"Matching Response: {paymenttype_response}")
+
+                                    paymenttype_response = json.loads(paymenttype_response)
+                
+                                    paymenttype_id = paymenttype_response.get("PaymentType ID", None)
+ 
                                 except Exception as e:
                                     print(f"Failed to decode JSON from string: {e}")
-
 
                 except Exception as e:
                     print(f"Error in getting payment type id: {e}")
@@ -1409,5 +1448,5 @@ class Assistant(Agent):
         return frequent_addresses_result
     
 
-# assistant = Assistant(affiliate_id=65)
-# asyncio.run(assistant.get_IDs('wmata'))
+# assistant = Assistant(affiliate_id=21)
+# asyncio.run(assistant.get_IDs('cash'))

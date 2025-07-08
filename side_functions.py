@@ -31,6 +31,24 @@ MUSIC_PATH = os.path.join(App_Directory, "music.wav")
 
 openai_client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
+async def check_address_validity(latitude: str, longitude: str, address_type: str):
+    """Helper function to check if the address is valid."""
+    if latitude == "0" or longitude == "0" or latitude == "" or longitude == "":
+        return f"{address_type} address is missing latitude or longitude"
+    return None
+
+async def safe_float(value):
+    try:
+        return float(value)
+    except (ValueError, TypeError):
+        return 0.0
+
+async def safe_int(value):
+    try:
+        return int(value)
+    except (ValueError, TypeError):
+        return 0
+
 async def create_address_verification_prompt(address):
     """Creates a clear prompt for address verification with explicit JSON format instructions."""
     return f"""Verify if this address is valid or not: 
