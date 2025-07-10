@@ -1446,6 +1446,145 @@ class Assistant(Agent):
         await asyncio.sleep(2)
         await self.Stop_Music()
         return frequent_addresses_result
+
+    @function_tool()
+    async def get_distance_duration_fare(self,
+        pickup_latitude: str,
+        dropoff_latitude: str,
+        pickup_longitude: str,
+        dropoff_longitude: str,
+        number_of_wheel_chairs: str,
+        number_of_passengers: str,
+        rider_id: str,
+        ):
+        """Function to Distance and Trip Duration between two locations
+        Args:
+            pickup_latitude: Pickup Address Latitude in string. If not available, set it to 0.
+            pickup_longitude: Pickup Address Longitude in string. If not available, set it to 0.
+            dropoff_latitude: Dropoff Address Latitude in string. If not available, set it to 0.
+            dropoff_longitude: Dropoff Address Longitude in string. If not available, set it to 0.
+            rider_id: Rider Id available in the memory either already in the memory or provided by the customer. If not available set it to 0. I am applying  python int() so generate value accordingly
+            number_of_wheel_chairs: Number of wheel chairs if required by rider else 0. For example if rider is missing leg or specifically says, 'they require wheel chair'. I am applying  python int() so generate value accordingly
+            number_of_passengers: Number of passengers. If rider mentioned more than 1 passengers, set accordingly otherwise set it to 1. I am applying  python int() so generate value accordingly
+        """
+
+        print(f"\n\nCalled get_distance_duration_fare function\n\n")
+
+        _ = asyncio.create_task(self.Play_Music())
+        await asyncio.sleep(2)
+
+        if pickup_latitude == "0" or pickup_longitude == "0":
+            await asyncio.sleep(2)
+            await self.Stop_Music()
+            return "Pick Up address is not verified. Use [get_valid_addresses] function to verify it first"
+        
+        if dropoff_latitude == "0" or dropoff_longitude == "0":
+            await asyncio.sleep(2)
+            await self.Stop_Music()
+            return "Drop Off address is not verified. Use [get_valid_addresses] function to verify it first"
+
+        distance_miles = 0
+        duration_minutes = 0
+        total_cost = 0
+        copay_cost = 0
+
+        try:
+
+            # Define the API URL and parameters
+            url = os.getenv("GET_DIRECTION")
+            
+            params = {
+                'origin': f'{pickup_latitude},{pickup_longitude}',  # Origin coordinates
+                'destination': f'{dropoff_latitude},{dropoff_longitude}',  # Destination coordinates
+                'AppType': 'FCSTService'
+            }
+
+            logging.info(f"\n\n\nPayload Sent for distance and duration retrieval: {params}\n\n\n")
+            
+            # Define your Basic Authentication credentials
+            auth = BasicAuth(os.getenv("GET_DIRECTION_USER"), os.getenv("GET_DIRECTION_PASSWORD"))  # Replace with your actual password
+
+            # Add headers to mimic Postman headers if needed
+            headers = {
+                'User-Agent': 'PostmanRuntime/7.43.4',  # Use the User-Agent as seen in Postman
+                'Accept': '*/*',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'Connection': 'keep-alive'
+            }
+
+            # Make the request
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, params=params, headers=headers, auth=auth) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        logging.info(f"\n\n\nResponse for distance and duration retrieval: {data}\n\n\n")
+                        distance = int(data["routes"][0]["legs"][0]["distance"]["value"]) 
+                        duration = int(data["routes"][0]["legs"][0]["duration"]["value"])
+                        print(f"Distance: {distance}")
+                        print(f"Duration: {duration}")
+
+                        url = os.getenv("GET_FARE_API")
+
+                        distance_miles = await meters_to_miles(distance)
+                        duration_minutes = await seconds_to_minutes(duration)
+            
+                        # The JSON body data to be sent in the POST request
+                        data = {
+                            "distance": distance_miles,
+                            "travelTime": duration_minutes,
+                            "fundingSourceID": 1,
+                            "copy": 0,
+                            "numberOfWheelchairs": int(number_of_wheel_chairs),
+                            "numberOfPassengers": int(number_of_passengers),
+                            "classOfServiceID": 1,
+                            "affiliateID": int(self.affiliate_id),
+                            "pickupLatitude": float(pickup_latitude),
+                            "pickupLongitude": float(pickup_longitude),
+                            "copyFundingSourceID": -1,
+                            "riderID": str(rider_id),
+                            "authorizedStaff": "string",
+                            "startFareZone": "string",
+                            "endFareZone": "string",
+                            "tspid": "string",
+                            "httpResponseCode": 100
+                        }
+
+                        logging.info(f"\n\n\nPayload for fare estimation: {data}\n\n\n")
+
+                        # Headers to be used in the request
+                        headers = {
+                            'Content-Type': 'application/json',  # Ensure that the body is sent as JSON
+                            'User-Agent': 'PostmanRuntime/7.43.4',  # Optional, can be omitted if not needed
+                        }
+
+                        # Making the POST request
+                        async with aiohttp.ClientSession() as session:
+                            async with session.post(url, json=data, headers=headers) as response:
+                                if response.status == 200:
+                                    # If successful, print the JSON response
+                                    response_data = await response.json()
+                                    logging.info(f"\n\n\nResponse for fare estimation: {response_data}\n\n\n")
+                                    total_cost = response_data["totalCost"]
+                                    copay_cost = response_data["copay"]
+                                    print(f"Total Cost: {total_cost}")
+                                    print(f"Copay Cost: {copay_cost}")
+                                else:
+                                    print(f"Request failed with status code: {response.status}")
+
+                    else:
+                        print(f"Request failed with status code {response.status_code}")
+
+        except Exception as e:
+            logging.ERROR(f"Error in getting distance and duration: {e}")
+
+        await asyncio.sleep(2)
+        await self.Stop_Music()
+
+        if distance_miles == 0 and duration_minutes == 0:
+            return "Could not get distance and duration from API!"
+        
+        return f"""Distance between two locations is {distance_miles} miles, it will take around {duration_minutes} minutes while Cost is ${total_cost}
+        """
     
 
 # assistant = Assistant(affiliate_id=21)
