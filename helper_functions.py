@@ -350,6 +350,7 @@ class Assistant(Agent):
                         print(f"Duration: {duration}")
                         url = os.getenv("GET_FARE_API")
 
+
                         distance_miles = await meters_to_miles(distance)
                         duration_minutes = await seconds_to_minutes(duration)
             
