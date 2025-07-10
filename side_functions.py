@@ -327,8 +327,10 @@ async def recognize_affiliate(receiver):
     match = re.search(r'sip:(\+\d+)@', receiver)
     if match:
         receiver_number = match.group(1)
-        receiver_number = "+16318022590"
+        # receiver_number = "+16318022590"
         receiver_number = await extract_phone_number(receiver_number)
+    elif receiver:
+        receiver_number = await extract_phone_number(receiver)
     else:
         return "Receiver Number not found!"
     

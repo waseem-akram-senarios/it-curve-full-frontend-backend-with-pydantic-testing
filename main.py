@@ -109,15 +109,18 @@ async def entrypoint(ctx: agents.JobContext):
     current_time = date_time.strftime("%I:%M %p")  # 12-hour format with AM/PM
 
     try:
-        metadata = eval(participant.metadata)
+        # metadata = eval(participant.metadata)
+        meta_data = participant.metadata
+        metadata = json.loads(meta_data)
         print(f"\n\nMetadata: {metadata}\n\n")
     except: 
         pass
 
     starting_time = date_time.strftime("%Y-%m-%d %H:%M:%S")
 
-    all_riders_info = {}
-    
+    # all_riders_info = {}
+    all_riders_info = {"number_of_riders":0}
+
     unknow_rider = {
         "name" : "Unknown",
         "client_id" : "-1",
@@ -151,23 +154,35 @@ async def entrypoint(ctx: agents.JobContext):
         success = False
 
         try:
-            # Fetch call details using CallSid
-            call = TWILIO_CLIENT.calls(call_sid).fetch()
+            # For Twillio or Asterisk calls
+            try:
+                # Twillio
+                # Fetch call details using CallSid
+                call = TWILIO_CLIENT.calls(call_sid).fetch()
 
-            # Access caller and recipient information
-            caller = call._from
-            print(f"\n\n\nCaller: {caller}\n\n\n")
-            # caller = "+12222222222"
-            # caller = "+13012082222"
-            # caller = "+13012082252"
-            recipient = str(call.to)
-            # recipient = "+17172007213" 
-            print(f"\n\nRecipient: {recipient}\n\n")
+                # Access caller and recipient information
+                caller = call._from
+                print(f"\n\n\nCaller: {caller}\n\n\n")
+                # caller = "+12222222222"
+                # caller = "+13012082222"
+                # caller = "+13012082252"
+                recipient = str(call.to)
+                # recipient = "+17172007213"
+                print(f"\n\nRecipient: {recipient}\n\n")
+            except:
+                # Asterisk
+                # pass
+                logger.info(participant.attributes)
+                # metadata = participant.metadata
+                caller = participant.attributes['sip.phoneNumber']
+                recipient = participant.attributes['sip.trunkPhoneNumber']
+
             affiliate = await recognize_affiliate(recipient)
             success = True
-            affiliate_id = affiliate["AffiliateID"] 
+            ivr = True
+            affiliate_id = affiliate["AffiliateID"]
             family_id = affiliate["AffiliateFamilyID"]
-            
+
             phone_number = await extract_phone_number(caller)
             # print(f"\n\nPhone Number: {phone_number}")
             all_riders_info = await get_client_name_voice(phone_number, affiliate_id, family_id)
@@ -321,7 +336,7 @@ async def entrypoint(ctx: agents.JobContext):
         stt = deepgram.STT(model="nova-3",language="en-US",keyterms=["snouffer"]),
         allow_interruptions=allow_interruption_status,
         llm=openai.LLM(model="gpt-4o"),
-        tts=deepgram.TTS(model="aura-2-janus-en"),
+        tts=deepgram.TTS(model="aura-asteria-en"),
         vad=silero.VAD.load(),
         # min_interruption_duration=1.0,
         # min_endpointing_delay = 1.0,
