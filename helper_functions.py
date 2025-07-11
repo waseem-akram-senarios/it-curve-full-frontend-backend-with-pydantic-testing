@@ -255,6 +255,10 @@ class Assistant(Agent):
         rider_home_address: str,
         rider_home_city: str,
         rider_home_state: str,
+        home_phone: str,
+        office_phone: str,
+        total_passengers: int,
+        total_wheelchairs: int,
         ):
         """"Function that is used to book a new trip.
         Args:
@@ -288,6 +292,10 @@ class Assistant(Agent):
             rider_home_address: Home location of the rider present in the memory. If not available, set it to "".
             rider_home_city: City of rider's home address. If not available, set it to "".
             rider_home_state: State of rider's home address. If not available, set it to "".
+            home_phone: Rider's home phone no. If not available, set it to "".
+            office_phone: Rider's Office Phone no. if not available, set it to "".
+            total_passengers: total passenger count if not available, set it to 1.
+            total_wheelchairs: total wheel chair count if not available, set it to 0.
         """
         print(f"\n\n\nCalled Book a new trip function at: {datetime.now()}\n\n\n")
         # Start playing music asynchronously
@@ -472,9 +480,13 @@ class Assistant(Agent):
             data['addressInfo']["Trips"][0]["Details"][0]["addressDetails"]["Longitude"] = pickup_lng
             data['addressInfo']["Trips"][0]["Details"][0]["addressDetails"]["State"] = pickup_state
             data['addressInfo']["Trips"][0]["Details"][0]["addressDetails"]["Zip"] = pickup_city_zip_code
+            data['addressInfo']["Trips"][0]["Details"][0]["addressDetails"]["Phone"] = home_phone
             data['addressInfo']["Trips"][0]["Details"][0]["tripInfo"]["ExtraInfo"] = extra_details
+            data['addressInfo']["Trips"][0]["Details"][0]["tripInfo"]["CallBackInfo"] = phone_number
             data['addressInfo']["Trips"][0]["Details"][0]["dateInfo"]["PickupDate"] = booking_time
             data['addressInfo']["Trips"][0]["Details"][0]["dateInfo"]["IsScheduled"] = is_schedule
+            data['addressInfo']["Trips"][0]["Details"][0]["passengerInfo"]["TotalPassengers"] = total_passengers
+            data['addressInfo']["Trips"][0]["Details"][0]["passengerInfo"]["TotalWheelChairs"] = total_wheelchairs
 
             # Drop off Address Information
             data['addressInfo']["Trips"][0]["Details"][1]["addressDetails"]["Address"] = dropoff_street_address
@@ -483,8 +495,12 @@ class Assistant(Agent):
             data['addressInfo']["Trips"][0]["Details"][1]["addressDetails"]["Longitude"] = dropoff_lng
             data['addressInfo']["Trips"][0]["Details"][1]["addressDetails"]["State"] = dropoff_state
             data['addressInfo']["Trips"][0]["Details"][1]["addressDetails"]["Zip"] = dropoff_city_zip_code
+            data['addressInfo']["Trips"][0]["Details"][1]["addressDetails"]["Phone"] = home_phone
             data['addressInfo']["Trips"][0]["Details"][1]["dateInfo"]["PickupDate"] = booking_time
             data['addressInfo']["Trips"][0]["Details"][1]["dateInfo"]["IsScheduled"] = is_schedule
+            data['addressInfo']["Trips"][0]["Details"][1]["tripInfo"]["CallBackInfo"] = phone_number
+            data['addressInfo']["Trips"][0]["Details"][1]["passengerInfo"]["TotalPassengers"] = total_passengers
+            data['addressInfo']["Trips"][0]["Details"][1]["passengerInfo"]["TotalWheelChairs"] = total_wheelchairs
 
             # Pickup Cost Information
             data['addressInfo']["Trips"][0]["Details"][0]["estimatedInfo"]["EstimatedDistance"] = distance_miles

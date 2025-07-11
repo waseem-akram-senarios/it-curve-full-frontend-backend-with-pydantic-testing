@@ -410,6 +410,8 @@ async def get_client_name_voice(caller_number, affiliate_id, family_id):
             for i, client in enumerate(client_list, 1):
                 name = (client.get('FirstName', '') + ' ' + client.get('LastName', '')).strip()
                 medical_id_raw = client.get("MedicalId", "")
+                client_home_phone = client.get("HomePhone", "")
+                client_office_phone = client.get("OfficePhone", "")
                 if medical_id_raw and str(medical_id_raw).isdigit():
                     rider_id = int(medical_id_raw)
                     rider_id = rider_id if rider_id != 0 else "Unknown"
@@ -422,7 +424,9 @@ async def get_client_name_voice(caller_number, affiliate_id, family_id):
                     "city": client.get("City", ""),
                     "state": client.get("State", ""),
                     "current_location/home_address": client.get("Address", ""),
-                    "rider_id": rider_id
+                    "rider_id": rider_id,
+                    "HomePhone": client_home_phone,
+                    "OfficePhone": client_office_phone
                 }
 
                 result[f"rider_{i}"] = rider_data

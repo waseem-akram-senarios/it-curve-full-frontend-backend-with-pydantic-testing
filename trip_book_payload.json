@@ -82,7 +82,7 @@
               "OutRefID": -1,
               "CustomerEmail": "",
               "CallbackReq": true,
-              "CallBackInfo": "333-333-3333",
+              "CallBackInfo": "",
               "SLAClassID": 5,
               "AuthorizedBy": "",
               "ServiceStatusID": 0,
@@ -206,7 +206,7 @@
               "OutRefID": -1,
               "CustomerEmail": "",
               "CallbackReq": true,
-              "CallBackInfo": "333-333-3333",
+              "CallBackInfo": "",
               "SLAClassID": 5,
               "AuthorizedBy": "",
               "ServiceStatusID": 0,
@@ -250,7 +250,7 @@
               "Zone": "",
               "FareZone": "",
               "Remarks": "",
-              "Phone": "333-333-3333",
+              "Phone": "",
               "POIName": ""
             },
             "dateInfo": {
