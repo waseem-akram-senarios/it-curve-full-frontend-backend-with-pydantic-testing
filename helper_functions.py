@@ -143,8 +143,8 @@ class Assistant(Agent):
 
         print(f"\n\nCalled get_client_name function\n\n")
 
-        _ = asyncio.create_task(self.Play_Music())
-        await asyncio.sleep(2)
+        # _ = asyncio.create_task(self.Play_Music())
+        # await asyncio.sleep(2)
 
         print(f"caller number: {caller_number}")
         print(f"family_id: {family_id}")
@@ -219,8 +219,8 @@ class Assistant(Agent):
         
         print(f"\n\nResult: {result}\n\n")
 
-        await asyncio.sleep(2)
-        await self.Stop_Music()
+        # await asyncio.sleep(2)
+        # await self.Stop_Music()
 
         return json.dumps(result, indent=2)
         
@@ -299,21 +299,21 @@ class Assistant(Agent):
         """
         print(f"\n\n\nCalled Book a new trip function at: {datetime.now()}\n\n\n")
         # Start playing music asynchronously
-        _ = asyncio.create_task(self.Play_Music())
-        await asyncio.sleep(2)
+        # _ = asyncio.create_task(self.Play_Music())
+        # await asyncio.sleep(2)
 
         # Check Pickup Address
         pickup_error = await check_address_validity(pickup_lat, pickup_lng, "Pick Up")
         if pickup_error:
-            await asyncio.sleep(2)
-            await self.Stop_Music()
+            # await asyncio.sleep(2)
+            # await self.Stop_Music()
             return pickup_error
 
         # Check Dropoff Address
         dropoff_error = await check_address_validity(dropoff_lat, dropoff_lng, "Drop Off")
         if dropoff_error:
-            await asyncio.sleep(2)
-            await self.Stop_Music()
+            # await asyncio.sleep(2)
+            # await self.Stop_Music()
             return dropoff_error
 
         distance = 0
@@ -547,8 +547,8 @@ class Assistant(Agent):
         weather = await search_web_manual(prompt)
         print(f"\n\nWeather: {weather}\n\n")
 
-        await asyncio.sleep(2)
-        await self.Stop_Music()
+        # await asyncio.sleep(2)
+        # await self.Stop_Music()
 
         try:
 
@@ -588,8 +588,8 @@ class Assistant(Agent):
         print(f"\n\nCalled get_ETA function\n\n")
 
         # Start background music task
-        _ = asyncio.create_task(self.Play_Music())
-        await asyncio.sleep(2)
+        # _ = asyncio.create_task(self.Play_Music())
+        # await asyncio.sleep(2)
 
         url = os.getenv("EXISTING_RIDES_API")
         client_id = str(client_id)
@@ -613,8 +613,8 @@ class Assistant(Agent):
             async with aiohttp.ClientSession() as session:
                 async with session.post(url, json=payload, headers=headers) as resp:
                     text = await resp.text()
-                    await asyncio.sleep(2)
-                    await self.Stop_Music()
+                    # await asyncio.sleep(2)
+                    # await self.Stop_Music()
 
                     try:
                         response = json.loads(text)
@@ -651,8 +651,8 @@ class Assistant(Agent):
                         return "No data found for ETA!"
 
         except Exception as e:
-            await asyncio.sleep(2)
-            await self.Stop_Music()
+            # await asyncio.sleep(2)
+            # await self.Stop_Music()
 
             print(f"\n\nError occurred in getting client ETA: {e}\n\n")
             return "No data found for ETA!"
@@ -667,8 +667,8 @@ class Assistant(Agent):
             prompt: Prompt for web search. Keep it as precise and to the point as possible. 
         """
         print("\n\nCalled search_web function\n\n")
-        _ = asyncio.create_task(self.Play_Music())
-        await asyncio.sleep(2)
+        # _ = asyncio.create_task(self.Play_Music())
+        # await asyncio.sleep(2)
 
         try:
             # Use the OpenAI API client to make the call
@@ -679,13 +679,13 @@ class Assistant(Agent):
             )
         
             # Output the result
-            await asyncio.sleep(2)
-            await self.Stop_Music()
+            # await asyncio.sleep(2)
+            # await self.Stop_Music()
             return response.output_text
         
         except Exception as e:
-            await asyncio.sleep(2)
-            await self.Stop_Music()
+            # await asyncio.sleep(2)
+            # await self.Stop_Music()
             print(f"Error in search web: {e}")
             return "Web search failed!"
         
@@ -704,8 +704,8 @@ class Assistant(Agent):
             state: State of the rider.
         """
         print("\n\nCalled search_address function\n\n")
-        _ = asyncio.create_task(self.Play_Music())
-        await asyncio.sleep(2)
+        # _ = asyncio.create_task(self.Play_Music())
+        # await asyncio.sleep(2)
 
         prompt = f"""{prompt}.\n\nKeep your response as small and precise as possible."""
         print(f"\n\nPrompt for Address Search: {prompt}")
@@ -737,13 +737,13 @@ class Assistant(Agent):
             result = await summarize_address_results(web_result)
             print(f"\n\nResult after summarization: {result}\n\n")
 
-            await asyncio.sleep(2)
-            await self.Stop_Music()
+            # await asyncio.sleep(2)
+            # await self.Stop_Music()
             return result
 
         except Exception as e:
-            await asyncio.sleep(2)
-            await self.Stop_Music()
+            # await asyncio.sleep(2)
+            # await self.Stop_Music()
             print(f"Error in address search: {e}")
             return "Address retrieval failed!"
         
@@ -758,8 +758,8 @@ class Assistant(Agent):
         """
         print(f"\n\nCalled get_valid_address function with address: {address}\n\n")
         # await self.session.say('Let me verify if that address is valid. Please wait a moment.')
-        _ = asyncio.create_task(self.Play_Music())
-        await asyncio.sleep(2)
+        # _ = asyncio.create_task(self.Play_Music())
+        # await asyncio.sleep(2)
 
         result = {}
 
@@ -773,8 +773,8 @@ class Assistant(Agent):
                 is_within_service_area = await self.check_bounds(lat, lng)
                 result["isWithinServiceArea"] = is_within_service_area
                 result_str = json.dumps(result, indent=2)
-                await asyncio.sleep(2)
-                await self.Stop_Music()
+                # await asyncio.sleep(2)
+                # await self.Stop_Music()
                 return result_str
         except Exception as e:
             print(f"Error in getting valid address status")
@@ -814,8 +814,8 @@ class Assistant(Agent):
         except Exception as e:
             print(f"ITC location exception: {e}")
         
-        await asyncio.sleep(2)
-        await self.Stop_Music()
+        # await asyncio.sleep(2)
+        # await self.Stop_Music()
         print(f"\n\nValid Addresses from ITC MAP API: {result}\n\n")
         return str(result)
     
@@ -878,8 +878,8 @@ class Assistant(Agent):
         Args:
             account_: Account name provided by the rider, else None
         """
-        _ = asyncio.create_task(self.Play_Music())
-        await asyncio.sleep(2)
+        # _ = asyncio.create_task(self.Play_Music())
+        # await asyncio.sleep(2)
         print("\n\n\nCalled get_IDs function\n\n\n")
 
         account = account_.lower()
@@ -938,8 +938,8 @@ class Assistant(Agent):
                 account_name = parsed_response.get("FundingSource", None)
 
                 if str(account_name).lower() == "none":
-                    await asyncio.sleep(2)
-                    await self.Stop_Music()
+                    # await asyncio.sleep(2)
+                    # await self.Stop_Music()
                     return "The account you provided is not valid!"
 
                 print(f"Got Program Id: {program_id}")
@@ -1038,8 +1038,8 @@ class Assistant(Agent):
         else:
             rider_verification = True
         
-        await asyncio.sleep(2)
-        await self.Stop_Music()
+        # await asyncio.sleep(2)
+        # await self.Stop_Music()
         
         print("\n\n")
         print(f"Verified Account Name is: {account_name}, Funding Source Id is: {funding_id}, Requires Rider Verification Status: {rider_verification}, Payment Type Id is: {paymenttype_id}, Require Copay Status is: {copay_status}, Program Id is {program_id}")
@@ -1055,8 +1055,8 @@ class Assistant(Agent):
             affiliate_id: Affiliate Id of the rider, else None.
             copay_account_name: Copay Account Name provided by the rider, else None.
         """
-        _ = asyncio.create_task(self.Play_Music())
-        await asyncio.sleep(2)
+        # _ = asyncio.create_task(self.Play_Music())
+        # await asyncio.sleep(2)
         print("\n\n\nCalled get_copay_payment_type_id function\n\n\n")
 
         copay_funding_source_id, payment_type_id = -1, -1
@@ -1107,8 +1107,8 @@ class Assistant(Agent):
             print(f"Got Copay Funding Source Id: {copay_funding_source_id}")
 
             if str(verified_copay_account_name.lower()) == "None":
-                await asyncio.sleep(2)
-                await self.Stop_Music()
+                # await asyncio.sleep(2)
+                # await self.Stop_Music()
                 return "Copay Account was not verified!"
 
         except:
@@ -1172,8 +1172,8 @@ class Assistant(Agent):
             print(f"Error parsing JSON: {e}")
             pass
 
-        await asyncio.sleep(2)
-        await self.Stop_Music()
+        # await asyncio.sleep(2)
+        # await self.Stop_Music()
         print(f"\n\n\nCopay Funding Source Id: {copay_funding_source_id}\n\n\n")
         print(f"\n\n\nCopay Payment Type Id: {payment_type_id}\n\n\n")
 
@@ -1190,14 +1190,14 @@ class Assistant(Agent):
             affiliate_id: Affiliate Id of the rider, else None.
             program_id: Program Id, else -1.
         """
-        _ = asyncio.create_task(self.Play_Music())
-        await asyncio.sleep(2)
+        # _ = asyncio.create_task(self.Play_Music())
+        # await asyncio.sleep(2)
         print("\n\n\nCalled verify_rider function\n\n\n")
 
         program_id_int = int(program_id)
         if program_id_int == -1:
-            await asyncio.sleep(2)
-            await self.Stop_Music()
+            # await asyncio.sleep(2)
+            # await self.Stop_Music()
             return "Rider does not need verification!"
 
         url = os.getenv("RIDER_VERIFICATION_API")
@@ -1255,8 +1255,8 @@ class Assistant(Agent):
             print(f"Verified Rider Name: {verified_rider_name}")
         except Exception as e:
             print(f"\n\nError in verifying_rider_id: {e}\n\n")
-        await asyncio.sleep(2)
-        await self.Stop_Music()
+        # await asyncio.sleep(2)
+        # await self.Stop_Music()
 
         if not rider_status:
             return "Rider is not verified!"
@@ -1278,8 +1278,8 @@ class Assistant(Agent):
 
         print(f"\n\nCalled get_Trip_Stats function\n\n")
 
-        _ = asyncio.create_task(self.Play_Music())
-        await asyncio.sleep(2)
+        # _ = asyncio.create_task(self.Play_Music())
+        # await asyncio.sleep(2)
         
         # Define the API endpoint
         url = os.getenv("TRIP_STATS_API")
@@ -1310,18 +1310,18 @@ class Assistant(Agent):
                     try:
                         data = json.loads(text)
                         print(f"\n\nResponse: {data}\n\n")
-                        await asyncio.sleep(2)
-                        await self.Stop_Music()
+                        # await asyncio.sleep(2)
+                        # await self.Stop_Music()
                         return json.dumps(data, indent=4)
                     except json.JSONDecodeError:
-                        await asyncio.sleep(2)
-                        await self.Stop_Music()
+                        # await asyncio.sleep(2)
+                        # await self.Stop_Music()
                         print("\n\nFailed to decode JSON. Raw response:\n", text)
                         return "No valid JSON data found!"
                     
         except Exception as e:
-            await asyncio.sleep(2)
-            await self.Stop_Music()
+            # await asyncio.sleep(2)
+            # await self.Stop_Music()
             print(f"\n\nError occurred in getting trip stats: {e}\n\n")
             return "No data found!"
         
@@ -1343,8 +1343,8 @@ class Assistant(Agent):
         
         print(f"\n\nCalled get_historic_rides function\n\n")
 
-        _ = asyncio.create_task(self.Play_Music())
-        await asyncio.sleep(2)
+        # _ = asyncio.create_task(self.Play_Music())
+        # await asyncio.sleep(2)
 
         url = os.getenv("GET_HISTORIC_RIDES_API")
 
@@ -1396,8 +1396,8 @@ class Assistant(Agent):
         historic_trips_data_result = f"""Rider Historic/Past/Completed Trips are: ``{historic_trips_data}``\n
         """
         print(f"\n\nHistoric Rides: {historic_trips_data}\n\n")
-        await asyncio.sleep(2)
-        await self.Stop_Music()
+        # await asyncio.sleep(2)
+        # await self.Stop_Music()
         return historic_trips_data_result
     
     @function_tool()
@@ -1410,8 +1410,8 @@ class Assistant(Agent):
 
         print(f"\n\nCalled get_frequnt_addresses function\n\n")
 
-        _ = asyncio.create_task(self.Play_Music())
-        await asyncio.sleep(2)
+        # _ = asyncio.create_task(self.Play_Music())
+        # await asyncio.sleep(2)
 
         url = os.getenv("GET_HISTORIC_RIDES_API")
 
@@ -1460,8 +1460,8 @@ class Assistant(Agent):
         frequent_addresses_result = f"""Rider Frequently Used Addresses are: ``{frequent_addresses}``\n
         Only use these addresses for address completion. Use [get_ETA] function to get Last/Latest trip details
         """
-        await asyncio.sleep(2)
-        await self.Stop_Music()
+        # await asyncio.sleep(2)
+        # await self.Stop_Music()
         return frequent_addresses_result
 
     @function_tool()
@@ -1487,17 +1487,17 @@ class Assistant(Agent):
 
         print(f"\n\nCalled get_distance_duration_fare function\n\n")
 
-        _ = asyncio.create_task(self.Play_Music())
-        await asyncio.sleep(2)
+        # _ = asyncio.create_task(self.Play_Music())
+        # await asyncio.sleep(2)
 
         if pickup_latitude == "0" or pickup_longitude == "0":
-            await asyncio.sleep(2)
-            await self.Stop_Music()
+            # await asyncio.sleep(2)
+            # await self.Stop_Music()
             return "Pick Up address is not verified. Use [get_valid_addresses] function to verify it first"
         
         if dropoff_latitude == "0" or dropoff_longitude == "0":
-            await asyncio.sleep(2)
-            await self.Stop_Music()
+            # await asyncio.sleep(2)
+            # await self.Stop_Music()
             return "Drop Off address is not verified. Use [get_valid_addresses] function to verify it first"
 
         distance_miles = 0
@@ -1594,8 +1594,8 @@ class Assistant(Agent):
         except Exception as e:
             logging.ERROR(f"Error in getting distance and duration: {e}")
 
-        await asyncio.sleep(2)
-        await self.Stop_Music()
+        # await asyncio.sleep(2)
+        # await self.Stop_Music()
 
         if distance_miles == 0 and duration_minutes == 0:
             return "Could not get distance and duration from API!"
