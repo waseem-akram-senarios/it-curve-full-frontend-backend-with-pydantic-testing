@@ -211,6 +211,7 @@ async def entrypoint(ctx: agents.JobContext):
         if all_riders_info["number_of_riders"] == 0:
             all_riders_info["number_of_riders"] = 1
             all_riders_info["rider_1"] = new_rider
+            all_riders_info["rider_1"]["number_of_existing_trips"] = 0
 
         print(f"\n\nRider: {all_riders_info}\n\n")
         print(f"\n\nAffiliate: {affiliate}\n\n")
@@ -393,9 +394,13 @@ async def entrypoint(ctx: agents.JobContext):
             
             elif rider["name"]:
                 try:
-                    await session.say(f"Hello {rider['name']}! {greeting}. How can I help you today?", allow_interruptions=allow_interruption_status)
+                    no_of_trips = rider.get("number_of_existing_trips", "0")
+                    if int(no_of_trips) > 0:
+                        await session.say(f"Hello {rider['name']}! {greeting}. You have {no_of_trips} existing trips in the system. How can I help you today?", allow_interruptions=allow_interruption_status)
+                    else:
+                        await session.say(f"Hello {rider['name']}! {greeting}. How can I help you today?", allow_interruptions=allow_interruption_status)
                 except:
-                    await session.say(f"Hello! {greeting}.", allow_interruptions=allow_interruption_status)
+                    await session.say(f"Hello {rider['name']}! {greeting}. How can I help you today?", allow_interruptions=allow_interruption_status)
 
         elif all_riders_info["number_of_riders"] > 1:
             await session.say(f"Hello! {greeting}. I have multiple profiles for your number. Can I have your name please?", allow_interruptions=allow_interruption_status)

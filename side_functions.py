@@ -34,7 +34,7 @@ openai_client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 async def check_address_validity(latitude: str, longitude: str, address_type: str):
     """Helper function to check if the address is valid."""
     if latitude == "0" or longitude == "0" or latitude == "" or longitude == "":
-        return f"{address_type} address is missing latitude or longitude"
+        return f"{address_type} address is missing latitude or longitude. Use [get_valid_addresses] function to verify this address."
     return None
 
 async def safe_float(value):
@@ -409,6 +409,8 @@ async def get_client_name_voice(caller_number, affiliate_id, family_id):
             client_list = json.loads(response.get("responseJSON", "[]"))
             for i, client in enumerate(client_list, 1):
                 name = (client.get('FirstName', '') + ' ' + client.get('LastName', '')).strip()
+                client_id = client.get('Id', 0)
+                number_of_existing_trips = await get_Existing_Trips_Number(client_id, affiliate_id)
                 medical_id_raw = client.get("MedicalId", "")
                 client_home_phone = client.get("HomePhone", "")
                 client_office_phone = client.get("OfficePhone", "")
@@ -425,6 +427,7 @@ async def get_client_name_voice(caller_number, affiliate_id, family_id):
                     "state": client.get("State", ""),
                     "current_location/home_address": client.get("Address", ""),
                     "rider_id": rider_id,
+                    "number_of_existing_trips": number_of_existing_trips,
                     "HomePhone": client_home_phone,
                     "OfficePhone": client_office_phone
                 }
@@ -569,3 +572,62 @@ async def is_point_out_of_bounds(bounds, location):
         return False
     else:
         return True
+    
+async def get_Existing_Trips_Number(client_id : str, affiliate_id: str):
+    """
+    Function to get
+    - Number of existing trips in the system
+
+    Args:
+        client_id: Client Id of rider
+        affiliate_id: Affiliate Id
+    """
+    print(f"\n\nCalled get_Existing_Trips_Number function\n\n")
+
+    url = os.getenv("EXISTING_RIDES_API")
+
+    payload = {
+        "searchCriteria": "CustomerID",
+        "searchText": str(client_id),
+        "bActiveRecords": True,
+        "iATSPID": int(affiliate_id),
+        "responseJSON": "string",
+        "responseCode": 100
+    }
+    headers = {
+        "Content-Type": "application/json"
+    }
+
+    len_existing_trips = 0
+
+    print(f"\n\n\nPayload Sent for existing trips: {payload}\n\n\n")
+
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url, json=payload, headers=headers) as resp:
+                text = await resp.text()
+                print(f"\n\nResponse: {text}\n\n")
+
+                try:
+                    response = json.loads(text)
+                except json.JSONDecodeError:
+                    print(f"\n\nFailed to decode JSON. Raw response:\n{text}\n\n")
+                    return len_existing_trips
+
+                if response.get("responseCode") == 200:
+                    try:
+                        data = json.loads(response.get("responseJSON", "{}"))
+                        len_existing_trips = len(data)
+                        
+                        return len_existing_trips
+                    except json.JSONDecodeError:
+                        print(f"\n\nFailed to decode nested responseJSON\n\n")
+                        return len_existing_trips
+                else:
+                    print(f"\n\nNo trip ETA Found for the rider\n\n")
+                    return len_existing_trips
+
+    except Exception as e:
+
+        print(f"\n\nError occurred in getting client ETA: {e}\n\n")
+        return len_existing_trips

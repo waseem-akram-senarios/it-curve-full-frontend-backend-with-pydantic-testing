@@ -191,6 +191,9 @@ class Assistant(Agent):
                 client_list = json.loads(client_object)
                 for i, client in enumerate(client_list, 1):
                     name = (client['FirstName'] + ' ' + client['LastName']).strip()
+                    client_id = client.get('Id', 0)
+                    number_of_existing_trips = await get_Existing_Trips_Number(client_id, self.affiliate_id)
+
                     medical_id_raw = client.get("MedicalId", "")
                     if medical_id_raw and str(medical_id_raw).isdigit():
                         rider_id = int(medical_id_raw)
@@ -204,7 +207,8 @@ class Assistant(Agent):
                         "city": client["City"],
                         "state": client["State"],
                         "current_location/home_address": client["Address"],
-                        "rider_id": rider_id
+                        "rider_id": rider_id,
+                        "number_of_existing_trips" : number_of_existing_trips
                     }
 
                     result[f"rider_{i}"] = rider_data
@@ -212,7 +216,16 @@ class Assistant(Agent):
                 # result["number_of_riders"] = rider_count
             else:
                 print("Request failed!")
-                result["number_of_riders"] = 0
+                result["number_of_riders"] = 1
+                result["rider_1"] = {
+                    "name" : "new_rider",
+                    "client_id" : "-1",
+                    "city" : "Unknown",
+                    "state" : "Unknown",
+                    "current_location" : "Unknown",
+                    "rider_id" : "-1",
+                    "number_of_existing_trips" : 0
+                }
         except Exception as e:
             print(f"Error occurred in getting client Name: {e}")
             result["number_of_riders"] = rider_count
@@ -357,7 +370,6 @@ class Assistant(Agent):
                         print(f"Distance: {distance}")
                         print(f"Duration: {duration}")
                         url = os.getenv("GET_FARE_API")
-
 
                         distance_miles = await meters_to_miles(distance)
                         duration_minutes = await seconds_to_minutes(duration)

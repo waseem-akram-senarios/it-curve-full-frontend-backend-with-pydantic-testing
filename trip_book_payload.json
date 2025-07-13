@@ -10,7 +10,7 @@
   },
   "riderInfo": {
     "ID": 609981,
-    "PhoneNo": "333-333-3333",
+    "PhoneNo": "",
     "PickupPerson": "",
     "DateOfBirth": "01/01/1900",
     "RiderID": "0",
@@ -126,7 +126,7 @@
               "Zone": "",
               "FareZone": "",
               "Remarks": "",
-              "Phone": "333-333-3333",
+              "Phone": "",
               "POIName": ""
             },
             "dateInfo": {
