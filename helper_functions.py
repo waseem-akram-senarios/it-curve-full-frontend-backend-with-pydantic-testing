@@ -1624,7 +1624,11 @@ class Assistant(Agent):
         
         return f"""Distance between two locations is {distance_miles} miles, it will take around {duration_minutes} minutes while Cost is ${total_cost}
         """
-    
+
+    @function_tool()
+    async def pause_for_a_while(self):
+        return asyncio.sleep(0.5)
+
 
 # assistant = Assistant(affiliate_id=21)
 # asyncio.run(assistant.get_IDs('cash'))
