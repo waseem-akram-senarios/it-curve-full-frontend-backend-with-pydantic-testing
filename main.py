@@ -12,6 +12,9 @@ from livekit.agents import (
     RoomInputOptions,
     metrics,
     ConversationItemAddedEvent,
+    BackgroundAudioPlayer,
+    BuiltinAudioClip,
+    AudioConfig,
     MetricsCollectedEvent
 )
 from livekit.plugins import (
@@ -328,8 +331,13 @@ async def entrypoint(ctx: agents.JobContext):
             2. Use [get_ETA] function to get latest/last trip, pickup and dropoff address: No Data Available``
             """
             pass
-    
+
     print(f"\n\nPrompt: {prompt}\n\n")
+
+    background_audio = BackgroundAudioPlayer(thinking_sound=[
+                        AudioConfig(BuiltinAudioClip.KEYBOARD_TYPING2, volume=0.5),
+                        AudioConfig(BuiltinAudioClip.KEYBOARD_TYPING,volume=0.6)
+                    ])
 
     allow_interruption_status = False
 
@@ -349,6 +357,8 @@ async def entrypoint(ctx: agents.JobContext):
     except Exception as e:
         print(f"\n\n\nError in generating agent object: {e}\n\n")
         agent = Assistant(call_sid=call_sid, room=ctx.room, instructions=prompt, affiliate_id=65)
+
+    await background_audio.start(room=ctx.room, agent_session=session)
 
     await session.start(
         room=ctx.room,
