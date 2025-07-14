@@ -294,7 +294,7 @@ class Assistant(Agent):
             payment_type_id: Payment Type Id else -1. I am applying  python int() so generate value accordingly
             copay_funding_source_id: Copay Funding Source Id else -1. I am applying  python int() so generate value accordingly
             copay_payment_type_id: Copay Payment Type Id else -1. I am applying  python int() so generate value accordingly
-            booking_time: Booking Time if mentioned by rider in this format 'Year-Month-Date HH:MM' for the driver else ''. If the rider wants to book for now, get current time from memory.
+            booking_time: Booking Time if mentioned by rider in this format 'Year-Month-Date HH:MM' for the driver else ''. If the rider wants to book for now, get current time from memory. if is_will_call is true, set it to date today.
             pickup_lat: Pickup address latitude else 0. I am applying  python float() so generate value accordingly
             pickup_lng: Pickup address longitude else 0. I am applying  python float() so generate value accordingly
             dropoff_lat: Drop off address latitude else 0. I am applying  python float() so generate value accordingly
@@ -302,7 +302,7 @@ class Assistant(Agent):
             number_of_wheel_chairs: Number of wheel chairs if required by rider else 0. For example if rider is missing leg or specifically says, 'they require wheel chair'. I am applying  python int() so generate value accordingly
             number_of_passengers: Number of passengers. If rider mentioned more than 1 passengers, set accordingly otherwise set it to 1. I am applying  python int() so generate value accordingly
             family_id: Family Id else 0. I am applying  python int() so generate value accordingly
-            is_schedule: 1 if the trip is scheduled for 20+ minutes from current time else 0 if the trip is sceduled for now. I am applying  python int() so generate value accordingly
+            is_schedule: 1 if the trip is scheduled for 20+ minutes from current time,also 1 if is_will_call true , else 0 if the trip is scheduled for now. I am applying  python int() so generate value accordingly,or if
             rider_id: Rider Id available in the memory either already in the memory or provided by the customer. If not available set it to -1. I am applying  python int() so generate value accordingly
             rider_home_address: Home location of the rider present in the memory. If not available, set it to "".
             rider_home_city: City of rider's home address. If not available, set it to "".
