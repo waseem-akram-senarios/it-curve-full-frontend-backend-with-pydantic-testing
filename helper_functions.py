@@ -17,7 +17,7 @@ from dotenv import load_dotenv
 from livekit.agents import Agent, function_tool
 import logging
 from side_functions import *
-
+import logging
 # Load variables from .env file
 load_dotenv()
 
@@ -272,6 +272,8 @@ class Assistant(Agent):
         office_phone: str,
         total_passengers: int,
         total_wheelchairs: int,
+        is_will_call: bool,
+        will_call_day: str,
         ):
         """"Function that is used to book a new trip.
         Args:
@@ -309,6 +311,8 @@ class Assistant(Agent):
             office_phone: Rider's Office Phone no. if not available, set it to "".
             total_passengers: total passenger count if not available, set it to 1.
             total_wheelchairs: total wheel chair count if not available, set it to 0.
+            is_will_call: true if booking time is not provided or booking time is will call else fasle.
+            will_call_day:Booking Date if mentioned by rider in this format 'Year-Month-Date 00:00:00' for the driver else get current date from memory, applicable only if is_will_call is true.
         """
         print(f"\n\n\nCalled Book a new trip function at: {datetime.now()}\n\n\n")
         # Start playing music asynchronously
@@ -497,6 +501,8 @@ class Assistant(Agent):
             data['addressInfo']["Trips"][0]["Details"][0]["tripInfo"]["CallBackInfo"] = phone_number
             data['addressInfo']["Trips"][0]["Details"][0]["dateInfo"]["PickupDate"] = booking_time
             data['addressInfo']["Trips"][0]["Details"][0]["dateInfo"]["IsScheduled"] = is_schedule
+            data['addressInfo']["Trips"][0]["Details"][0]["dateInfo"]["WillCallDay"] = will_call_day
+            data['addressInfo']["Trips"][0]["Details"][0]["dateInfo"]["IsWillCall"] = is_will_call
             data['addressInfo']["Trips"][0]["Details"][0]["passengerInfo"]["TotalPassengers"] = total_passengers
             data['addressInfo']["Trips"][0]["Details"][0]["passengerInfo"]["TotalWheelChairs"] = total_wheelchairs
 
@@ -511,6 +517,8 @@ class Assistant(Agent):
             data['addressInfo']["Trips"][0]["Details"][1]["dateInfo"]["PickupDate"] = booking_time
             data['addressInfo']["Trips"][0]["Details"][1]["dateInfo"]["IsScheduled"] = is_schedule
             data['addressInfo']["Trips"][0]["Details"][1]["tripInfo"]["CallBackInfo"] = phone_number
+            data['addressInfo']["Trips"][0]["Details"][1]["tripInfo"]["WillCallDay"] = will_call_day
+            data['addressInfo']["Trips"][0]["Details"][1]["tripInfo"]["IsWillCall"] = is_will_call
             data['addressInfo']["Trips"][0]["Details"][1]["passengerInfo"]["TotalPassengers"] = total_passengers
             data['addressInfo']["Trips"][0]["Details"][1]["passengerInfo"]["TotalWheelChairs"] = total_wheelchairs
 
@@ -681,6 +689,7 @@ class Assistant(Agent):
         print("\n\nCalled search_web function\n\n")
         # _ = asyncio.create_task(self.Play_Music())
         # await asyncio.sleep(2)
+        logging.info(f"web search payload: {prompt}")
 
         try:
             # Use the OpenAI API client to make the call
@@ -720,6 +729,7 @@ class Assistant(Agent):
         # await asyncio.sleep(2)
 
         prompt = f"""{prompt}.\n\nKeep your response as small and precise as possible."""
+        logging.info(f"\n\nPrompt for Address Search: {prompt}")
         print(f"\n\nPrompt for Address Search: {prompt}")
         print(f"\n\nCity: {city}")
         print(f"\n\nRegion: {state}")
