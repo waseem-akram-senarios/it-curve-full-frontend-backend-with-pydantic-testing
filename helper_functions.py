@@ -274,6 +274,10 @@ class Assistant(Agent):
         total_wheelchairs: int,
         is_will_call: bool,
         will_call_day: str,
+        pickup_remarks: str,
+        pickup_phone_number: str,
+        dropoff_remarks: str,
+        dropoff_phone_number: str,
         ):
         """"Function that is used to book a new trip.
         Args:
@@ -299,8 +303,8 @@ class Assistant(Agent):
             pickup_lng: Pickup address longitude else 0. I am applying  python float() so generate value accordingly
             dropoff_lat: Drop off address latitude else 0. I am applying  python float() so generate value accordingly
             dropoff_lng: Drop off address longitude else 0. I am applying  python float() so generate value accordingly
-            number_of_wheel_chairs: Number of wheel chairs if required by rider else 0. For example if rider is missing leg or specifically says, 'they require wheel chair'. I am applying  python int() so generate value accordingly
-            number_of_passengers: Number of passengers. If rider mentioned more than 1 passengers, set accordingly otherwise set it to 1. I am applying  python int() so generate value accordingly
+            number_of_wheel_chairs: Number of wheelchairs if required by rider else 0. For example if rider is missing leg or specifically says, 'they require wheel chair'. I am applying  python int() so generate value accordingly
+            number_of_passengers: Number of passengers. If rider mentioned more than 1 passenger, set accordingly otherwise set it to 1. I am applying  python int() so generate value accordingly
             family_id: Family Id else 0. I am applying  python int() so generate value accordingly
             is_schedule: 1 if the trip is scheduled for 20+ minutes from current time,also 1 if is_will_call true , else 0 if the trip is scheduled for now. I am applying  python int() so generate value accordingly,or if
             rider_id: Rider Id available in the memory either already in the memory or provided by the customer. If not available set it to -1. I am applying  python int() so generate value accordingly
@@ -310,9 +314,14 @@ class Assistant(Agent):
             home_phone: Rider's home phone no. If not available, set it to "".
             office_phone: Rider's Office Phone no. if not available, set it to "".
             total_passengers: total passenger count if not available, set it to 1.
-            total_wheelchairs: total wheel chair count if not available, set it to 0.
+            total_wheelchairs: total wheelchair count if not available, set it to 0.
             is_will_call: true if booking time is not provided or booking time is will call else fasle.
             will_call_day:Booking Date if mentioned by rider in this format 'Year-Month-Date 00:00:00' for the driver else get current date from memory, applicable only if is_will_call is true.
+            pickup_remarks: any remarks given explicitly for pickup address else "".
+            pickup_phone_number: if pickup phone number is explicitly provided else "".
+            dropoff_remarks: any remarks given explicitly for drop off address else "".
+            dropoff_phone_number: if drop off  phone number is explicitly provided else "".
+
         """
         print(f"\n\n\nCalled Book a new trip function at: {datetime.now()}\n\n\n")
         # Start playing music asynchronously
@@ -496,7 +505,8 @@ class Assistant(Agent):
             data['addressInfo']["Trips"][0]["Details"][0]["addressDetails"]["Longitude"] = pickup_lng
             data['addressInfo']["Trips"][0]["Details"][0]["addressDetails"]["State"] = pickup_state
             data['addressInfo']["Trips"][0]["Details"][0]["addressDetails"]["Zip"] = pickup_city_zip_code
-            data['addressInfo']["Trips"][0]["Details"][0]["addressDetails"]["Phone"] = home_phone
+            data['addressInfo']["Trips"][0]["Details"][0]["addressDetails"]["Phone"] = pickup_phone_number
+            data['addressInfo']["Trips"][0]["Details"][0]["addressDetails"]["Remarks"] = pickup_remarks
             data['addressInfo']["Trips"][0]["Details"][0]["tripInfo"]["ExtraInfo"] = extra_details
             data['addressInfo']["Trips"][0]["Details"][0]["tripInfo"]["CallBackInfo"] = phone_number
             data['addressInfo']["Trips"][0]["Details"][0]["dateInfo"]["PickupDate"] = booking_time
@@ -513,7 +523,8 @@ class Assistant(Agent):
             data['addressInfo']["Trips"][0]["Details"][1]["addressDetails"]["Longitude"] = dropoff_lng
             data['addressInfo']["Trips"][0]["Details"][1]["addressDetails"]["State"] = dropoff_state
             data['addressInfo']["Trips"][0]["Details"][1]["addressDetails"]["Zip"] = dropoff_city_zip_code
-            data['addressInfo']["Trips"][0]["Details"][1]["addressDetails"]["Phone"] = home_phone
+            data['addressInfo']["Trips"][0]["Details"][1]["addressDetails"]["Phone"] = dropoff_phone_number
+            data['addressInfo']["Trips"][0]["Details"][1]["addressDetails"]["Remarks"] = dropoff_remarks
             data['addressInfo']["Trips"][0]["Details"][1]["dateInfo"]["PickupDate"] = booking_time
             data['addressInfo']["Trips"][0]["Details"][1]["dateInfo"]["IsScheduled"] = is_schedule
             data['addressInfo']["Trips"][0]["Details"][1]["tripInfo"]["CallBackInfo"] = phone_number
