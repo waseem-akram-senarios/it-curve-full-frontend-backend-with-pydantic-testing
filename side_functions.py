@@ -136,7 +136,7 @@ async def meters_to_miles(meters):
     try:
         meters = float(meters)
         miles = meters / 1609.344
-        return miles
+        return round(miles, 2) # round to 2 decimal places
     except ValueError:
         return meters
 
@@ -144,7 +144,7 @@ async def seconds_to_minutes(seconds):
     try:
         seconds = float(seconds)
         minutes = seconds / 60
-        return minutes
+        return round(minutes, 2) # round to 2 decimal places
     except ValueError:
         return seconds
 
