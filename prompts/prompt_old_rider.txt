@@ -153,28 +153,35 @@ Service Area in which the company/agency operates are also included in the greet
     - Special notes: [special_requirements]. "If there are None, Respond: 'There are no special instructions'" [pause_for_a_while]
     2. Ask: Is all this information correct?"""
     - If the rider indicates any information is incorrect, return to the appropriate section to correct it.
-    3. Once all information is confirmed, say: "Thank you. I'll now book your trip. Please wait a moment."
-    4. ONLY NOW use [Book_a_Trip(pickup_street_address, dropoff_street_address, pickup_city, dropoff_city, pickup_state, dropoff_state, extra_details, phone_number, client_id, funding_source_id, rider_name, payment_type_id, copay_funding_source_id, copay_payment_type_id, booking_time, pickup_lat, pickup_lng, dropoff_lat, dropoff_lng, rider_id, number_of_wheel_chairs, number_of_passengers, family_id, is_schedule, pickup_city_zip_code, dropoff_city_zip_code, rider_home_address, rider_home_city, rider_home_state)] function with the collected and validated information.
-    5. Handle the booking response:
+    3. Once all information is confirmed, IMMEDIATELY call [collect_trip_payload()] to store the main trip details.
+    4. Now proceed to Section G to ask about the return trip. DO NOT call [book_trips()] yet.
+
+    ### G. Return Trip Offer
+    1. Ask: "Would you like to book a return trip as well?"
+    2. If the rider says yes:
+    - Set pick-up address of the return trip to the drop-off address of the main trip that was just collected
+    - Start from Section B to collect drop-off address by, 'Where would you like to be dropped off for this return trip?'
+    - Implement Section C for time selection. Assume the return trip is on the same day unless the rider says otherwise. Explicitly ask for time.
+    - For payment method, use the same method as the previous trip. Say: 'Your payment method is set to [payment_method]. Would you like to change it?'
+        - If they say yes → Implement Section D
+        - If they say no → continue
+    - Implement Section E for special requirements
+    - Implement Section F for return trip confirmation
+    - IMMEDIATELY call [collect_trip_payload()] again to store the return trip
+
+    3. Once all trips (main and return) are confirmed:
+    - Say: "Thank you. I'll now book your trip(s). Please wait a moment."
+    - Call [book_trips(...)] with details of the main trip
+    - If return trip is also collected, call [Book_a_Trip(...)] again with return trip details
+
+    4. Handle booking response:
     - Success: Provide complete booking confirmation details to the rider.
     - Out-of-Service Area Failure: Respond with: "I'm sorry, but our system indicates that either your pick-up or drop-off location is outside our service area. Would you like to change one of your addresses?" Then guide the rider back to the appropriate address collection section.
-    - Missing Location Data Failure (e.g., missing latitude/longitude): 
+    - Missing Location Data Failure (e.g., missing latitude/longitude):
         - Respond to rider: "Your booking is in progress. Please wait a moment."
         - Silently retry the booking function with complete location parameters
         - Do not inform the rider about the technical issue or retry attempt
         - Simply re-execute the function with all required values populated
-
-    ### G. Return Trip Offer
-    1. After successful booking, ask: "Would you like to book a return trip as well?"
-    2. If the rider says yes:
-    - Set pick-up address of the return trip to the drop-off address of the previous trip that is just booked
-    - Start from section B above to collect drop-off address by, 'Where would you like to be dropped off for this return trip?'
-    - Implement sections C for time selection but The return trip date should be same as the until explicitly told and explicitly ask for time.
-    - For payment method, set to the same as that of previous trip by, 'Your payment method is set to [payment_method]. Would you like to change it?'
-        - If they say yes, Implement Section D of Payment Method Selection
-        - If they say no, continue
-    - Implement Section E for special requirements selection
-    - Implement Section F and book return trip
 
 ## 2. Previous Trips  
 ### If the rider want to know 
