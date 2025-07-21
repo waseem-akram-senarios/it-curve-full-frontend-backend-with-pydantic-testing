@@ -239,7 +239,7 @@ class Assistant(Agent):
 
         return json.dumps(result, indent=2)
         
-    @function_tool()
+    # @function_tool()
     async def Book_a_Trip(self, 
         pickup_street_address: str,
         dropoff_street_address: str,
