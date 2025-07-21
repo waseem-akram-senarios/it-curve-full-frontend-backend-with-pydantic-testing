@@ -1728,7 +1728,8 @@ class Assistant(Agent):
             dropoff_phone_number: if drop off  phone number is explicitly provided else "".
 
         """
-        print(f"\n\n\nCalled Book a new trip function at: {datetime.now()}\n\n\n")
+        print(f"\n\n\nCalled collect_trip_payload function at: {datetime.now()}\n\n\n")
+        logging.info(f"\n\n\nCalled collect_trip_payload function at: {datetime.now()}\n\n\n")
         # Start playing music asynchronously
         # _ = asyncio.create_task(self.Play_Music())
         # await asyncio.sleep(2)
@@ -1960,18 +1961,20 @@ class Assistant(Agent):
             else:
                 self.return_leg = data
 
-            print(f"\n\n\nPayload Sent for booking: {data}\n\n\n")
-            logging.info(f"\n\n\nPayload Sent for booking: {data}\n\n\n")
+            print(f"\n\n\nPayload collected: {data}\n\n\n")
+            logging.info(f"\n\n\nPayload collected: {data}\n\n\n")
 
             return f"payload for trip:{data}"
 
         except Exception as e:
-            print(f"\n\nError occured in booking trip: {e}\n\n")
+            print(f"\n\nError occurred in collecting trip payload: {e}\n\n")
             return f"error: {e}"
 
 
     async def book_trips(self):
         """The function combine the trips to main leg payload and reserves the trip(s)"""
+
+        logging.info("book_trips function called...")
 
         if self.return_leg:
             payload = await combine_payload(self.main_leg,self.return_leg)
@@ -1998,7 +2001,7 @@ class Assistant(Agent):
 
                     response_text = ""
 
-                    for trip_data,irefId  in zip(payload1['addressInfo']["Trips"],irefid_list):
+                    for trip_data,irefId  in zip(payload['addressInfo']["Trips"],irefid_list):
                         estimates = trip_data['Details'][0]['estimatedInfo']
                         pickup_address = trip_data['Details'][0]['addressDetails']
                         dropoff_address = trip_data['Details'][1]['addressDetails']

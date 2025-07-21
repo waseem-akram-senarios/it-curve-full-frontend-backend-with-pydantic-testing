@@ -641,10 +641,13 @@ async def combine_payload(leg1: dict,leg2: dict):
     """
     The function adds only trips to main leg payload from return leg payload.
     """
+    logging.info("combine_payload function called...")
     combined_leg = copy.deepcopy(leg1)
     trip_from_leg2 = leg2.get("addressInfo",{}).get("Trips",[None])[0]
 
     if trip_from_leg2:
         combined_leg["addressInfo"]["Trips"].append(trip_from_leg2)
+
+    logging.info(f"combined_payload:{combined_leg}")
 
     return combined_leg
