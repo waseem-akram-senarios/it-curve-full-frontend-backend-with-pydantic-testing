@@ -33,12 +33,14 @@ MUSIC_PATH = os.path.join(App_Directory, "music.wav")
 openai_client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 class Assistant(Agent):
-    def __init__(self, call_sid=None, room=None, affiliate_id=None, instructions=None):
+    def __init__(self, call_sid=None, room=None, affiliate_id=None, instructions=None, main_leg=None, return_leg=None):
         """Initialize the assistant with a call SID and LiveKit room."""
         self.call_sid = call_sid  # Store the call SID for music control
         self.room = room  # Store the LiveKit room instance
         self.stop_music = False  # Flag to stop music
         self.affiliate_id = affiliate_id
+        self.main_leg = main_leg
+        self.return_leg = return_leg
         super().__init__(instructions=instructions)  # Initialize Agent with the instructions argument
 
     async def Play_Music(self):
@@ -1640,6 +1642,416 @@ class Assistant(Agent):
     async def pause_for_a_while(self):
         return asyncio.sleep(0.5)
 
+    @function_tool()
+    async def collect_trip_payload(self,
+                          pickup_street_address: str,
+                          dropoff_street_address: str,
+                          pickup_city: str,
+                          dropoff_city: str,
+                          pickup_state: str,
+                          dropoff_state: str,
+                          extra_details: str,
+                          phone_number: str,
+                          client_id: str,
+                          funding_source_id: str,
+                          rider_name: str,
+                          payment_type_id: str,
+                          copay_funding_source_id: str,
+                          copay_payment_type_id: str,
+                          booking_time: str,
+                          pickup_lat: str,
+                          pickup_lng: str,
+                          dropoff_lat: str,
+                          dropoff_lng: str,
+                          rider_id: str,
+                          number_of_wheel_chairs: str,
+                          number_of_passengers: str,
+                          family_id: str,
+                          is_schedule: str,
+                          pickup_city_zip_code: str,
+                          dropoff_city_zip_code: str,
+                          rider_home_address: str,
+                          rider_home_city: str,
+                          rider_home_state: str,
+                          home_phone: str,
+                          office_phone: str,
+                          total_passengers: int,
+                          total_wheelchairs: int,
+                          is_will_call: bool,
+                          will_call_day: str,
+                          pickup_remarks: str,
+                          pickup_phone_number: str,
+                          dropoff_remarks: str,
+                          dropoff_phone_number: str,
+                          ):
+        """"Function that is used to book a new trip.
+        Args:
+            pickup_street_address: Pickup Street Address confirmed by rider. Do not include city, state, country
+            dropoff_street_address: Dropoff Street Address confirmed by rider. Do not include city, state, country
+            pickup_city: Pickup city confirmed by rider else ''
+            dropoff_city: Dropoff city confirmed by rider else ''
+            pickup_state: Pickup State confirmed by rider else ''
+            dropoff_state: Dropoff State confirmed by rider else ''
+            pickup_city_zip_code: Pick Up City Zip Code else ''
+            dropoff_city_zip_code: Drop Off City Zip Code else ''
+            extra_details: Additional Notes if mentioned by rider for the driver else ''
+            phone_number: Phone number of rider else -1
+            client_id: Client Id else -1. I am applying  python int() so generate value accordingly
+            funding_source_id: Funding Source Id else -1. I am applying  python int() so generate value accordingly
+            affilaite_id: Affiliate Id else -1. I am applying  python int() so generate value accordingly
+            rider_name: Complete verified name of the rider if available. If you do not have verified name, use Complete Name of the rider used in conversation. If you do not have nane in your memory set it to ''
+            payment_type_id: Payment Type Id else -1. I am applying  python int() so generate value accordingly
+            copay_funding_source_id: Copay Funding Source Id else -1. I am applying  python int() so generate value accordingly
+            copay_payment_type_id: Copay Payment Type Id else -1. I am applying  python int() so generate value accordingly
+            booking_time: Booking Time if mentioned by rider in this format 'Year-Month-Date HH:MM' for the driver else ''. If the rider wants to book for now, get current time from memory. if is_will_call is true, set it to date today.
+            pickup_lat: Pickup address latitude else 0. I am applying  python float() so generate value accordingly
+            pickup_lng: Pickup address longitude else 0. I am applying  python float() so generate value accordingly
+            dropoff_lat: Drop off address latitude else 0. I am applying  python float() so generate value accordingly
+            dropoff_lng: Drop off address longitude else 0. I am applying  python float() so generate value accordingly
+            number_of_wheel_chairs: Number of wheelchairs if required by rider else 0. For example if rider is missing leg or specifically says, 'they require wheel chair'. I am applying  python int() so generate value accordingly
+            number_of_passengers: Number of passengers. If rider mentioned more than 1 passenger, set accordingly otherwise set it to 1. I am applying  python int() so generate value accordingly
+            family_id: Family Id else 0. I am applying  python int() so generate value accordingly
+            is_schedule: 1 if the trip is scheduled for 20+ minutes from current time,also 1 if is_will_call true , else 0 if the trip is scheduled for now. I am applying  python int() so generate value accordingly,or if
+            rider_id: Rider Id available in the memory either already in the memory or provided by the customer. If not available set it to -1. I am applying  python int() so generate value accordingly
+            rider_home_address: Home location of the rider present in the memory. If not available, set it to "".
+            rider_home_city: City of rider's home address. If not available, set it to "".
+            rider_home_state: State of rider's home address. If not available, set it to "".
+            home_phone: Rider's home phone no. If not available, set it to "".
+            office_phone: Rider's Office Phone no. if not available, set it to "".
+            total_passengers: total passenger count if not available, set it to 1.
+            total_wheelchairs: total wheelchair count if not available, set it to 0.
+            is_will_call: true if booking time is not provided or booking time is will call else fasle.
+            will_call_day:Booking Date if mentioned by rider in this format 'Year-Month-Date 00:00:00' for the driver else get current date from memory, applicable only if is_will_call is true.
+            pickup_remarks: any remarks given explicitly for pickup address else "".
+            pickup_phone_number: if pickup phone number is explicitly provided else "".
+            dropoff_remarks: any remarks given explicitly for drop off address else "".
+            dropoff_phone_number: if drop off  phone number is explicitly provided else "".
 
-# assistant = Assistant(affiliate_id=21)
-# asyncio.run(assistant.get_IDs('cash'))
+        """
+        print(f"\n\n\nCalled Book a new trip function at: {datetime.now()}\n\n\n")
+        # Start playing music asynchronously
+        # _ = asyncio.create_task(self.Play_Music())
+        # await asyncio.sleep(2)
+
+        # Check Pickup Address
+        pickup_error = await check_address_validity(pickup_lat, pickup_lng, "Pick Up")
+        if pickup_error:
+            # await asyncio.sleep(2)
+            # await self.Stop_Music()
+            return pickup_error
+
+        # Check Dropoff Address
+        dropoff_error = await check_address_validity(dropoff_lat, dropoff_lng, "Drop Off")
+        if dropoff_error:
+            # await asyncio.sleep(2)
+            # await self.Stop_Music()
+            return dropoff_error
+
+        distance = 0
+        duration = 0
+        distance_miles = 0
+        duration_minutes = 0
+        total_cost = 0
+        copay_cost = 0
+
+        try:
+            # Define the API URL and parameters
+            url = os.getenv("GET_DIRECTION")
+
+            params = {
+                'origin': f'{pickup_lat},{pickup_lng}',  # Origin coordinates
+                'destination': f'{dropoff_lat},{dropoff_lng}',  # Destination coordinates
+                'AppType': 'FCSTService'
+            }
+
+            logging.info(f"\n\n\nPayload Sent for distance and duration retrieval: {params}\n\n\n")
+
+            # Define your Basic Authentication credentials
+            auth = BasicAuth(os.getenv("GET_DIRECTION_USER"),
+                             os.getenv("GET_DIRECTION_PASSWORD"))  # Replace with your actual password
+
+            # Add headers to mimic Postman headers if needed
+            headers = {
+                'User-Agent': 'PostmanRuntime/7.43.4',  # Use the User-Agent as seen in Postman
+                'Accept': '*/*',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'Connection': 'keep-alive'
+            }
+
+            # Make the request
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, params=params, headers=headers, auth=auth) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        logging.info(f"\n\n\nResponse for distance and duration retrieval: {data}\n\n\n")
+                        distance = int(data["routes"][0]["legs"][0]["distance"]["value"])
+                        duration = int(data["routes"][0]["legs"][0]["duration"]["value"])
+                        print(f"Distance: {distance}")
+                        print(f"Duration: {duration}")
+                        url = os.getenv("GET_FARE_API")
+
+                        distance_miles = await meters_to_miles(distance)
+                        duration_minutes = await seconds_to_minutes(duration)
+
+                        # The JSON body data to be sent in the POST request
+                        data = {
+                            "distance": distance_miles,
+                            "travelTime": duration_minutes,
+                            "fundingSourceID": int(funding_source_id),
+                            "copy": 0,
+                            "numberOfWheelchairs": int(number_of_wheel_chairs),
+                            "numberOfPassengers": int(number_of_passengers),
+                            "classOfServiceID": 1,
+                            "affiliateID": int(self.affiliate_id),
+                            "pickupLatitude": float(pickup_lat),
+                            "pickupLongitude": float(pickup_lng),
+                            "copyFundingSourceID": int(copay_funding_source_id),
+                            "riderID": str(rider_id),
+                            "authorizedStaff": "string",
+                            "startFareZone": "string",
+                            "endFareZone": "string",
+                            "tspid": "string",
+                            "httpResponseCode": 100
+                        }
+
+                        logging.info(f"\n\n\nPayload for fare estimation: {data}\n\n\n")
+
+                        # Headers to be used in the request
+                        headers = {
+                            'Content-Type': 'application/json',  # Ensure that the body is sent as JSON
+                            'User-Agent': 'PostmanRuntime/7.43.4',  # Optional, can be omitted if not needed
+                        }
+
+                        # Making the POST request
+                        async with aiohttp.ClientSession() as session:
+                            async with session.post(url, json=data, headers=headers) as response:
+                                if response.status == 200:
+                                    # If successful, print the JSON response
+                                    response_data = await response.json()
+                                    logging.info(f"\n\n\nResponse for fare estimation: {response_data}\n\n\n")
+                                    total_cost = response_data["totalCost"]
+                                    copay_cost = response_data["copay"]
+                                    print(f"Total Cost: {total_cost}")
+                                    print(f"Copay Cost: {copay_cost}")
+                                else:
+                                    print(f"Request failed with status code: {response.status}")
+
+                    else:
+                        print(f"Request failed with status code: {response.status}")
+
+        except Exception as e:
+            print(f"Error in getting fare: {e}")
+            pass
+
+        pickup_lat = await safe_float(pickup_lat)
+        pickup_lng = await safe_float(pickup_lng)
+        dropoff_lat = await safe_float(dropoff_lat)
+        dropoff_lng = await safe_float(dropoff_lng)
+
+        try:
+            if str(is_schedule) == "1":
+                is_schedule = True
+            else:
+                is_schedule = False
+
+        except Exception as e:
+            print(f"Error in getting schedule status: {e}")
+            pass
+
+        try:
+
+            payload_path = os.path.join(App_Directory, "trip_book_payload.json")
+            # Step 1: Read the JSON file
+            with open(payload_path, 'r') as file:
+                data = json.load(file)
+
+            print(f"Phone number by LLM: {phone_number}")
+            phone_number = await format_phone_number(phone_number)
+            print(f"Phone number after formatting: {phone_number}")
+
+            client_id = await safe_int(client_id)
+            rider_id = await safe_int(rider_id)
+            affiliate_id = await safe_int(self.affiliate_id)
+            family_id = await safe_int(family_id)
+            funding_source_id = await safe_int(funding_source_id)
+            payment_type_id = await safe_int(payment_type_id)
+            copay_funding_source_id = await safe_int(copay_funding_source_id)
+            copay_payment_type_id = await safe_int(copay_payment_type_id)
+
+            # Rider and Affiliate Information
+            data["riderInfo"]["ID"] = client_id
+            data["riderInfo"]["PhoneNo"] = phone_number
+            data["riderInfo"]["PickupPerson"] = rider_name
+            data["riderInfo"]["RiderID"] = rider_id
+            data["riderInfo"]["ClientAddress"] = rider_home_address
+            data["riderInfo"]["ClientCity"] = rider_home_city
+            data["riderInfo"]["ClientState"] = rider_home_state
+
+            data['addressInfo']["Trips"][0]["Details"][0]["tripInfo"]["AffiliateID"] = affiliate_id
+            data['addressInfo']["Trips"][0]["Details"][1]["tripInfo"]["AffiliateID"] = affiliate_id
+            data['generalInfo']['RequestAffiliateID'] = affiliate_id
+            data['generalInfo']['FamilyID'] = family_id
+
+            # Pickup Payment Method Information
+            data['addressInfo']["Trips"][0]["Details"][0]["paymentInfo"]["FundingSourceID"] = funding_source_id
+            data['addressInfo']["Trips"][0]["Details"][0]["paymentInfo"]["PaymentTypeID"] = payment_type_id
+            data['addressInfo']["Trips"][0]["Details"][0]["paymentInfo"][
+                "iCopayFundingSourceID"] = copay_funding_source_id
+            data['addressInfo']["Trips"][0]["Details"][0]["paymentInfo"]["iActualPaymentTypeID"] = copay_payment_type_id
+
+            # Drop off Payment Method Information
+            data['addressInfo']["Trips"][0]["Details"][1]["paymentInfo"]["FundingSourceID"] = funding_source_id
+            data['addressInfo']["Trips"][0]["Details"][1]["paymentInfo"]["PaymentTypeID"] = payment_type_id
+            data['addressInfo']["Trips"][0]["Details"][1]["paymentInfo"][
+                "iCopayFundingSourceID"] = copay_funding_source_id
+            data['addressInfo']["Trips"][0]["Details"][1]["paymentInfo"]["iActualPaymentTypeID"] = copay_payment_type_id
+
+            # Pickup Address Information
+            data['addressInfo']["Trips"][0]["Details"][0]["addressDetails"]["Address"] = pickup_street_address
+            data['addressInfo']["Trips"][0]["Details"][0]["addressDetails"]["City"] = pickup_city
+            data['addressInfo']["Trips"][0]["Details"][0]["addressDetails"]["Latitude"] = pickup_lat
+            data['addressInfo']["Trips"][0]["Details"][0]["addressDetails"]["Longitude"] = pickup_lng
+            data['addressInfo']["Trips"][0]["Details"][0]["addressDetails"]["State"] = pickup_state
+            data['addressInfo']["Trips"][0]["Details"][0]["addressDetails"]["Zip"] = pickup_city_zip_code
+            data['addressInfo']["Trips"][0]["Details"][0]["addressDetails"]["Phone"] = pickup_phone_number
+            data['addressInfo']["Trips"][0]["Details"][0]["addressDetails"]["Remarks"] = pickup_remarks
+            data['addressInfo']["Trips"][0]["Details"][0]["tripInfo"]["ExtraInfo"] = extra_details
+            data['addressInfo']["Trips"][0]["Details"][0]["tripInfo"]["CallBackInfo"] = phone_number
+            data['addressInfo']["Trips"][0]["Details"][0]["dateInfo"]["PickupDate"] = booking_time
+            data['addressInfo']["Trips"][0]["Details"][0]["dateInfo"]["IsScheduled"] = is_schedule
+            data['addressInfo']["Trips"][0]["Details"][0]["dateInfo"]["WillCallDay"] = will_call_day
+            data['addressInfo']["Trips"][0]["Details"][0]["dateInfo"]["IsWillCall"] = is_will_call
+            data['addressInfo']["Trips"][0]["Details"][0]["passengerInfo"]["TotalPassengers"] = total_passengers
+            data['addressInfo']["Trips"][0]["Details"][0]["passengerInfo"]["TotalWheelChairs"] = total_wheelchairs
+
+            # Drop off Address Information
+            data['addressInfo']["Trips"][0]["Details"][1]["addressDetails"]["Address"] = dropoff_street_address
+            data['addressInfo']["Trips"][0]["Details"][1]["addressDetails"]["City"] = dropoff_city
+            data['addressInfo']["Trips"][0]["Details"][1]["addressDetails"]["Latitude"] = dropoff_lat
+            data['addressInfo']["Trips"][0]["Details"][1]["addressDetails"]["Longitude"] = dropoff_lng
+            data['addressInfo']["Trips"][0]["Details"][1]["addressDetails"]["State"] = dropoff_state
+            data['addressInfo']["Trips"][0]["Details"][1]["addressDetails"]["Zip"] = dropoff_city_zip_code
+            data['addressInfo']["Trips"][0]["Details"][1]["addressDetails"]["Phone"] = dropoff_phone_number
+            data['addressInfo']["Trips"][0]["Details"][1]["addressDetails"]["Remarks"] = dropoff_remarks
+            data['addressInfo']["Trips"][0]["Details"][1]["dateInfo"]["PickupDate"] = booking_time
+            data['addressInfo']["Trips"][0]["Details"][1]["dateInfo"]["IsScheduled"] = is_schedule
+            data['addressInfo']["Trips"][0]["Details"][1]["tripInfo"]["CallBackInfo"] = phone_number
+            data['addressInfo']["Trips"][0]["Details"][1]["tripInfo"]["WillCallDay"] = will_call_day
+            data['addressInfo']["Trips"][0]["Details"][1]["tripInfo"]["IsWillCall"] = is_will_call
+            data['addressInfo']["Trips"][0]["Details"][1]["passengerInfo"]["TotalPassengers"] = total_passengers
+            data['addressInfo']["Trips"][0]["Details"][1]["passengerInfo"]["TotalWheelChairs"] = total_wheelchairs
+
+            # Pickup Cost Information
+            data['addressInfo']["Trips"][0]["Details"][0]["estimatedInfo"]["EstimatedDistance"] = distance_miles
+            data['addressInfo']["Trips"][0]["Details"][0]["estimatedInfo"]["EstimatedTime"] = duration_minutes
+            data['addressInfo']["Trips"][0]["Details"][0]["estimatedInfo"]["EstimatedCost"] = total_cost
+            data['addressInfo']["Trips"][0]["Details"][0]["estimatedInfo"]["CoPay"] = copay_cost
+
+            # Drop off Cost Information
+            data['addressInfo']["Trips"][0]["Details"][1]["estimatedInfo"]["EstimatedDistance"] = distance
+            data['addressInfo']["Trips"][0]["Details"][1]["estimatedInfo"]["EstimatedTime"] = duration
+            data['addressInfo']["Trips"][0]["Details"][1]["estimatedInfo"]["EstimatedCost"] = total_cost
+            data['addressInfo']["Trips"][0]["Details"][1]["estimatedInfo"]["CoPay"] = copay_cost
+
+            # adding payload to agent memory
+
+            if self.main_leg is None:
+                self.main_leg = data
+            else:
+                self.return_leg = data
+
+            print(f"\n\n\nPayload Sent for booking: {data}\n\n\n")
+            logging.info(f"\n\n\nPayload Sent for booking: {data}\n\n\n")
+
+            return f"payload for trip:{data}"
+
+        except Exception as e:
+            print(f"\n\nError occured in booking trip: {e}\n\n")
+            return f"error: {e}"
+
+
+    async def book_trips(self):
+        """The function combine the trips to main leg payload and reserves the trip(s)"""
+
+        if self.return_leg:
+            payload = await combine_payload(self.main_leg,self.return_leg)
+        else:
+            payload = self.main_leg
+
+        # Step 2: Set the endpoint
+        url = os.getenv("TRIP_BOOKING_API")
+
+        print(f"\n\n\nPayload Sent for booking: {payload}\n\n\n")
+        logging.info(f"\n\n\nPayload Sent for booking: {payload}\n\n\n")
+
+        # Step 3: Send the data to the API
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url, json=payload) as response:
+                response =  await response.json()
+
+
+                if response['responseCode'] == 200:
+
+                    irefid_list = [response['iRefID']]
+                    if not response['iRefID'] is None:
+                        irefid_list + response['returnLegsList']
+
+                    response_text = ""
+
+                    for trip_data,irefId  in zip(payload1['addressInfo']["Trips"],irefid_list):
+                        estimates = trip_data['Details'][0]['estimatedInfo']
+                        pickup_address = trip_data['Details'][0]['addressDetails']
+                        dropoff_address = trip_data['Details'][1]['addressDetails']
+                        pickup_address_complete = pickup_address['Address'] + pickup_address['City'] + pickup_address['State']
+                        dropoff_address_complete = dropoff_address['Address'] + dropoff_address['City'] + dropoff_address['State']
+                        estimate_distance = estimates["EstimatedDistance"]
+                        estimate_time = estimates['EstimatedTime']
+                        estimate_cost = estimates['EstimatedCost']
+                        copay_cost = estimates['CoPay']
+
+
+
+                        prompt = f"""What is the current weather in {dropoff_address_complete}? Provide a concise response with exactly two lines:
+                
+                            Line 1: State the temperature in Fahrenheit (numbers only, no unit) and current sky conditions.
+                            Line 2: Give relevant weather-appropriate advice.
+                
+                            Format example:
+                            "The temperature is 72 and the sky is clear. It's a perfect day for a ride."
+                
+                            Requirements:
+                            - Temperature in Fahrenheit without the °F unit
+                            - Current sky conditions (clear, cloudy, rainy, etc.)
+                            - Practical advice based on the weather conditions
+                            - Keep response to exactly two lines
+                            """
+                        weather = await search_web_manual(prompt)
+                        print(f"\n\nWeather: {weather}\n\n")
+
+                        # await asyncio.sleep(2)
+                        # await self.Stop_Music()
+
+                        try:
+
+                            # Step 4: Process the response
+                            if response["responseCode"] == 200:
+                                print(f"\n\nResponse: {response}\n\n\n")
+                                irefId = response['iRefID']
+                                if irefId == 0:
+                                    return "Your trip could not be booked!"
+
+                                if str(copay_cost) == "0":
+                                    response_text += f"Trip has been booked! Your Trip Number is {irefId}. It will take around {estimate_time} minutes and distance between your pick up and drop off is {estimate_distance} miles. Total Cost is {estimate_cost}$. Weather in drop off location is {weather}."
+                                else:
+                                    response_text += f"Trip has been booked! Your Trip Number is {irefId}. It will take around {estimate_time} minutes and distance between your pick up and drop off is {estimate_distance} miles. Total Cost is {estimate_cost}$ and cost related to copay is {copay_cost}$. Weather in drop off location is {weather}."
+
+                            else:
+                                response_text += "Trip has not been booked!"
+
+
+                            return response_text
+
+                        except Exception as e:
+                            print(f"\n\nError occured in book a trip function: {e}\n\n")
+                            return "Trip has not been booked!"
+
