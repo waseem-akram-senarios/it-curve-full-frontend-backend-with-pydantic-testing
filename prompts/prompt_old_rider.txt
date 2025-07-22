@@ -159,6 +159,7 @@ Service Area in which the company/agency operates are also included in the greet
     1. Ask: "Would you like to book a return trip as well?"
     2. If the rider says yes:
     - Set pick-up address of the return trip to the drop-off address of the main trip that was just collected
+    - Return Trip date should be same as main trip if not provided
     - Start from Section B to collect drop-off address by, 'Where would you like to be dropped off for this return trip?'
     - Implement Section C for time selection. Assume the return trip is on the same day unless the rider says otherwise. Explicitly ask for time.
     - For payment method, use the same method as the previous trip. Say: 'Your payment method is set to [payment_method]. Would you like to change it?'

@@ -2315,7 +2315,7 @@ class Assistant(Agent):
         url = os.getenv("TRIP_BOOKING_API")
 
         # print(f"\n\n\nPayload Sent for booking: {payload}\n\n\n")
-        logging.info(f"\n\n\nPayload Sent for booking: {payload}\n\n\n")
+        logging.info("\n\n\nPayload Sent for booking:",payload)
 
         # Step 3: Send the data to the API
         async with aiohttp.ClientSession() as session:
