@@ -124,6 +124,8 @@ class Assistant(Agent):
         if self.call_sid:
             try:
                 print(f"Requested Call Ending for Call SID: {self.call_sid}")
+                await self.asterisk_call_disconnect()
+                logging.info("asterisk call disconnected...")
                 TWILIO_CLIENT.calls(self.call_sid).update(status="completed")
                 call_closed_msg = f"Call has been ended successfully."
             except Exception as e:
@@ -2395,6 +2397,7 @@ class Assistant(Agent):
                             else:
                                 response_text += "Trip has not been booked!"
 
+                            logging.info("Booking response:",response_text)
                             return response_text
 
                         except Exception as e:
