@@ -707,7 +707,7 @@ class Assistant(Agent):
 
         """Function to search web to get knowledge.
         Args:
-            prompt: Prompt for web search. Keep it as precise and to the point as possible. 
+            prompt: Prompt for web search. Keep it as precise and to the point as possible at max 3-4 lines.
         """
         print("\n\nCalled search_web function\n\n")
         # _ = asyncio.create_task(self.Play_Music())
