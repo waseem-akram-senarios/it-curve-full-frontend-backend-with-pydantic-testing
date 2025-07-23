@@ -2377,15 +2377,12 @@ class Assistant(Agent):
                         weather = await search_web_manual(prompt)
                         print(f"\n\nWeather: {weather}\n\n")
 
-                        # await asyncio.sleep(2)
-                        # await self.Stop_Music()
-
                         try:
 
                             # Step 4: Process the response
                             if response["responseCode"] == 200:
                                 print(f"\n\nResponse: {response}\n\n\n")
-                                irefId = response['iRefID']
+                                # irefId = response['iRefID']
                                 if irefId == 0:
                                     return "Your trip could not be booked!"
 
@@ -2397,7 +2394,7 @@ class Assistant(Agent):
                             else:
                                 response_text += "Trip has not been booked!"
 
-                            logging.info("Booking response:",response_text)
+                            logging.info(f"Booking response:{response_text}")
                             return response_text
 
                         except Exception as e:
