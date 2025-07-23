@@ -16,12 +16,20 @@ from openai import AsyncOpenAI
 from dotenv import load_dotenv
 from livekit.agents import Agent, function_tool
 import logging
+from livekit.agents.voice import Agent, AgentSession, RunContext
+from livekit.protocol.sip import TransferSIPParticipantRequest
+from livekit import api
+from livekit.rtc import SipDTMF
 from side_functions import *
 import logging
+
 # Load variables from .env file
 load_dotenv()
 
 App_Directory = Path(__file__).parent
+
+logger = logging.getLogger("transfer-logger")
+logger.setLevel(logging.INFO)
 
 # Twilio credentials (from environment)
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
@@ -31,6 +39,7 @@ TWILIO_CLIENT = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 MUSIC_PATH = os.path.join(App_Directory, "music.wav")
 
 openai_client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
 
 class Assistant(Agent):
     def __init__(self, call_sid=None, room=None, affiliate_id=None, instructions=None, main_leg=None, return_leg=None):
@@ -103,13 +112,13 @@ class Assistant(Agent):
         except Exception as e:
             print(f"\n\nError stopping music: {e}\n\n")
             return "Failed to stop music."
-    
+
     @function_tool()
     async def Close_Call(self):
         """Function to end Twilio call and disconnect from the LiveKit room."""
         print(f"\n\n\ncalled close call function\n\n\n")
         await self.session.say('Thank you for reaching out. Have a great day!')
-        
+
         # Step 1: End the Twilio call
         call_closed_msg = "No active call found."
         if self.call_sid:
@@ -132,12 +141,11 @@ class Assistant(Agent):
 
         return f"{call_closed_msg} {room_closed_msg}"
 
-        
     @function_tool()
     async def get_client_name(self,
-        caller_number: str, 
-        family_id: str,                     
-        ):
+                              caller_number: str,
+                              family_id: str,
+                              ):
         """Function to get Rider Profile
         Args:
             caller_number: Rider Phone Number in digits
@@ -169,7 +177,7 @@ class Assistant(Agent):
 
             # Define the headers
             headers = {
-                "Content-Type": "application/json",  
+                "Content-Type": "application/json",
             }
 
             print(f"\n\nPayload sent by LLM: {payload}\n\n")
@@ -182,12 +190,12 @@ class Assistant(Agent):
         except Exception as e:
             print(f"\n\nError occured in getting rider profile: {e}\n\n")
             pass
-        
+
         result = {}
         rider_count = 0
-        
+
         try:
-            if response["responseCode"] == 200: 
+            if response["responseCode"] == 200:
                 client_object = response["responseJSON"]
                 # print(type(client_object))
                 client_list = json.loads(client_object)
@@ -202,7 +210,7 @@ class Assistant(Agent):
                         rider_id = rider_id if rider_id != 0 else "Unknown"
                     else:
                         rider_id = "Unknown"
-                    
+
                     rider_data = {
                         "name": name,
                         "client_id": int(client['Id']),
@@ -210,7 +218,7 @@ class Assistant(Agent):
                         "state": client["State"],
                         "current_location/home_address": client["Address"],
                         "rider_id": rider_id,
-                        "number_of_existing_trips" : number_of_existing_trips
+                        "number_of_existing_trips": number_of_existing_trips
                     }
 
                     result[f"rider_{i}"] = rider_data
@@ -220,25 +228,25 @@ class Assistant(Agent):
                 print("Request failed!")
                 result["number_of_riders"] = 1
                 result["rider_1"] = {
-                    "name" : "new_rider",
-                    "client_id" : "-1",
-                    "city" : "Unknown",
-                    "state" : "Unknown",
-                    "current_location" : "Unknown",
-                    "rider_id" : "-1",
-                    "number_of_existing_trips" : 0
+                    "name": "new_rider",
+                    "client_id": "-1",
+                    "city": "Unknown",
+                    "state": "Unknown",
+                    "current_location": "Unknown",
+                    "rider_id": "-1",
+                    "number_of_existing_trips": 0
                 }
         except Exception as e:
             print(f"Error occurred in getting client Name: {e}")
             result["number_of_riders"] = rider_count
-        
+
         print(f"\n\nResult: {result}\n\n")
 
         # await asyncio.sleep(2)
         # await self.Stop_Music()
 
         return json.dumps(result, indent=2)
-        
+
     # @function_tool()
     # async def Book_a_Trip(self,
     #     pickup_street_address: str,
@@ -603,7 +611,7 @@ class Assistant(Agent):
     #     except Exception as e:
     #         print(f"\n\nError occured in book a trip function: {e}\n\n")
     #         return "Trip has not been booked!"
-        
+
     @function_tool()
     async def get_ETA(self, client_id: str):
         """
@@ -673,7 +681,7 @@ class Assistant(Agent):
                                 }
 
                                 existing_trips_data = json.dumps(result, indent=4)
-                            
+
                             print(f"\n\nETA Reponse: {existing_trips_data}\n\n")
                             return existing_trips_data
                         except json.JSONDecodeError:
@@ -689,11 +697,11 @@ class Assistant(Agent):
 
             print(f"\n\nError occurred in getting client ETA: {e}\n\n")
             return "No data found for ETA!"
-    
+
     @function_tool()
     async def search_web(self,
-        prompt: str,
-        ):
+                         prompt: str,
+                         ):
 
         """Function to search web to get knowledge.
         Args:
@@ -711,25 +719,25 @@ class Assistant(Agent):
                 tools=[{"type": "web_search_preview"}],
                 input=prompt
             )
-        
+
             # Output the result
             # await asyncio.sleep(2)
             # await self.Stop_Music()
             return response.output_text
-        
+
         except Exception as e:
             # await asyncio.sleep(2)
             # await self.Stop_Music()
             print(f"Error in search web: {e}")
             return "Web search failed!"
-        
+
     @function_tool()
     async def get_address(self,
-        prompt: str,
-        country: str,
-        city: str,
-        state: str
-        ):
+                          prompt: str,
+                          country: str,
+                          city: str,
+                          state: str
+                          ):
         """Function to search the web for an address based on location details.
         Args:
             prompt: Prompt to search addresses and latitude and longitude of a location. Include the name of the location. e.g. To find nearest cinema to 20 pitts court prompt will be, 'Nearest cinema to 20 pitts court'
@@ -767,7 +775,7 @@ class Assistant(Agent):
 
             web_result = completion.choices[0].message.content
             print(f"\n\nResult from Address Search: {web_result}\n\n")
-            
+
             # Summarize the result
             result = await summarize_address_results(web_result)
             print(f"\n\nResult after summarization: {result}\n\n")
@@ -781,12 +789,11 @@ class Assistant(Agent):
             # await self.Stop_Music()
             print(f"Error in address search: {e}")
             return "Address retrieval failed!"
-        
-    
+
     @function_tool()
-    async def get_valid_addresses(self, 
-        address: str
-        ):
+    async def get_valid_addresses(self,
+                                  address: str
+                                  ):
         """Function to search valid addresses based on input address.
         Args:
             address: Complete Address confirmed by the rider to be validated.
@@ -802,7 +809,7 @@ class Assistant(Agent):
             result = await verify_address(address)
             print(f"\n\nValid Addresses Result from Web Search: {result}\n\n")
             if result["valid"]:
-                 # Extract latitude and longitude
+                # Extract latitude and longitude
                 lat = result["latitude"]
                 lng = result["longitude"]
                 is_within_service_area = await self.check_bounds(lat, lng)
@@ -834,31 +841,31 @@ class Assistant(Agent):
                         locations = data['results']
                         for i, location in enumerate(locations):
                             # Initialize the dictionary for each location
-                            result[f"Location_{i+1}"] = {}
-                            result[f"Location_{i+1}"]["Address"] = location["formatted_address"]
-                            result[f"Location_{i+1}"]["Coordinates"] = location['geometry']['location']
+                            result[f"Location_{i + 1}"] = {}
+                            result[f"Location_{i + 1}"]["Address"] = location["formatted_address"]
+                            result[f"Location_{i + 1}"]["Coordinates"] = location['geometry']['location']
 
                             # Extract latitude and longitude
                             lat = location['geometry']['location']['lat']
                             lng = location['geometry']['location']['lng']
                             is_within_service_area = await self.check_bounds(lat, lng)
-                            result[f"Location_{i+1}"]["isWithinServiceArea"] = is_within_service_area
+                            result[f"Location_{i + 1}"]["isWithinServiceArea"] = is_within_service_area
 
                     else:
                         print(f"ITC location error: status {resp.status}")
         except Exception as e:
             print(f"ITC location exception: {e}")
-        
+
         # await asyncio.sleep(2)
         # await self.Stop_Music()
         print(f"\n\nValid Addresses from ITC MAP API: {result}\n\n")
         return str(result)
-    
+
     @function_tool()
     async def check_bounds(self,
-        latitude: str,
-        longitude: str
-        ):
+                           latitude: str,
+                           longitude: str
+                           ):
         """Function to check if the address is within the service area based on provided coordinates.
         Args:
             latitude: Latitude of the location to be checked.
@@ -899,16 +906,16 @@ class Assistant(Agent):
                 return True
             else:
                 return False
-        
+
         except:
             # await asyncio.sleep(2)
             # await self.Stop_Music()
             return True
-        
+
     @function_tool()
-    async def get_IDs(self, 
-        account_: str,
-        ):
+    async def get_IDs(self,
+                      account_: str,
+                      ):
         """Function to fetch Funding Source Id, Program Id, Payment Type, and Copay Status based on provided account and affiliate details.
         Args:
             account_: Account name provided by the rider, else None
@@ -966,7 +973,7 @@ class Assistant(Agent):
 
             try:
                 parsed_response = json.loads(response)
-                
+
                 funding_id = parsed_response.get("FID", None)
                 program_id = parsed_response.get("ProgramID", None)
                 program_id = int(program_id)
@@ -990,7 +997,7 @@ class Assistant(Agent):
 
                     elif funding_id_str in copay_fs_list:
                         copay_status = True
-                
+
                     print(f"Got Copay Status: {copay_status}")
 
                 except Exception as e:
@@ -1001,9 +1008,8 @@ class Assistant(Agent):
 
                     # Define the payload
                     data = {
-                        "iaffiliateid":str(self.affiliate_id)
+                        "iaffiliateid": str(self.affiliate_id)
                     }
-                   
 
                     print(f"\n\n\nPayload Sent for Payment Type Selection: {data}\n\n\n")
 
@@ -1019,7 +1025,8 @@ class Assistant(Agent):
                                     paymenttype_prompt = f"""
                                     You are given a list of dictionaries enclosed in triple backticks: ```{response_dict}```
 
-                                    Your task is to find the dictionary whose 'PaymentType Name' value closely matches the account enclosed in double quotes: ``{account_}``
+                                    Your task is to find the dictionary whose 'PaymentType Name' value closely matches
+                                     the account enclosed in double quotes: ``{account_}``
 
                                     Return the matching dictionary in JSON format with the following fields:
 
@@ -1050,9 +1057,9 @@ class Assistant(Agent):
                                     print(f"Matching Response: {paymenttype_response}")
 
                                     paymenttype_response = json.loads(paymenttype_response)
-                
+
                                     paymenttype_id = paymenttype_response.get("PaymentType ID", None)
- 
+
                                 except Exception as e:
                                     print(f"Failed to decode JSON from string: {e}")
 
@@ -1072,22 +1079,25 @@ class Assistant(Agent):
             rider_verification = False
         else:
             rider_verification = True
-        
+
         # await asyncio.sleep(2)
         # await self.Stop_Music()
-        
+
         print("\n\n")
-        print(f"Verified Account Name is: {account_name}, Funding Source Id is: {funding_id}, Requires Rider Verification Status: {rider_verification}, Payment Type Id is: {paymenttype_id}, Require Copay Status is: {copay_status}, Program Id is {program_id}")
+        print(f"Verified Account Name is: {account_name}, Funding Source Id is: {funding_id},"
+              f" Requires Rider Verification Status: {rider_verification}, Payment Type Id is: {paymenttype_id},"
+              f" Require Copay Status is: {copay_status}, Program Id is {program_id}")
         print("\n\n")
-        return f"Verified Account Name is: {account_name}, Funding Source Id is: {funding_id}, Requires Rider Verification Status: {rider_verification}, Payment Type Id is: {paymenttype_id}, Require Copay Status is: {copay_status}, Program Id is {program_id}"
-    
+        return (f"Verified Account Name is: {account_name}, Funding Source Id is: {funding_id},"
+                f" Requires Rider Verification Status: {rider_verification}, Payment Type Id is: {paymenttype_id},"
+                f" Require Copay Status is: {copay_status}, Program Id is {program_id}")
+
     @function_tool()
     async def get_copay_ids(self,
-        copay_account_name: str
-        ):
+                            copay_account_name: str
+                            ):
         """Function to fetch copay payment type based on affiliate ID and copay account name.
         Args:
-            affiliate_id: Affiliate Id of the rider, else None.
             copay_account_name: Copay Account Name provided by the rider, else None.
         """
         # _ = asyncio.create_task(self.Play_Music())
@@ -1100,7 +1110,8 @@ class Assistant(Agent):
         prompt = f"""
         You are given a list of dictionaries enclosed in triple backticks: ```{funding_sources}```
 
-        Your task is to find the dictionary whose 'FundingSource' value closely matches the account enclosed in double quotes: ``{copay_account_name}``. 
+        Your task is to find the dictionary whose 'FundingSource' value closely matches the account enclosed in
+         double quotes: ``{copay_account_name}``. 
 
         Return the matching dictionary in JSON format with the following fields:
 
@@ -1132,7 +1143,7 @@ class Assistant(Agent):
 
         try:
             parsed_response = json.loads(response)
-            
+
             copay_funding_source_id = parsed_response.get("FID", None)
             copay_program_id = parsed_response.get("ProgramID", None)
             copay_program_id = int(copay_program_id)
@@ -1171,7 +1182,8 @@ class Assistant(Agent):
         prompt = f"""
         You are given a list of dictionaries enclosed in triple backticks: ```{response_dict}```
 
-        Your task is to find the dictionary whose 'PaymentType Name' value closely matches the account enclosed in double quotes: ``{copay_account_name}``. 
+        Your task is to find the dictionary whose 'PaymentType Name' value closely matches the account
+         enclosed in double quotes: ``{copay_account_name}``. 
 
         Return the matching dictionary in JSON format with the following fields:
 
@@ -1212,17 +1224,18 @@ class Assistant(Agent):
         print(f"\n\n\nCopay Funding Source Id: {copay_funding_source_id}\n\n\n")
         print(f"\n\n\nCopay Payment Type Id: {payment_type_id}\n\n\n")
 
-        return f"Verified Copay Account Name is: {verified_copay_account_name}, Copay Funding Source Id is: {copay_funding_source_id} and Copay Payment Type Id: {payment_type_id}"
-    
+        return (
+            f"Verified Copay Account Name is: {verified_copay_account_name}, Copay Funding Source Id is: {copay_funding_source_id} and"
+            f" Copay Payment Type Id: {payment_type_id}")
+
     @function_tool()
     async def verify_rider(self,
-        rider_id: str,
-        program_id: str
-        ):
+                           rider_id: str,
+                           program_id: str
+                           ):
         """Function to verify rider based on rider_id, affiliate_id, and program_id.
         Args:
             rider_id: Rider Id, else -1.
-            affiliate_id: Affiliate Id of the rider, else None.
             program_id: Program Id, else -1.
         """
         # _ = asyncio.create_task(self.Play_Music())
@@ -1259,9 +1272,9 @@ class Assistant(Agent):
                             rider_status = response_dict["VerificationSuccess"]
                         except Exception as e:
                             print(f"Failed to decode JSON from string: {e}")
-            
+
             verified_rider_name = ""
-            
+
             if rider_status:
                 get_name_url = os.getenv("GET_NAME_API")
 
@@ -1282,10 +1295,10 @@ class Assistant(Agent):
                                 response_dict = json.loads(response_text)
                                 verified_rider_name += str(response_dict["FirstName"]) + " "
                                 verified_rider_name += str(response_dict["LastName"])
-                                
+
                             except Exception as e:
                                 print(f"Failed to decode JSON from string: {e}")
-            
+
             print(f"Rider Verification Status: {rider_status}")
             print(f"Verified Rider Name: {verified_rider_name}")
         except Exception as e:
@@ -1301,11 +1314,10 @@ class Assistant(Agent):
             else:
                 return f"Rider is Verified! Verified Rider Name is {verified_rider_name}"
 
-
     @function_tool()
     async def get_Trip_Stats(self,
-        client_id: str
-        ):
+                             client_id: str
+                             ):
         """Function to get Trip ETA or to know where is rider's current ride.
         Args:
             client_id: Client Id in digits
@@ -1315,7 +1327,7 @@ class Assistant(Agent):
 
         # _ = asyncio.create_task(self.Play_Music())
         # await asyncio.sleep(2)
-        
+
         # Define the API endpoint
         url = os.getenv("TRIP_STATS_API")
 
@@ -1323,7 +1335,7 @@ class Assistant(Agent):
 
         # Create the payload (request body)
         payload = {
-        "iclientid": client_id
+            "iclientid": client_id
         }
 
         # Define the headers
@@ -1353,17 +1365,17 @@ class Assistant(Agent):
                         # await self.Stop_Music()
                         print("\n\nFailed to decode JSON. Raw response:\n", text)
                         return "No valid JSON data found!"
-                    
+
         except Exception as e:
             # await asyncio.sleep(2)
             # await self.Stop_Music()
             print(f"\n\nError occurred in getting trip stats: {e}\n\n")
             return "No data found!"
-        
+
     @function_tool()
     async def get_historic_rides(self,
-        client_id: str
-        ):
+                                 client_id: str
+                                 ):
         """Function to get
         - Performed trips
         - Latest/Last Historic trip
@@ -1375,7 +1387,7 @@ class Assistant(Agent):
         Args:
             client_id: Client Id in digits
         """
-        
+
         print(f"\n\nCalled get_historic_rides function\n\n")
 
         # _ = asyncio.create_task(self.Play_Music())
@@ -1427,14 +1439,14 @@ class Assistant(Agent):
 
         if historic_trips_data.strip() == "":
             historic_trips_data = "No Data Available"
-        
+
         historic_trips_data_result = f"""Rider Historic/Past/Completed Trips are: ``{historic_trips_data}``\n
         """
         print(f"\n\nHistoric Rides: {historic_trips_data}\n\n")
         # await asyncio.sleep(2)
         # await self.Stop_Music()
         return historic_trips_data_result
-    
+
     @function_tool()
     async def get_frequnt_addresses(self, client_id: str):
 
@@ -1479,19 +1491,21 @@ class Assistant(Agent):
                         address_data_json = json.loads(address_data)
 
                         for trip in address_data_json:
-                            pickup_address = trip.get("PUAddress", "") + trip.get("PUCity", "") + trip.get("PUState", "")
-                            dropoff_address = trip.get("DOAddress", "") + trip.get("DOCity", "") + trip.get("DOState", "")
+                            pickup_address = trip.get("PUAddress", "") + trip.get("PUCity", "") + trip.get("PUState",
+                                                                                                           "")
+                            dropoff_address = trip.get("DOAddress", "") + trip.get("DOCity", "") + trip.get("DOState",
+                                                                                                            "")
                             frequent_addresses += pickup_address + "\n" + dropoff_address + "\n"
                     else:
                         frequent_addresses = ""
-                    
+
                 except json.JSONDecodeError:
                     print("Failed to parse response as JSON.")
                     print("Raw Response:", response_text)
 
         if frequent_addresses.strip() == "":
             frequent_addresses = "No Data Available"
-        
+
         frequent_addresses_result = f"""Rider Frequently Used Addresses are: ``{frequent_addresses}``\n
         Only use these addresses for address completion. Use [get_ETA] function to get Last/Latest trip details
         """
@@ -1501,14 +1515,14 @@ class Assistant(Agent):
 
     @function_tool()
     async def get_distance_duration_fare(self,
-        pickup_latitude: str,
-        dropoff_latitude: str,
-        pickup_longitude: str,
-        dropoff_longitude: str,
-        number_of_wheel_chairs: str,
-        number_of_passengers: str,
-        rider_id: str,
-        ):
+                                         pickup_latitude: str,
+                                         dropoff_latitude: str,
+                                         pickup_longitude: str,
+                                         dropoff_longitude: str,
+                                         number_of_wheel_chairs: str,
+                                         number_of_passengers: str,
+                                         rider_id: str,
+                                         ):
         """Function to Distance and Trip Duration between two locations
         Args:
             pickup_latitude: Pickup Address Latitude in string. If not available, set it to 0.
@@ -1529,7 +1543,7 @@ class Assistant(Agent):
             # await asyncio.sleep(2)
             # await self.Stop_Music()
             return "Pick Up address is not verified. Use [get_valid_addresses] function to verify it first"
-        
+
         if dropoff_latitude == "0" or dropoff_longitude == "0":
             # await asyncio.sleep(2)
             # await self.Stop_Music()
@@ -1544,7 +1558,7 @@ class Assistant(Agent):
 
             # Define the API URL and parameters
             url = os.getenv("GET_DIRECTION")
-            
+
             params = {
                 'origin': f'{pickup_latitude},{pickup_longitude}',  # Origin coordinates
                 'destination': f'{dropoff_latitude},{dropoff_longitude}',  # Destination coordinates
@@ -1552,9 +1566,10 @@ class Assistant(Agent):
             }
 
             logging.info(f"\n\n\nPayload Sent for distance and duration retrieval: {params}\n\n\n")
-            
+
             # Define your Basic Authentication credentials
-            auth = BasicAuth(os.getenv("GET_DIRECTION_USER"), os.getenv("GET_DIRECTION_PASSWORD"))  # Replace with your actual password
+            auth = BasicAuth(os.getenv("GET_DIRECTION_USER"),
+                             os.getenv("GET_DIRECTION_PASSWORD"))  # Replace with your actual password
 
             # Add headers to mimic Postman headers if needed
             headers = {
@@ -1570,7 +1585,7 @@ class Assistant(Agent):
                     if response.status == 200:
                         data = await response.json()
                         logging.info(f"\n\n\nResponse for distance and duration retrieval: {data}\n\n\n")
-                        distance = int(data["routes"][0]["legs"][0]["distance"]["value"]) 
+                        distance = int(data["routes"][0]["legs"][0]["distance"]["value"])
                         duration = int(data["routes"][0]["legs"][0]["duration"]["value"])
                         print(f"Distance: {distance}")
                         print(f"Duration: {duration}")
@@ -1579,7 +1594,7 @@ class Assistant(Agent):
 
                         distance_miles = await meters_to_miles(distance)
                         duration_minutes = await seconds_to_minutes(duration)
-            
+
                         # The JSON body data to be sent in the POST request
                         data = {
                             "distance": distance_miles,
@@ -1634,7 +1649,7 @@ class Assistant(Agent):
 
         if distance_miles == 0 and duration_minutes == 0:
             return "Could not get distance and duration from API!"
-        
+
         return f"""Distance between two locations is {distance_miles} miles, it will take around {duration_minutes} minutes while Cost is ${total_cost}
         """
 
@@ -1645,46 +1660,46 @@ class Assistant(Agent):
 
     @function_tool()
     async def collect_main_trip_payload(self,
-                          pickup_street_address: str,
-                          dropoff_street_address: str,
-                          pickup_city: str,
-                          dropoff_city: str,
-                          pickup_state: str,
-                          dropoff_state: str,
-                          extra_details: str,
-                          phone_number: str,
-                          client_id: str,
-                          funding_source_id: str,
-                          rider_name: str,
-                          payment_type_id: str,
-                          copay_funding_source_id: str,
-                          copay_payment_type_id: str,
-                          booking_time: str,
-                          pickup_lat: str,
-                          pickup_lng: str,
-                          dropoff_lat: str,
-                          dropoff_lng: str,
-                          rider_id: str,
-                          number_of_wheel_chairs: str,
-                          number_of_passengers: str,
-                          family_id: str,
-                          is_schedule: str,
-                          pickup_city_zip_code: str,
-                          dropoff_city_zip_code: str,
-                          rider_home_address: str,
-                          rider_home_city: str,
-                          rider_home_state: str,
-                          home_phone: str,
-                          office_phone: str,
-                          total_passengers: int,
-                          total_wheelchairs: int,
-                          is_will_call: bool,
-                          will_call_day: str,
-                          pickup_remarks: str,
-                          pickup_phone_number: str,
-                          dropoff_remarks: str,
-                          dropoff_phone_number: str,
-                          ):
+                                        pickup_street_address: str,
+                                        dropoff_street_address: str,
+                                        pickup_city: str,
+                                        dropoff_city: str,
+                                        pickup_state: str,
+                                        dropoff_state: str,
+                                        extra_details: str,
+                                        phone_number: str,
+                                        client_id: str,
+                                        funding_source_id: str,
+                                        rider_name: str,
+                                        payment_type_id: str,
+                                        copay_funding_source_id: str,
+                                        copay_payment_type_id: str,
+                                        booking_time: str,
+                                        pickup_lat: str,
+                                        pickup_lng: str,
+                                        dropoff_lat: str,
+                                        dropoff_lng: str,
+                                        rider_id: str,
+                                        number_of_wheel_chairs: str,
+                                        number_of_passengers: str,
+                                        family_id: str,
+                                        is_schedule: str,
+                                        pickup_city_zip_code: str,
+                                        dropoff_city_zip_code: str,
+                                        rider_home_address: str,
+                                        rider_home_city: str,
+                                        rider_home_state: str,
+                                        home_phone: str,
+                                        office_phone: str,
+                                        total_passengers: int,
+                                        total_wheelchairs: int,
+                                        is_will_call: bool,
+                                        will_call_day: str,
+                                        pickup_remarks: str,
+                                        pickup_phone_number: str,
+                                        dropoff_remarks: str,
+                                        dropoff_phone_number: str,
+                                        ):
         """"Function that is used to collect the payload for the trips.
         Args:
             pickup_street_address: Pickup Street Address confirmed by rider. Do not include city, state, country
@@ -1973,46 +1988,46 @@ class Assistant(Agent):
 
     @function_tool()
     async def collect_return_trip_payload(self,
-                                        pickup_street_address: str,
-                                        dropoff_street_address: str,
-                                        pickup_city: str,
-                                        dropoff_city: str,
-                                        pickup_state: str,
-                                        dropoff_state: str,
-                                        extra_details: str,
-                                        phone_number: str,
-                                        client_id: str,
-                                        funding_source_id: str,
-                                        rider_name: str,
-                                        payment_type_id: str,
-                                        copay_funding_source_id: str,
-                                        copay_payment_type_id: str,
-                                        booking_time: str,
-                                        pickup_lat: str,
-                                        pickup_lng: str,
-                                        dropoff_lat: str,
-                                        dropoff_lng: str,
-                                        rider_id: str,
-                                        number_of_wheel_chairs: str,
-                                        number_of_passengers: str,
-                                        family_id: str,
-                                        is_schedule: str,
-                                        pickup_city_zip_code: str,
-                                        dropoff_city_zip_code: str,
-                                        rider_home_address: str,
-                                        rider_home_city: str,
-                                        rider_home_state: str,
-                                        home_phone: str,
-                                        office_phone: str,
-                                        total_passengers: int,
-                                        total_wheelchairs: int,
-                                        is_will_call: bool,
-                                        will_call_day: str,
-                                        pickup_remarks: str,
-                                        pickup_phone_number: str,
-                                        dropoff_remarks: str,
-                                        dropoff_phone_number: str,
-                                        ):
+                                          pickup_street_address: str,
+                                          dropoff_street_address: str,
+                                          pickup_city: str,
+                                          dropoff_city: str,
+                                          pickup_state: str,
+                                          dropoff_state: str,
+                                          extra_details: str,
+                                          phone_number: str,
+                                          client_id: str,
+                                          funding_source_id: str,
+                                          rider_name: str,
+                                          payment_type_id: str,
+                                          copay_funding_source_id: str,
+                                          copay_payment_type_id: str,
+                                          booking_time: str,
+                                          pickup_lat: str,
+                                          pickup_lng: str,
+                                          dropoff_lat: str,
+                                          dropoff_lng: str,
+                                          rider_id: str,
+                                          number_of_wheel_chairs: str,
+                                          number_of_passengers: str,
+                                          family_id: str,
+                                          is_schedule: str,
+                                          pickup_city_zip_code: str,
+                                          dropoff_city_zip_code: str,
+                                          rider_home_address: str,
+                                          rider_home_city: str,
+                                          rider_home_state: str,
+                                          home_phone: str,
+                                          office_phone: str,
+                                          total_passengers: int,
+                                          total_wheelchairs: int,
+                                          is_will_call: bool,
+                                          will_call_day: str,
+                                          pickup_remarks: str,
+                                          pickup_phone_number: str,
+                                          dropoff_remarks: str,
+                                          dropoff_phone_number: str,
+                                          ):
         """"Function that is used to collect return trip payload.
         Args:
             pickup_street_address: Pickup Street Address confirmed by rider. Do not include city, state, country
@@ -2307,7 +2322,7 @@ class Assistant(Agent):
         logging.info("book_trips function called...")
 
         if self.return_leg:
-            payload = await combine_payload(self.main_leg,self.return_leg)
+            payload = await combine_payload(self.main_leg, self.return_leg)
         else:
             payload = self.main_leg
 
@@ -2315,7 +2330,7 @@ class Assistant(Agent):
         url = os.getenv("TRIP_BOOKING_API")
 
         # print(f"\n\n\nPayload Sent for booking: {payload}\n\n\n")
-        logging.info("\n\n\nPayload Sent for booking:",payload)
+        logging.info("\n\n\nPayload Sent for booking:", payload)
 
         # Step 3: Send the data to the API
         async with aiohttp.ClientSession() as session:
@@ -2330,12 +2345,14 @@ class Assistant(Agent):
 
                     response_text = ""
 
-                    for trip_data, irefId in zip(payload['addressInfo']["Trips"],irefid_list):
+                    for trip_data, irefId in zip(payload['addressInfo']["Trips"], irefid_list):
                         estimates = trip_data['Details'][0]['estimatedInfo']
                         pickup_address = trip_data['Details'][0]['addressDetails']
                         dropoff_address = trip_data['Details'][1]['addressDetails']
-                        pickup_address_complete = pickup_address['Address'] + pickup_address['City'] + pickup_address['State']
-                        dropoff_address_complete = dropoff_address['Address'] + dropoff_address['City'] + dropoff_address['State']
+                        pickup_address_complete = pickup_address['Address'] + pickup_address['City'] + pickup_address[
+                            'State']
+                        dropoff_address_complete = dropoff_address['Address'] + dropoff_address['City'] + \
+                                                   dropoff_address['State']
                         estimate_distance = estimates["EstimatedDistance"]
                         estimate_time = estimates['EstimatedTime']
                         estimate_cost = estimates['EstimatedCost']
@@ -2384,3 +2401,30 @@ class Assistant(Agent):
                             print(f"\n\nError occured in book a trip function: {e}\n\n")
                             return "Trip has not been booked!"
 
+    @function_tool()
+    async def asterisk_call_disconnect(self, participant_identity: str = None, room_name: str = None) -> None:
+
+        try:
+            async with api.LiveKitAPI() as livekit_api:
+                transfer_to = "sip:6000@139.64.158.216"
+
+                # Create transfer request
+                transfer_request = TransferSIPParticipantRequest(
+                    participant_identity='sip_3012082222',
+                    room_name=self.room.name,
+                    transfer_to=transfer_to,
+                    play_dialtone=False,
+                    # wait_until_answered=True,
+                )
+                logger.debug(f"Transfer request: {transfer_request}")
+
+                # Transfer caller
+                await livekit_api.sip.transfer_sip_participant(transfer_request)
+                logger.info(f"Successfully transferred participant {participant_identity} to {transfer_to}")
+        except Exception as e:
+            logger.info(e)
+
+    @function_tool()
+    async def send_dtmf_code(self, code: int, context: RunContext):
+        room = context.session.room
+        await room.local_participant.publish_dtmf(code=code, digit=str(code))
