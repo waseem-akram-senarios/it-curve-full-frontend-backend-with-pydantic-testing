@@ -2308,7 +2308,8 @@ class Assistant(Agent):
                 self.return_leg = data
 
             # print(f"\n\n\n Return trip Payload collected: {data}\n\n\n")
-            logging.info(f"\n\n\n Return trip Payload collected: {data}\n\n\n")
+            logging.info(f"\n\n\n Return trip Payload collected:{data}\n\n\n")
+            print("return trip paylaod:", data)
 
             return f"The collected payload for return trip is :{data}"
 
@@ -2322,84 +2323,83 @@ class Assistant(Agent):
          uses agent's main_leg and return leg parameter."""
 
         logging.info("book_trips function called...")
+        try:
 
-        if self.return_leg:
-            payload = await combine_payload(self.main_leg, self.return_leg)
-        else:
-            payload = self.main_leg
+            if self.return_leg:
+                payload = await combine_payload(self.main_leg, self.return_leg)
+            else:
+                payload = self.main_leg
 
-        # Step 2: Set the endpoint
-        url = os.getenv("TRIP_BOOKING_API")
+            # Step 2: Set the endpoint
+            url = os.getenv("TRIP_BOOKING_API")
 
-        # print(f"\n\n\nPayload Sent for booking: {payload}\n\n\n")
-        logging.info("\n\n\nPayload Sent for booking:", payload)
+            # print(f"\n\n\nPayload Sent for booking: {payload}\n\n\n")
+            logging.info("\n\n\nPayload Sent for booking:", payload)
 
-        # Step 3: Send the data to the API
-        async with aiohttp.ClientSession() as session:
-            async with session.post(url, json=payload) as response:
-                response = await response.json()
+            # Step 3: Send the data to the API
+            async with aiohttp.ClientSession() as session:
+                async with session.post(url, json=payload) as response:
+                    response = await response.json()
 
-                if response['responseCode'] == 200:
+                    if response['responseCode'] == 200:
 
-                    irefid_list = [response['iRefID']]
-                    if not response['iRefID'] is None:
-                        irefid_list.extend(response['returnLegsList'])
+                        irefid_list = [response['iRefID']]
+                        if not response['returnLegsList'] is None:
+                            irefid_list.append(response['returnLegsList'])
 
-                    response_text = ""
+                        response_text = ""
 
-                    for trip_data, irefId in zip(payload['addressInfo']["Trips"], irefid_list):
-                        estimates = trip_data['Details'][0]['estimatedInfo']
-                        pickup_address = trip_data['Details'][0]['addressDetails']
-                        dropoff_address = trip_data['Details'][1]['addressDetails']
-                        pickup_address_complete = pickup_address['Address'] + pickup_address['City'] + pickup_address[
-                            'State']
-                        dropoff_address_complete = dropoff_address['Address'] + dropoff_address['City'] + \
-                                                   dropoff_address['State']
-                        estimate_distance = estimates["EstimatedDistance"]
-                        estimate_time = estimates['EstimatedTime']
-                        estimate_cost = estimates['EstimatedCost']
-                        copay_cost = estimates['CoPay']
+                        for trip_data, irefId in zip(payload['addressInfo']["Trips"], irefid_list):
+                            estimates = trip_data['Details'][0]['estimatedInfo']
+                            pickup_address = trip_data['Details'][0]['addressDetails']
+                            dropoff_address = trip_data['Details'][1]['addressDetails']
+                            pickup_address_complete = f" {pickup_address['Address']}  {pickup_address['City']}  {pickup_address['State']}"
+                            dropoff_address_complete = f" {dropoff_address['Address']}  {dropoff_address['City']} {dropoff_address['State']}"
+                            estimate_distance = estimates["EstimatedDistance"]
+                            estimate_time = estimates['EstimatedTime']
+                            estimate_cost = estimates['EstimatedCost']
+                            copay_cost = estimates['CoPay']
 
-                        prompt = f"""What is the current weather in {dropoff_address_complete}? Provide a concise response with exactly two lines:
-                
-                            Line 1: State the temperature in Fahrenheit (numbers only, no unit) and current sky conditions.
-                            Line 2: Give relevant weather-appropriate advice.
-                
-                            Format example:
-                            "The temperature is 72 and the sky is clear. It's a perfect day for a ride."
-                
-                            Requirements:
-                            - Temperature in Fahrenheit without the °F unit
-                            - Current sky conditions (clear, cloudy, rainy, etc.)
-                            - Practical advice based on the weather conditions
-                            - Keep response to exactly two lines
-                            """
-                        weather = await search_web_manual(prompt)
-                        print(f"\n\nWeather: {weather}\n\n")
+                            prompt = f"""What is the current weather in {dropoff_address_complete}? Provide a concise response with exactly two lines:
+                    
+                                Line 1: State the temperature in Fahrenheit (numbers only, no unit) and current sky conditions.
+                                Line 2: Give relevant weather-appropriate advice.
+                    
+                                Format example:
+                                "The temperature is 72 and the sky is clear. It's a perfect day for a ride."
+                    
+                                Requirements:
+                                - Temperature in Fahrenheit without the °F unit
+                                - Current sky conditions (clear, cloudy, rainy, etc.)
+                                - Practical advice based on the weather conditions
+                                - Keep response to exactly two lines
+                                """
+                            weather = await search_web_manual(prompt)
+                            print(f"\n\nWeather: {weather}\n\n")
 
-                        try:
+                            try:
+                                if response["responseCode"] == 200:
+                                    print(f"\n\nResponse: {response}\n\n\n")
 
-                            # Step 4: Process the response
-                            if response["responseCode"] == 200:
-                                print(f"\n\nResponse: {response}\n\n\n")
-                                # irefId = response['iRefID']
-                                if irefId == 0:
-                                    return "Your trip could not be booked!"
+                                    if str(copay_cost) == "0":
+                                        response_text += f"Trip has been booked! Your Trip Number is {irefId}. It will take around {estimate_time} minutes and distance between your pick up and drop off is {estimate_distance} miles. Total Cost is {estimate_cost}$. Weather in drop off location is {weather}."
+                                    else:
+                                        response_text += f"Trip has been booked! Your Trip Number is {irefId}. It will take around {estimate_time} minutes and distance between your pick up and drop off is {estimate_distance} miles. Total Cost is {estimate_cost}$ and cost related to copay is {copay_cost}$. Weather in drop off location is {weather}."
 
-                                if str(copay_cost) == "0":
-                                    response_text += f"Trip has been booked! Your Trip Number is {irefId}. It will take around {estimate_time} minutes and distance between your pick up and drop off is {estimate_distance} miles. Total Cost is {estimate_cost}$. Weather in drop off location is {weather}."
                                 else:
-                                    response_text += f"Trip has been booked! Your Trip Number is {irefId}. It will take around {estimate_time} minutes and distance between your pick up and drop off is {estimate_distance} miles. Total Cost is {estimate_cost}$ and cost related to copay is {copay_cost}$. Weather in drop off location is {weather}."
+                                    response_text += "Trip has not been booked!"
 
-                            else:
-                                response_text += "Trip has not been booked!"
+                                logging.info(f"Booking response:{response_text}")
 
-                            logging.info(f"Booking response:{response_text}")
-                            return response_text
+                            except Exception as e:
+                                print(f"\n\nError occurred in book a trip function: {e}\n\n")
+                                return "Trip has not been booked!"
 
-                        except Exception as e:
-                            print(f"\n\nError occured in book a trip function: {e}\n\n")
-                            return "Trip has not been booked!"
+                        return response_text
+
+        except Exception as e:
+            print(e)
+            return f"error in booking:{e}"
 
     @function_tool()
     async def asterisk_call_disconnect(self, participant_identity: str = None, room_name: str = None) -> None:
