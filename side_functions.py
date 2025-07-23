@@ -648,6 +648,6 @@ async def combine_payload(leg1: dict,leg2: dict):
     if trip_from_leg2:
         combined_leg["addressInfo"]["Trips"].append(trip_from_leg2)
 
-    logging.info(f"combined_payload:{combined_leg}")
+    logging.info("combined_payload:",combined_leg)
 
     return combined_leg
