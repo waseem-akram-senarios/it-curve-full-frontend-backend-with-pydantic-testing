@@ -1974,8 +1974,8 @@ class Assistant(Agent):
 
             # adding payload to agent memory
 
-            if self.main_leg is None:
-                self.main_leg = data
+            # if self.main_leg is None:
+            self.main_leg = data
             # elif self.return_leg is None:
             #     self.return_leg = data
 
@@ -2304,8 +2304,8 @@ class Assistant(Agent):
 
             # if self.main_leg is None:
             #     self.main_leg = data
-            if self.return_leg is None:
-                self.return_leg = data
+            # if self.return_leg is None:
+            self.return_leg = data
 
             # print(f"\n\n\n Return trip Payload collected: {data}\n\n\n")
             logging.info(f"\n\n\n Return trip Payload collected:{data}\n\n\n")
@@ -2394,6 +2394,9 @@ class Assistant(Agent):
                             except Exception as e:
                                 print(f"\n\nError occurred in book a trip function: {e}\n\n")
                                 return "Trip has not been booked!"
+
+                        self.main_leg = None
+                        self.return_leg = None
 
                         return response_text
 

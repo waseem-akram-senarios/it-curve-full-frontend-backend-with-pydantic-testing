@@ -114,25 +114,25 @@ async def entrypoint(ctx: agents.JobContext):
     # Store active tasks to prevent garbage collection
     _active_tasks = set()
 
-    async def async_handle_text_stream(reader, participant_identity):
-        info = reader.info
+    # async def async_handle_text_stream(reader, participant_identity):
+    #     info = reader.info
+    #
+    #     print(
+    #         f'Text stream received from {participant_identity}\n'
+    #         f'  Topic: {info.topic}\n'
+    #         f'  Timestamp: {info.timestamp}\n'
+    #         f'  ID: {info.id}\n'
+    #         f'  Size: {info.size}'  # Optional, only available if the stream was sent with `send_text`
+    #     )
+    #
+    #     # Option 1: Process the stream incrementally using an async for loop.
+    #     async for chunk in reader:
+    #         print(f"Next chunk: {chunk}")
+    #
+    #     # Option 2: Get the entire text after the stream completes.
+    #     text = await reader.read_all()
+    #     print(f"Received text: {text}")
 
-        print(
-            f'Text stream received from {participant_identity}\n'
-            f'  Topic: {info.topic}\n'
-            f'  Timestamp: {info.timestamp}\n'
-            f'  ID: {info.id}\n'
-            f'  Size: {info.size}'  # Optional, only available if the stream was sent with `send_text`
-        )
-
-        # Option 1: Process the stream incrementally using an async for loop.
-        async for chunk in reader:
-            print(f"Next chunk: {chunk}")
-
-        # Option 2: Get the entire text after the stream completes.
-        text = await reader.read_all()
-        print(f"Received text: {text}")
-    
     # def handle_text_stream(reader, participant_identity):
     #     task = asyncio.create_task(async_handle_text_stream(reader, participant_identity))
     #     _active_tasks.add(task)
@@ -151,7 +151,7 @@ async def entrypoint(ctx: agents.JobContext):
 
     if call_sid == "Unknown":
         call_sid = 'chat-' + str(uuid.uuid4())
-    
+
     print(f"\n\nCall SID: {call_sid}\n\n")
 
     # Specify the US Eastern time zone
@@ -165,7 +165,7 @@ async def entrypoint(ctx: agents.JobContext):
         meta_data = participant.metadata
         metadata = json.loads(meta_data)
         print(f"\n\nMetadata: {metadata}\n\n")
-    except: 
+    except:
         pass
 
     starting_time = date_time.strftime("%Y-%m-%d %H:%M:%S")
@@ -201,7 +201,10 @@ async def entrypoint(ctx: agents.JobContext):
     room_name = ctx.room.name
     # room_name = "both-65-3-ARMON"
     print(f"\n\n\nRoom Name: {room_name}\n\n\n")
-    
+
+    chatbot = False
+    ivr = False
+
     try:
         success = False
 
@@ -223,7 +226,6 @@ async def entrypoint(ctx: agents.JobContext):
                 print(f"\n\nRecipient: {recipient}\n\n")
             except:
                 # Asterisk
-                # pass
                 logger.info(participant.attributes)
                 # metadata = participant.metadata
                 caller = participant.attributes['sip.phoneNumber']
@@ -247,7 +249,7 @@ async def entrypoint(ctx: agents.JobContext):
                 family_id = metadata['familyId']
                 affiliate_id = metadata['affiliateId']
                 affiliate = await recognize_affiliate_by_ids(family_id, affiliate_id)
-                print("*************AFFILIATE*******:", affiliate)
+                print("*************AFFILIATE*******:\n", affiliate)
                 phone_number = metadata['phoneNo']
                 if phone_number != "":
                     phone_number = await extract_phone_number(phone_number)
@@ -256,10 +258,11 @@ async def entrypoint(ctx: agents.JobContext):
                 else:
                     all_riders_info["number_of_riders"] = 1
                     all_riders_info["rider_1"] = unknow_rider
+                chatbot = True
 
             except Exception as e:
                 print(f"Error in recognizing affiliate from room matadata: {e}")
-        
+
         if all_riders_info["number_of_riders"] == 0:
             all_riders_info["number_of_riders"] = 1
             all_riders_info["rider_1"] = new_rider
@@ -267,50 +270,74 @@ async def entrypoint(ctx: agents.JobContext):
 
         print(f"\n\nRider: {all_riders_info}\n\n")
         print(f"\n\nAffiliate: {affiliate}\n\n")
-    
+
     except Exception as e:
         print(f"Error occured in getting rider name and id: {e}")
         pass
 
-    if all_riders_info["number_of_riders"] == 1:
+    if all_riders_info["number_of_riders"] == 1 and chatbot is True:
 
         if all_riders_info["rider_1"]["name"] == "new_rider":
-            print("\n\n****************New Rider Flow Selected****************\n\n")
+            print("\n\n****************New Rider chatbot Flow Selected****************\n\n")
             prompt_file = os.path.join(Agent_Directory, "prompts", "prompt_new_rider.txt")
 
         elif all_riders_info["rider_1"]["name"] == "Unknown":
-            print("\n\n****************Widget Flow Selected****************\n\n")
+            print("\n\n****************Widget Flow chatbot Selected****************\n\n")
             prompt_file = os.path.join(Agent_Directory, "prompts", "prompt_widget.txt")
 
         else:
-            print("\n\n****************Old Rider Flow Selected****************\n\n")
+            print("\n\n****************Old Rider chatbot Flow Selected****************\n\n")
             prompt_file = os.path.join(Agent_Directory, "prompts", "prompt_old_rider.txt")
 
-    elif all_riders_info["number_of_riders"] > 1:
-        print("\n\n****************Multiple Riders Flow Selected****************\n\n")
+    elif all_riders_info["number_of_riders"] == 1 and ivr is True:
+
+        if all_riders_info["rider_1"]["name"] == "new_rider":
+            print("\n\n****************New Rider IVR Flow Selected****************\n\n")
+            prompt_file = os.path.join(Agent_Directory, "prompts", "prompt_new_rider_ivr.txt")
+
+        else:
+            print("\n\n****************Old Rider IVR Flow Selected****************\n\n")
+            prompt_file = os.path.join(Agent_Directory, "prompts", "prompt_old_rider_ivr.txt")
+
+    elif all_riders_info["number_of_riders"] > 1 and chatbot is True:
+        print("\n\n****************Multiple Riders chatbot Flow Selected****************\n\n")
         prompt_file = os.path.join(Agent_Directory, "prompts", "prompt_multiple_riders.txt")
-    
+
+    elif all_riders_info["number_of_riders"] > 1 and ivr is True:
+        print("\n\n****************Multiple Riders IVR Flow Selected****************\n\n")
+        prompt_file = os.path.join(Agent_Directory, "prompts", "prompt_multiple_riders_ivr.txt")
+
     else:
         print("\n\n****************Error in Selecting Flow****************\n\n")
         prompt_file = os.path.join(Agent_Directory, "prompts", "prompt_new_rider.txt")
-    
+
     with open(prompt_file) as file:
         system_prompt = file.read()
-
     try:
         if all_riders_info["number_of_riders"] == 1:
             rider_info = all_riders_info["rider_1"]
-            rider_info["phone_number"] = phone_number
+
+            try:
+                # for chatbot only
+                rider_info["phone_number"] = metadata['phoneNo']
+                rider_info["userID"] = metadata['userID']
+            except: pass
+
             rider_info = json.dumps(rider_info, indent=4)
             prompt = f"""{system_prompt}\n\n
             ``Today's date is {today_date} and Current Time is {current_time}``\n\n
             ``Rider's Profile: \n{rider_info}\n\n``
             """
-            
+
         elif all_riders_info["number_of_riders"] > 1:
             riders_data_without_tally = copy.deepcopy(all_riders_info)
             del riders_data_without_tally["number_of_riders"]
             riders_data_without_tally["phone_number"] = phone_number
+            try:
+                # for chatbot only
+                riders_data_without_tally["userID"] = metadata["userID"]
+            except: pass
+
             rider_info = json.dumps(riders_data_without_tally, indent=4)
             prompt = f"""{system_prompt}\n\n
             ``Today's date is {today_date} and Current Time is {current_time}``\n\n
@@ -320,14 +347,14 @@ async def entrypoint(ctx: agents.JobContext):
     except Exception as e:
         print(f"Error occured in getting rider profile: {e}")
         # Include today's date in the system prompt
-        
+
         prompt = f"""{system_prompt}\n\n
         Today's date is {today_date} and Current Time is {current_time}\n\n
         """
 
     try:
         if not isinstance(affiliate, str):
-            affiliate_id = affiliate["AffiliateID"] 
+            affiliate_id = affiliate["AffiliateID"]
             family_id = affiliate["AffiliateFamilyID"]
             affiliate_type = affiliate["TypeForIVRAI"].lower()
             affiliate_name = affiliate["AffiliateName"]
@@ -336,7 +363,7 @@ async def entrypoint(ctx: agents.JobContext):
             """
         else:
             pass
-        
+
     except Exception as e:
         print(f"Error occured in recognizing affiliate: {e}")
         pass
@@ -358,14 +385,14 @@ async def entrypoint(ctx: agents.JobContext):
 
     if all_riders_info["number_of_riders"] == 1:
         rider_info = all_riders_info["rider_1"]
-        client_id = rider_info["client_id"] 
+        client_id = rider_info["client_id"]
         frequent_rides = ""
         try:
             frequent_rides = await get_frequnt_addresses_manual(client_id, affiliate_id)
             if frequent_rides.strip() != "":
                 prompt = f"""{prompt}\n\n
                 {frequent_rides}
-                """ 
+                """
             else:
                 prompt = f"""{prompt}\n\n
                 ``Rider Historic/Past/Completed Trips are:
@@ -450,7 +477,7 @@ async def entrypoint(ctx: agents.JobContext):
 
             elif rider["name"] == "Unknown":
                 await session.say(f"Hello! {greeting}. Can I have your phone number please?", allow_interruptions=allow_interruption_status)
-            
+
             elif rider["name"]:
                 try:
                     no_of_trips = rider.get("number_of_existing_trips", "0")
@@ -558,7 +585,7 @@ async def entrypoint(ctx: agents.JobContext):
             print(f"Error sending data to API: {e}")
 
     # At shutdown, generate and log the summary from the usage collector
-    ctx.add_shutdown_callback(lambda: asyncio.create_task(log_usage(starting_time, call_sid, conversation_history)))  # returns a Task[None])
+    ctx.add_shutdown_callback(lambda: asyncio.create_task(log_usage(starting_time, call_sid, conversation_history)))
 
 if __name__ == "__main__":
     agents.cli.run_app(agents.WorkerOptions(entrypoint_fnc=entrypoint))
