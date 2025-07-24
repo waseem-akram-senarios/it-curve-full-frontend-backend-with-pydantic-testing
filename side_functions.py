@@ -657,17 +657,25 @@ async def get_Existing_Trips_Number(client_id : str, affiliate_id: str):
         return len_existing_trips
 
 
-async def combine_payload(leg1: dict,leg2: dict):
+async def combine_payload(leg1: dict, leg2: dict):
     """
     The function adds only trips to main leg payload from return leg payload.
     """
-    logging.info("combine_payload function called...")
-    combined_leg = copy.deepcopy(leg1)
-    trip_from_leg2 = leg2.get("addressInfo",{}).get("Trips",[None])[0]
+    try:
+        combined_leg = None
 
-    if trip_from_leg2:
-        combined_leg["addressInfo"]["Trips"].append(trip_from_leg2)
+        logging.info("combine_payload function called...")
+        if leg1 is not None:
+            combined_leg = copy.deepcopy(leg1)
 
-    logging.info("combined_payload:",combined_leg)
+        if leg2 is not None:
+            trip_from_leg2 = leg2.get("addressInfo",{}).get("Trips",[None])[0]
 
-    return combined_leg
+            if trip_from_leg2:
+                combined_leg["addressInfo"]["Trips"].append(trip_from_leg2)
+
+            logging.info("combined_payload:",combined_leg)
+
+            return combined_leg
+    except Exception as e:
+        return f"There's an error in combine_payload function: {e}"

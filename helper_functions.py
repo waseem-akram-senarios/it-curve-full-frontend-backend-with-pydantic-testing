@@ -656,7 +656,7 @@ class Assistant(Agent):
             "Content-Type": "application/json"
         }
 
-        print(f"\n\n\nPayload Sent for booking: {payload}\n\n\n")
+        print(f"\n\n\nPayload Sent for Existing Trips: {payload}\n\n\n")
 
         try:
             async with aiohttp.ClientSession() as session:
@@ -2437,3 +2437,29 @@ class Assistant(Agent):
     async def send_dtmf_code(self, code: int, context: RunContext):
         room = context.session.room
         await room.local_participant.publish_dtmf(code=code, digit=str(code))
+
+    @function_tool()
+    async def transfer_call(room, participant_identity: str = None, room_name: str = None) -> None:
+        """
+        The function transfer call to live agent.
+        room: room no of the agent
+        """
+        try:
+            async with api.LiveKitAPI() as livekit_api:
+                transfer_to = "sip:5000@139.64.158.216"
+                participant_identity = 'sip_3012082222'
+                # Create transfer request
+                transfer_request = TransferSIPParticipantRequest(
+                    participant_identity='sip_3012082222',
+                    room_name=room,
+                    transfer_to=transfer_to,
+                    play_dialtone=False,
+                    # wait_until_answered=True,
+                )
+                logger.debug(f"Transfer request: {transfer_request}")
+
+                # Transfer caller
+                await livekit_api.sip.transfer_sip_participant(transfer_request)
+                logger.info(f"Successfully transferred participant {participant_identity} to {transfer_to}")
+        except Exception as e:
+            logger.info(e)
