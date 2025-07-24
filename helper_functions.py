@@ -121,15 +121,21 @@ class Assistant(Agent):
 
         # Step 1: End the Twilio call
         call_closed_msg = "No active call found."
-        if self.call_sid:
-            try:
-                print(f"Requested Call Ending for Call SID: {self.call_sid}")
-                await self.asterisk_call_disconnect()
-                logging.info("asterisk call disconnected...")
-                TWILIO_CLIENT.calls(self.call_sid).update(status="completed")
-                call_closed_msg = f"Call has been ended successfully."
-            except Exception as e:
-                call_closed_msg = f"Failed to end call: {str(e)}"
+        # if self.call_sid:
+        #     try:
+        #         print(f"Requested Call Ending for Call SID: {self.call_sid}")
+        #         TWILIO_CLIENT.calls(self.call_sid).update(status="completed")
+        #         call_closed_msg = f"Call has been ended successfully."
+        #     except Exception as e:
+        #         call_closed_msg = f"Failed to end call: {str(e)}"
+        try:
+            # Asterisk end call
+            await self.asterisk_call_disconnect()
+            logging.info("asterisk call disconnected...")
+            # TWILIO_CLIENT.calls(self.call_sid).update(status="completed")
+            call_closed_msg = f"Call has been ended successfully."
+        except Exception as e:
+            call_closed_msg = f"Failed to end call: {str(e)}"
 
         # Step 2: Disconnect the LiveKit room
         room_closed_msg = "No active room found."

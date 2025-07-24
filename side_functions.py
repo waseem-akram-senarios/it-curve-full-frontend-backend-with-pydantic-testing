@@ -2,22 +2,22 @@ import copy
 # import ipdb
 # from flask import jsonify
 from livekit.agents import llm  # type: ignore
-import asyncio
+# import asyncio
 import os
 import re
-import wave
+# import wave
 from twilio.rest import Client
-from livekit import rtc
+# from livekit import rtc
 from pathlib import Path
-from datetime import datetime
+# from datetime import datetime
 import json
 import requests
-from typing import Annotated
+# from typing import Annotated
 import aiohttp
-from aiohttp import BasicAuth
+# from aiohttp import BasicAuth
 from openai import AsyncOpenAI
 from dotenv import load_dotenv
-from livekit.agents import Agent, function_tool
+# from livekit.agents import Agent, function_tool
 
 import logging
 
@@ -35,11 +35,13 @@ MUSIC_PATH = os.path.join(App_Directory, "music.wav")
 
 openai_client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
+
 async def check_address_validity(latitude: str, longitude: str, address_type: str):
     """Helper function to check if the address is valid."""
     if latitude == "0" or longitude == "0" or latitude == "" or longitude == "":
         return f"{address_type} address is missing latitude or longitude. Use [get_valid_addresses] function to verify this address."
     return None
+
 
 async def safe_float(value):
     try:
@@ -47,11 +49,13 @@ async def safe_float(value):
     except (ValueError, TypeError):
         return 0.0
 
+
 async def safe_int(value):
     try:
         return int(value)
     except (ValueError, TypeError):
         return 0
+
 
 async def create_address_verification_prompt(address):
     """Creates a clear prompt for address verification with explicit JSON format instructions."""
@@ -71,6 +75,7 @@ Please respond ONLY with a valid JSON object in the following format:
 }}
 
 Ensure your response contains ONLY the JSON object with no additional text, explanation, or formatting."""
+
 
 async def verify_address(address):
     """Verify an address and parse the JSON response."""
@@ -136,13 +141,15 @@ async def recognize_affiliate_by_ids(family_id, affiliate_id):
 
     return recognized_affiliate
 
+
 async def meters_to_miles(meters):
     try:
         meters = float(meters)
         miles = meters / 1609.344
-        return round(miles, 2) # round to 2 decimal places
+        return round(miles, 2)  # round to 2 decimal places
     except ValueError:
         return meters
+
 
 async def seconds_to_minutes(seconds):
     try:
@@ -151,6 +158,7 @@ async def seconds_to_minutes(seconds):
         return round(minutes, 2) # round to 2 decimal places
     except ValueError:
         return seconds
+
 
 async def search_web_manual(prompt: str):
 
@@ -169,6 +177,7 @@ async def search_web_manual(prompt: str):
     except Exception as e:
         print(f"Error in search web: {e}")
         return "Web search failed!"
+
 
 async def get_frequnt_addresses_manual(client_id, affiliate_id):
     url = os.getenv("GET_HISTORIC_RIDES_API")
@@ -218,6 +227,7 @@ async def get_frequnt_addresses_manual(client_id, affiliate_id):
     
     return frequent_addresses_result
 
+
 async def get_match_source(prompt):
     model = "gpt-4o"
 
@@ -240,7 +250,8 @@ async def get_match_source(prompt):
         print(f"OpenAI location error: {e}")
     
     return source
-    
+
+
 async def format_phone_number(phone_number):
     try:
         # Remove periods, hyphens, and any non-digit characters from the phone number
@@ -260,6 +271,7 @@ async def format_phone_number(phone_number):
             return phone_number
     except:
         return phone_number
+
 
 async def fetch_affiliate_details(affiliate_id):
     url = os.getenv("ALL_AFFILIATE_DETAILS_API")
@@ -326,6 +338,7 @@ async def fetch_affiliate_details(affiliate_id):
             
     return bounds, funding_sources, copay_fs_list
 
+
 async def recognize_affiliate(receiver):
     receiver = str(receiver)
     match = re.search(r'sip:(\+\d+)@', receiver)
@@ -359,6 +372,7 @@ async def recognize_affiliate(receiver):
     except Exception as e:
         return f"Error in recognizing affiliate: {e}"
 
+
 async def extract_phone_number(phone_number):
 
     phone_number = str(phone_number)
@@ -386,6 +400,7 @@ async def extract_phone_number(phone_number):
             break  # Exit the loop once the code is found
     
     return phone_number
+
 
 async def get_client_name_voice(caller_number, affiliate_id, family_id):
     url = os.getenv("SEARCH_CLIENT_DATA_API")
@@ -450,6 +465,7 @@ async def get_client_name_voice(caller_number, affiliate_id, family_id):
 
     return result
 
+
 def calculate_cost(llm_input_tokens, llm_output_tokens, stt_audio_seconds, tts_characters):
     # Pricing per unit
     llm_input_cost_per_million = 2.50  # $ per 1M tokens
@@ -475,6 +491,7 @@ def calculate_cost(llm_input_tokens, llm_output_tokens, stt_audio_seconds, tts_c
     }
     
     return cost
+
 
 async def get_location_from_openai_async(address):
     model = "gpt-4o"
@@ -511,6 +528,7 @@ async def get_location_from_openai_async(address):
         print(f"OpenAI location error: {e}")
     
     return location
+
 
 async def summarize_address_results(address):
     model = "gpt-4o"
@@ -551,6 +569,7 @@ async def summarize_address_results(address):
     
     return result
 
+
 async def is_point_out_of_bounds(bounds, location):
 
     print("\n\n\n")
@@ -576,7 +595,8 @@ async def is_point_out_of_bounds(bounds, location):
         return False
     else:
         return True
-    
+
+
 async def get_Existing_Trips_Number(client_id : str, affiliate_id: str):
     """
     Function to get

@@ -147,12 +147,13 @@ async def entrypoint(ctx: agents.JobContext):
 
     # Wait for the first participant to connect
     participant = await ctx.wait_for_participant()
-    call_sid = participant.attributes.get("sip.twilio.callSid", "Unknown")
 
-    if call_sid == "Unknown":
-        call_sid = 'chat-' + str(uuid.uuid4())
-
-    print(f"\n\nCall SID: {call_sid}\n\n")
+    # # Twilio code commented
+    # call_sid = participant.attributes.get("sip.twilio.callSid", "Unknown")
+    # if call_sid == "Unknown":
+    #     call_sid = 'chat-' + str(uuid.uuid4())
+    #
+    # print(f"\n\nCall SID: {call_sid}\n\n")
 
     # Specify the US Eastern time zone
     eastern = pytz.timezone('US/Eastern')
@@ -174,27 +175,27 @@ async def entrypoint(ctx: agents.JobContext):
     all_riders_info = {"number_of_riders":0}
 
     unknow_rider = {
-        "name" : "Unknown",
-        "client_id" : "-1",
-        "city" : "Unknown",
-        "state" : "Unknown",
-        "current_location" : "Unknown",
-        "rider_id" : "-1"
+        "name": "Unknown",
+        "client_id": "-1",
+        "city": "Unknown",
+        "state": "Unknown",
+        "current_location": "Unknown",
+        "rider_id": "-1"
     }
 
     new_rider = {
-        "name" : "new_rider",
-        "client_id" : "-1",
-        "city" : "Unknown",
-        "state" : "Unknown",
-        "current_location" : "Unknown",
-        "rider_id" : "-1"
+        "name": "new_rider",
+        "client_id": "-1",
+        "city": "Unknown",
+        "state": "Unknown",
+        "current_location": "Unknown",
+        "rider_id": "-1"
     }
 
     affiliate = {
-        "AffiliateID" : "-1",
-        "AffiliateFamilyID" : "-1",
-        "TypeForIVRAI" : "Unknown",
+        "AffiliateID": "-1",
+        "AffiliateFamilyID": "-1",
+        "TypeForIVRAI": "Unknown",
         "AffiliateName": "Unknown"
     }
 
@@ -210,26 +211,27 @@ async def entrypoint(ctx: agents.JobContext):
 
         try:
             # For Twillio or Asterisk calls
-            try:
-                # Twillio
-                # Fetch call details using CallSid
-                call = TWILIO_CLIENT.calls(call_sid).fetch()
+            # try:
+            #     # Twillio
+            #     # Fetch call details using CallSid
+            #     call = TWILIO_CLIENT.calls(call_sid).fetch()
+            #
+            #     # Access caller and recipient information
+            #     caller = call._from
+            #     print(f"\n\n\nCaller: {caller}\n\n\n")
+            #     # caller = "+12222222222"
+            #     # caller = "+13012082222"
+            #     # caller = "+13012082252"
+            #     recipient = str(call.to)
+            #     # recipient = "+17172007213"
+            #     print(f"\n\nRecipient: {recipient}\n\n")
+            # except:
 
-                # Access caller and recipient information
-                caller = call._from
-                print(f"\n\n\nCaller: {caller}\n\n\n")
-                # caller = "+12222222222"
-                # caller = "+13012082222"
-                # caller = "+13012082252"
-                recipient = str(call.to)
-                # recipient = "+17172007213"
-                print(f"\n\nRecipient: {recipient}\n\n")
-            except:
-                # Asterisk
-                logger.info(participant.attributes)
-                # metadata = participant.metadata
-                caller = participant.attributes['sip.phoneNumber']
-                recipient = participant.attributes['sip.trunkPhoneNumber']
+            # For Asterisk
+            logger.info(participant.attributes)
+            # metadata = participant.metadata
+            caller = participant.attributes['sip.phoneNumber']
+            recipient = participant.attributes['sip.trunkPhoneNumber']
 
             affiliate = await recognize_affiliate(recipient)
             success = True
@@ -409,7 +411,7 @@ async def entrypoint(ctx: agents.JobContext):
             pass
 
     print(f"\n\nPrompt: {prompt}\n\n")
-
+    call_sid = None
     background_audio = BackgroundAudioPlayer(thinking_sound=[
                         AudioConfig(BuiltinAudioClip.KEYBOARD_TYPING2, volume=0.5),
                         AudioConfig(BuiltinAudioClip.KEYBOARD_TYPING,volume=0.6)
