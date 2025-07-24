@@ -630,7 +630,7 @@ async def get_Existing_Trips_Number(client_id : str, affiliate_id: str):
         async with aiohttp.ClientSession() as session:
             async with session.post(url, json=payload, headers=headers) as resp:
                 text = await resp.text()
-                print(f"\n\nResponse: {text}\n\n")
+                # print(f"\n\nResponse: {text}\n\n")
 
                 try:
                     response = json.loads(text)
