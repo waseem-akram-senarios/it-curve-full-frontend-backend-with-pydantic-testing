@@ -151,9 +151,8 @@ async def entrypoint(ctx: agents.JobContext):
     # # Twilio code commented
     # call_sid = participant.attributes.get("sip.twilio.callSid", "Unknown")
     # if call_sid == "Unknown":
-    #     call_sid = 'chat-' + str(uuid.uuid4())
-    #
-    # print(f"\n\nCall SID: {call_sid}\n\n")
+    call_sid = 'chat-' + str(uuid.uuid4())
+    print(f"\n\nCall SID: {call_sid}\n\n")
 
     # Specify the US Eastern time zone
     eastern = pytz.timezone('US/Eastern')
@@ -411,7 +410,7 @@ async def entrypoint(ctx: agents.JobContext):
             pass
 
     print(f"\n\nPrompt: {prompt}\n\n")
-    call_sid = None
+
     background_audio = BackgroundAudioPlayer(thinking_sound=[
                         AudioConfig(BuiltinAudioClip.KEYBOARD_TYPING2, volume=0.5),
                         AudioConfig(BuiltinAudioClip.KEYBOARD_TYPING,volume=0.6)
