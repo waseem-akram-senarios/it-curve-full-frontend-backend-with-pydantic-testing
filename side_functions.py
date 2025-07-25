@@ -675,6 +675,7 @@ async def combine_payload(leg1: dict, leg2: dict):
                 combined_leg["addressInfo"]["Trips"].append(trip_from_leg2)
 
             logging.info("combined_payload:",combined_leg)
+            print("\n\n combined_paylaod:", combined_leg)
 
             return combined_leg
     except Exception as e:

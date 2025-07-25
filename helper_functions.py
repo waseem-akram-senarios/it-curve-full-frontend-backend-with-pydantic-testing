@@ -2331,10 +2331,12 @@ class Assistant(Agent):
         logging.info("book_trips function called...")
         try:
 
-            if self.return_leg:
+            if self.return_leg and self. main_leg:
                 payload = await combine_payload(self.main_leg, self.return_leg)
-            else:
+            elif self.main_leg:
                 payload = self.main_leg
+            elif self.return_leg:
+                payload = self.return_leg
 
             # Step 2: Set the endpoint
             url = os.getenv("TRIP_BOOKING_API")
@@ -2414,12 +2416,14 @@ class Assistant(Agent):
     async def asterisk_call_disconnect(self, participant_identity: str = None, room_name: str = None) -> None:
 
         try:
+            print("Asterisk call disconnect function called...")
             async with api.LiveKitAPI() as livekit_api:
                 transfer_to = "sip:6000@139.64.158.216"
-
+                participant_identity = list(self.room.remote_participants.values())[0].identity
+                logger.info(f"participant: {participant_identity}")
                 # Create transfer request
                 transfer_request = TransferSIPParticipantRequest(
-                    participant_identity='sip_3012082222',
+                    participant_identity=participant_identity,
                     room_name=self.room.name,
                     transfer_to=transfer_to,
                     play_dialtone=False,
@@ -2429,7 +2433,7 @@ class Assistant(Agent):
 
                 # Transfer caller
                 await livekit_api.sip.transfer_sip_participant(transfer_request)
-                logger.info(f"Successfully transferred participant {participant_identity} to {transfer_to}")
+                logger.info(f"Call disconnected ...")
         except Exception as e:
             logger.info(e)
 
@@ -2439,7 +2443,7 @@ class Assistant(Agent):
         await room.local_participant.publish_dtmf(code=code, digit=str(code))
 
     @function_tool()
-    async def transfer_call(room, participant_identity: str = None, room_name: str = None) -> None:
+    async def transfer_call(self,room, participant_identity: str = None, room_name: str = None) -> None:
         """
         The function transfer call to live agent.
         room: room no of the agent
@@ -2447,10 +2451,11 @@ class Assistant(Agent):
         try:
             async with api.LiveKitAPI() as livekit_api:
                 transfer_to = "sip:5000@139.64.158.216"
-                participant_identity = 'sip_3012082222'
+                participant_identity = list(self.room.remote_participants.values())[0].identity
+                logger.info(f"participant_identity: {participant_identity}")
                 # Create transfer request
                 transfer_request = TransferSIPParticipantRequest(
-                    participant_identity='sip_3012082222',
+                    participant_identity=participant_identity,
                     room_name=room,
                     transfer_to=transfer_to,
                     play_dialtone=False,

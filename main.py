@@ -65,14 +65,15 @@ load_dotenv(dotenv_path=".env")
 logger = logging.getLogger("voice-agent")
 
 
-async def transfer_call_dtmf(room, participant_identity: str = None, room_name: str = None) -> None:
+async def transfer_call_dtmf(self,room, participant_identity: str = None, room_name: str = None) -> None:
     try:
+        print("In call transfer dtmf function....")
         async with api.LiveKitAPI() as livekit_api:
             transfer_to = "sip:5000@139.64.158.216"
-            participant_identity = 'sip_3012082222'
+            participant_identity = list(self.room.remote_participants.values())[0].identity
             # Create transfer request
             transfer_request = TransferSIPParticipantRequest(
-                participant_identity='sip_3012082222',
+                participant_identity=participant_identity,
                 room_name=room,
                 transfer_to=transfer_to,
                 play_dialtone=False,
@@ -82,19 +83,19 @@ async def transfer_call_dtmf(room, participant_identity: str = None, room_name: 
 
             # Transfer caller
             await livekit_api.sip.transfer_sip_participant(transfer_request)
-            logger.info(f"Successfully transferred participant {participant_identity} to {transfer_to}")
+            logger.info(f"Call transferred to: {transfer_to}")
     except Exception as e:
         logger.info(e)
 
 
-async def transfer_call_dtmf_driver(room, participant_identity: str = None, room_name: str = None) -> None:
+async def transfer_call_dtmf_driver(self,room, participant_identity: str = None, room_name: str = None) -> None:
     try:
         async with api.LiveKitAPI() as livekit_api:
             transfer_to = "sip:5001@139.64.158.216"
-            participant_identity = 'sip_3012082222'
+            participant_identity = list(self.room.remote_participants.values())[0].identity
             # Create transfer request
             transfer_request = TransferSIPParticipantRequest(
-                participant_identity='sip_3012082222',
+                participant_identity=participant_identity,
                 room_name=room,
                 transfer_to=transfer_to,
                 play_dialtone=False,
@@ -104,7 +105,7 @@ async def transfer_call_dtmf_driver(room, participant_identity: str = None, room
 
             # Transfer caller
             await livekit_api.sip.transfer_sip_participant(transfer_request)
-            logger.info(f"Successfully transferred participant {participant_identity} to {transfer_to}")
+            logger.info(f"Successfully transferred  to {transfer_to}")
     except Exception as e:
         logger.info(e)
 
