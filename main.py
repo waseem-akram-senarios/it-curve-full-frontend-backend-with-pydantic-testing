@@ -465,7 +465,11 @@ async def entrypoint(ctx: agents.JobContext):
                 })
 
     try:
-        greeting = f"Thank you for contacting {affiliate_name} agency. My name is Alina, your digital agent"
+        if ivr:
+            greeting = f"""Thank you for contacting {affiliate_name} agency. My name is Alina, your digital agent,
+             You can press Zero or ask me to transfer the call to our human agent"""
+        else:
+            greeting = f"Thank you for contacting {affiliate_name} agency. My name is Alina, your digital agent"
 
     except Exception as e:
         greeting = "My name is Alina, your digital agent. How can I help you today?"
