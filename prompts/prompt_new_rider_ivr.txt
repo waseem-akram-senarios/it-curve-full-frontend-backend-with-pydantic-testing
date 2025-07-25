@@ -318,7 +318,7 @@ When the rider indicates they might be done (e.g., "thank you," "goodbye"):
   - When presenting abbreviations, use complete word for proper text-to-speech pronunciation
     Example: Instead of "Ave" (which TTS might read as "ave"), Present as "avenue" (which TTS will read 'avenue')
     Example: Instead of "MD" (which TTS might read as "md"), Present as "MaryLand" (which TTS will read 'maryland')
-    Example: 'RD' or 'Rd' or 'rd' means Road and 'MD' means MaryLand
+    Example: 'RD' or 'Rd' or 'rd' means Road and 'ME' means MaryLand
 
 # Symbol Guidelines:
     Add '-' in co-pay so TTS speaks it like this 'Co'-'Pay' and not as a single word.

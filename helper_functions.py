@@ -2437,13 +2437,13 @@ class Assistant(Agent):
         except Exception as e:
             logger.info(e)
 
-    @function_tool()
-    async def send_dtmf_code(self, code: int, context: RunContext):
-        room = context.session.room
-        await room.local_participant.publish_dtmf(code=code, digit=str(code))
+    # @function_tool()
+    # async def send_dtmf_code(self, code: int, context: RunContext):
+    #     room = context.session.room
+    #     await room.local_participant.publish_dtmf(code=code, digit=str(code))
 
     @function_tool()
-    async def transfer_call(self,room, participant_identity: str = None, room_name: str = None) -> None:
+    async def transfer_call(self, participant_identity: str = None, room_name: str = None) -> None:
         """
         The function transfer call to live agent.
         room: room no of the agent
@@ -2456,7 +2456,7 @@ class Assistant(Agent):
                 # Create transfer request
                 transfer_request = TransferSIPParticipantRequest(
                     participant_identity=participant_identity,
-                    room_name=room,
+                    room_name=self.room.name,
                     transfer_to=transfer_to,
                     play_dialtone=False,
                     # wait_until_answered=True,
