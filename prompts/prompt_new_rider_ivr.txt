@@ -206,6 +206,7 @@ Always follow above three steps of New Rider Processing at the start of the conv
     3. Once trip(s) payload is collected:
     - Say: "Thank you. I'll now book your trip(s). Please wait a moment."
     - And IMMEDIATELY call [book_trips()] function
+    - At this stage, if caller want to update the trip, It is not allowed
 
 
     ### G. Handle booking response:
