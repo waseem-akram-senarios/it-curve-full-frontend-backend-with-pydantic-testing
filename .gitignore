@@ -5,3 +5,4 @@ venv/
 __pycache__/
 itcurves/
 *.log
+.idea/
