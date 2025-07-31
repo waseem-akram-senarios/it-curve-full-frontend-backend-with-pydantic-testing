@@ -739,64 +739,64 @@ class Assistant(Agent):
             print(f"Error in search web: {e}")
             return "Web search failed!"
 
-    @function_tool()
-    async def get_address(self,
-                          prompt: str,
-                          country: str,
-                          city: str,
-                          state: str
-                          ):
-        """Function to search the web for an address based on location details.
-        Args:
-            prompt: Prompt to search addresses and latitude and longitude of a location. Include the name of the location. e.g. To find nearest cinema to 20 pitts court prompt will be, 'Nearest cinema to 20 pitts court'
-            country: Country of the rider in ISO 3166-1 code For example for United States of America it is 'US'
-            city: City of the rider.
-            state: State of the rider.
-        """
-        print("\n\nCalled search_address function\n\n")
-        # _ = asyncio.create_task(self.Play_Music())
-        # await asyncio.sleep(2)
+    # @function_tool()
+    # async def get_address(self,
+    #                       prompt: str,
+    #                       country: str,
+    #                       city: str,
+    #                       state: str
+    #                       ):
+    #     """Function to search the web for an address based on location details.
+    #     Args:
+    #         prompt: Prompt to search addresses and latitude and longitude of a location. Include the name of the location. e.g. To find nearest cinema to 20 pitts court prompt will be, 'Nearest cinema to 20 pitts court'
+    #         country: Country of the rider in ISO 3166-1 code For example for United States of America it is 'US'
+    #         city: City of the rider.
+    #         state: State of the rider.
+    #     """
+    #     print("\n\nCalled search_address function\n\n")
+    #     # _ = asyncio.create_task(self.Play_Music())
+    #     # await asyncio.sleep(2)
 
-        prompt = f"""{prompt}.\n\nKeep your response as small and precise as possible."""
-        logging.info(f"\n\nPrompt for Address Search: {prompt}")
-        print(f"\n\nPrompt for Address Search: {prompt}")
-        print(f"\n\nCity: {city}")
-        print(f"\n\nRegion: {state}")
-        print(f"\n\nCountry: {country}")
+    #     prompt = f"""{prompt}.\n\nKeep your response as small and precise as possible."""
+    #     logging.info(f"\n\nPrompt for Address Search: {prompt}")
+    #     print(f"\n\nPrompt for Address Search: {prompt}")
+    #     print(f"\n\nCity: {city}")
+    #     print(f"\n\nRegion: {state}")
+    #     print(f"\n\nCountry: {country}")
 
-        try:
-            # Use the OpenAI API client to search for the address
-            completion = await openai_client.chat.completions.create(
-                model="gpt-4o-search-preview",
-                web_search_options={
-                    "user_location": {
-                        "type": "approximate",
-                        "approximate": {
-                            "country": country,
-                            "city": city,
-                            "region": state
-                        }
-                    }
-                },
-                messages=[{"role": "user", "content": prompt}]
-            )
+    #     try:
+    #         # Use the OpenAI API client to search for the address
+    #         completion = await openai_client.chat.completions.create(
+    #             model="gpt-4o-search-preview",
+    #             web_search_options={
+    #                 "user_location": {
+    #                     "type": "approximate",
+    #                     "approximate": {
+    #                         "country": country,
+    #                         "city": city,
+    #                         "region": state
+    #                     }
+    #                 }
+    #             },
+    #             messages=[{"role": "user", "content": prompt}]
+    #         )
 
-            web_result = completion.choices[0].message.content
-            print(f"\n\nResult from Address Search: {web_result}\n\n")
+    #         web_result = completion.choices[0].message.content
+    #         print(f"\n\nResult from Address Search: {web_result}\n\n")
 
-            # Summarize the result
-            result = await summarize_address_results(web_result)
-            print(f"\n\nResult after summarization: {result}\n\n")
+    #         # Summarize the result
+    #         result = await summarize_address_results(web_result)
+    #         print(f"\n\nResult after summarization: {result}\n\n")
 
-            # await asyncio.sleep(2)
-            # await self.Stop_Music()
-            return result
+    #         # await asyncio.sleep(2)
+    #         # await self.Stop_Music()
+    #         return result
 
-        except Exception as e:
-            # await asyncio.sleep(2)
-            # await self.Stop_Music()
-            print(f"Error in address search: {e}")
-            return "Address retrieval failed!"
+    #     except Exception as e:
+    #         # await asyncio.sleep(2)
+    #         # await self.Stop_Music()
+    #         print(f"Error in address search: {e}")
+    #         return "Address retrieval failed!"
 
     @function_tool()
     async def get_valid_addresses(self,
@@ -1988,7 +1988,7 @@ class Assistant(Agent):
             # print(f"\n\n\nPayload collected: {data}\n\n\n")
             logging.info(f"\n\n\nPayload collected: {data}\n\n\n")
 
-            return f"The collected payload for trip is :{data}"
+            return f"Payload for main trip has been collected! Ask the rider if they would like to book a return trip."
 
         except Exception as e:
             print(f"\n\nError occurred in collecting trip payload: {e}\n\n")
@@ -2317,7 +2317,7 @@ class Assistant(Agent):
             logging.info(f"\n\n\n Return trip Payload collected:{data}\n\n\n")
             print("return trip paylaod:", data)
 
-            return f"The collected payload for return trip is :{data}"
+            return f"Payload for return trip has been collected!"
 
         except Exception as e:
             print(f"\n\nError occurred in collecting trip payload: {e}\n\n")
@@ -2407,6 +2407,11 @@ class Assistant(Agent):
                         self.return_leg = None
 
                         return response_text
+                    
+                    else:
+                        error_message = response["responseMessage"]
+                        logging.error(f"\n\n\!!!!!!!\nBooking API ERROR:{response_text}\n\!!!!!!!\n\n")
+                        return f"Trip has not been booked with error message {error_message}"
 
         except Exception as e:
             print(e)
