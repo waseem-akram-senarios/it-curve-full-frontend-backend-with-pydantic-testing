@@ -2410,7 +2410,7 @@ class Assistant(Agent):
                     
                     else:
                         error_message = response["responseMessage"]
-                        logging.error(f"\n\n\!!!!!!!\nBooking API ERROR:{response_text}\n\!!!!!!!\n\n")
+                        logging.error(f"\n\n**********\nBooking API ERROR: {error_message}\n**********\n\n")
                         return f"Trip has not been booked with error message {error_message}"
 
         except Exception as e:
