@@ -2337,6 +2337,9 @@ class Assistant(Agent):
                 payload = self.main_leg
             elif self.return_leg:
                 payload = self.return_leg
+            else:
+                logging.warning("\n\nNo legs provided for booking.\n\n")
+                return "Error: No valid trip legs payload found."
 
             # Step 2: Set the endpoint
             url = os.getenv("TRIP_BOOKING_API")
@@ -2383,38 +2386,31 @@ class Assistant(Agent):
                                 - Keep response to exactly two lines
                                 """
                             weather = await search_web_manual(prompt)
-                            print(f"\n\nWeather: {weather}\n\n")
+                            logging.info(f"\n\nWeather: {weather}\n\n")
 
                             try:
-                                if response["responseCode"] == 200:
-                                    print(f"\n\nResponse: {response}\n\n\n")
 
-                                    if str(copay_cost) == "0":
-                                        response_text += f"Trip has been booked! Your Trip Number is {irefId}. It will take around {estimate_time} minutes and distance between your pick up and drop off is {estimate_distance} miles. Total Cost is {estimate_cost}$. Weather in drop off location is {weather}."
-                                    else:
-                                        response_text += f"Trip has been booked! Your Trip Number is {irefId}. It will take around {estimate_time} minutes and distance between your pick up and drop off is {estimate_distance} miles. Total Cost is {estimate_cost}$ and cost related to copay is {copay_cost}$. Weather in drop off location is {weather}."
-
+                                if str(copay_cost) == "0":
+                                    response_text += f"Trip has been booked! Your Trip Number is {irefId}. It will take around {estimate_time} minutes and distance between your pick up and drop off is {estimate_distance} miles. Total Cost is {estimate_cost}$. Weather in drop off location is {weather}."
                                 else:
-                                    response_text += "Trip has not been booked!"
-
-                                logging.info(f"Booking response:{response_text}")
+                                    response_text += f"Trip has been booked! Your Trip Number is {irefId}. It will take around {estimate_time} minutes and distance between your pick up and drop off is {estimate_distance} miles. Total Cost is {estimate_cost}$ and cost related to copay is {copay_cost}$. Weather in drop off location is {weather}."
 
                             except Exception as e:
-                                print(f"\n\nError occurred in book a trip function: {e}\n\n")
-                                return "Trip has not been booked!"
+                                logging.info(f"\n\nError occurred in book a trip function: {e}\n\n")
 
-                        self.main_leg = None
-                        self.return_leg = None
+                        # self.main_leg = None
+                        # self.return_leg = None
 
+                        logging.info(f"Booking response:{response_text}")
                         return response_text
                     
                     else:
                         error_message = response["responseMessage"]
-                        logging.error(f"\n\n**********\nBooking API ERROR: {error_message}\n**********\n\n")
+                        logging.info(f"\n\n**********\nBooking API Payload ERROR: {error_message}\n**********\n\n")
                         return f"Trip has not been booked with error message {error_message}"
 
         except Exception as e:
-            print(e)
+            logging.info(f"\n\n**********\nBooking API Server ERROR: {e}\n**********\n\n")
             return f"error in booking:{e}"
 
     @function_tool()
