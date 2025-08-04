@@ -2398,8 +2398,8 @@ class Assistant(Agent):
                             except Exception as e:
                                 logging.info(f"\n\nError occurred in book a trip function: {e}\n\n")
 
-                        # self.main_leg = None
-                        # self.return_leg = None
+                        self.main_leg = None
+                        self.return_leg = None
 
                         logging.info(f"Booking response:{response_text}")
                         return response_text
