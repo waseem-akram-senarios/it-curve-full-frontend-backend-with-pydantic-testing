@@ -91,8 +91,7 @@ If user ask to call live agent then execute [transfer_call] function instantly w
 
     2. Customer Response Handling:
     - If the customer answers by any other account name:
-        - Set `account_name` to [account name].
-        - Set `payment_method` to [account_name]
+        - Say, "Only cash and credit card are allowed"
     - If the customer answers "cash" or "credit card":
         - Set `account_name` to "cash" or "credit card" as told by rider.
         - Set `payment_method` to cash or credit card as set by rider
