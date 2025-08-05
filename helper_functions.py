@@ -2419,7 +2419,9 @@ class Assistant(Agent):
         try:
             print("Asterisk call disconnect function called...")
             async with api.LiveKitAPI() as livekit_api:
-                transfer_to = "sip:6000@139.64.158.216"
+                asterisk_ip = os.getenv("ASTERISK_SERVER_IP")
+                transfer_to = f"sip:6000@{str(asterisk_ip)}"
+                # transfer_to = "sip:6000@139.64.158.216"
                 participant_identity = list(self.room.remote_participants.values())[0].identity
                 logger.info(f"participant: {participant_identity}")
                 # Create transfer request
@@ -2451,7 +2453,9 @@ class Assistant(Agent):
         """
         try:
             async with api.LiveKitAPI() as livekit_api:
-                transfer_to = "sip:5000@139.64.158.216"
+                asterisk_ip = os.getenv("ASTERISK_SERVER_IP")
+                transfer_to = f"sip:5000@{str(asterisk_ip)}"
+                # transfer_to = "sip:5000@139.64.158.216"
                 participant_identity = list(self.room.remote_participants.values())[0].identity
                 logger.info(f"participant_identity: {participant_identity}")
                 # Create transfer request

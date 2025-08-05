@@ -69,7 +69,9 @@ async def transfer_call_dtmf(participant, room, participant_identity: str = None
     try:
         print("In call transfer dtmf function....")
         async with api.LiveKitAPI() as livekit_api:
-            transfer_to = "sip:5000@139.64.158.216"
+            asterisk_ip = os.getenv("ASTERISK_SERVER_IP")
+            transfer_to = f"sip:5000@{str(asterisk_ip)}"
+            # transfer_to = "sip:5000@139.64.158.216"
             participant_identity = list(participant.remote_participants.values())[0].identity
             # Create transfer request
             transfer_request = TransferSIPParticipantRequest(
@@ -91,7 +93,9 @@ async def transfer_call_dtmf(participant, room, participant_identity: str = None
 async def transfer_call_dtmf_driver(participant, room, participant_identity: str = None, room_name: str = None) -> None:
     try:
         async with api.LiveKitAPI() as livekit_api:
-            transfer_to = "sip:5001@139.64.158.216"
+            asterisk_ip = os.getenv("ASTERISK_SERVER_IP")
+            transfer_to = f"sip:5001@{str(asterisk_ip)}"
+            # transfer_to = "sip:5001@139.64.158.216"
             participant_identity = list(participant.remote_participants.values())[0].identity
             # Create transfer request
             transfer_request = TransferSIPParticipantRequest(
