@@ -2446,15 +2446,17 @@ class Assistant(Agent):
     #     await room.local_participant.publish_dtmf(code=code, digit=str(code))
 
     @function_tool()
-    async def transfer_call(self, participant_identity: str = None, room_name: str = None) -> None:
+    async def transfer_call(self) -> str:
         """
         The function transfer call to live agent.
         room: room no of the agent
         """
+        logger.info("tranfer_call function called...")
         try:
             async with api.LiveKitAPI() as livekit_api:
                 asterisk_ip = os.getenv("ASTERISK_SERVER_IP")
                 transfer_to = f"sip:5000@{str(asterisk_ip)}"
+                logger.info(f"transfer sip: {transfer_to}")
                 # transfer_to = "sip:5000@139.64.158.216"
                 participant_identity = list(self.room.remote_participants.values())[0].identity
                 logger.info(f"participant_identity: {participant_identity}")
@@ -2473,3 +2475,4 @@ class Assistant(Agent):
                 logger.info(f"Successfully transferred participant {participant_identity} to {transfer_to}")
         except Exception as e:
             logger.info(e)
+            return "Issue with call transfer"
