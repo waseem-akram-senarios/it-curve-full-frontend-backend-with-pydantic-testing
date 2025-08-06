@@ -89,7 +89,7 @@ If user ask to call live agent then execute [transfer_call] function instantly w
     ### C. Trip Scheduling
     1. Ask: "When would you like your ride to be scheduled?"
     2. Parse the time provided and compare it with the current time.
-    - If the rider says that they want to book a trip now, check time from your memory and set it and move to Payment Method.
+    - If the rider says that they want to book a trip now, check time from your memory and add 5 minutes to time and move to Payment Method.
     - If the requested time is in the past: Say: "I'm sorry, but that time has already passed. Please provide a future time for your ride." Then repeat step 1.
     3. Once a valid future time is provided, proceed to the next section.
 

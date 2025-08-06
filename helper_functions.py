@@ -2391,9 +2391,9 @@ class Assistant(Agent):
                             try:
 
                                 if str(copay_cost) == "0":
-                                    response_text += f"Trip has been booked! Your Trip Number is {irefId}. It will take around {estimate_time} minutes and distance between your pick up and drop off is {estimate_distance} miles. Total Cost is {estimate_cost}$. Weather in drop off location is {weather}."
+                                    response_text += f"Trip has been booked! Your Trip Number is {irefId}. It will take around {estimate_time} minutes and distance between your pick up and drop off is {estimate_distance} miles. Estimated cost is {estimate_cost}$. Weather in drop off location is {weather}."
                                 else:
-                                    response_text += f"Trip has been booked! Your Trip Number is {irefId}. It will take around {estimate_time} minutes and distance between your pick up and drop off is {estimate_distance} miles. Total Cost is {estimate_cost}$ and cost related to copay is {copay_cost}$. Weather in drop off location is {weather}."
+                                    response_text += f"Trip has been booked! Your Trip Number is {irefId}. It will take around {estimate_time} minutes and distance between your pick up and drop off is {estimate_distance} miles. Estimated cost is {estimate_cost}$ and cost related to copay is {copay_cost}$. Weather in drop off location is {weather}."
 
                             except Exception as e:
                                 logging.info(f"\n\nError occurred in book a trip function: {e}\n\n")
