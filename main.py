@@ -333,6 +333,7 @@ async def entrypoint(ctx: agents.JobContext):
             prompt = f"""{system_prompt}\n\n
             ``Today's date is {today_date} and Current Time is {current_time}``\n\n
             ``Rider's Profile: \n{rider_info}\n\n``
+            ``Caller's phone no:{phone_number}\n\n``
             """
 
         elif all_riders_info["number_of_riders"] > 1:
@@ -471,7 +472,7 @@ async def entrypoint(ctx: agents.JobContext):
     try:
         if ivr:
             greeting = f"""Thank you for contacting {affiliate_name} agency. My name is Alina, your digital agent,
-             You can press Zero or ask me to transfer the call to our human agent"""
+            I can assist you with anything you need regarding your ride reservation, and more."""
         else:
             greeting = f"Thank you for contacting {affiliate_name} agency. My name is Alina, your digital agent"
 

@@ -1719,7 +1719,7 @@ class Assistant(Agent):
             pickup_city_zip_code: Pick Up City Zip Code else ''
             dropoff_city_zip_code: Drop Off City Zip Code else ''
             extra_details: Additional Notes if mentioned by rider for the driver else ''
-            phone_number: Phone number of rider else -1
+            phone_number: Phone number of rider else caller's phone number
             client_id: Client Id else -1. I am applying  python int() so generate value accordingly
             funding_source_id: Funding Source Id else -1. I am applying  python int() so generate value accordingly
             affilaite_id: Affiliate Id else -1. I am applying  python int() so generate value accordingly
@@ -2047,7 +2047,7 @@ class Assistant(Agent):
             pickup_city_zip_code: Pick Up City Zip Code else ''
             dropoff_city_zip_code: Drop Off City Zip Code else ''
             extra_details: Additional Notes if mentioned by rider for the driver else ''
-            phone_number: Phone number of rider else -1
+            phone_number:  Phone number of rider else caller's phone number
             client_id: Client Id else -1. I am applying  python int() so generate value accordingly
             funding_source_id: Funding Source Id else -1. I am applying  python int() so generate value accordingly
             affilaite_id: Affiliate Id else -1. I am applying  python int() so generate value accordingly
