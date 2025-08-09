@@ -167,7 +167,7 @@ async def search_web_manual(prompt: str):
     try:
         # Use the OpenAI API client to make the call
         response = await openai_client.responses.create(
-            model="gpt-4o",
+            model="gpt-4.1",
             tools=[{"type": "web_search_preview"}],
             input=prompt
         )
@@ -229,7 +229,7 @@ async def get_frequnt_addresses_manual(client_id, affiliate_id):
 
 
 async def get_match_source(prompt):
-    model = "gpt-4o"
+    model = "gpt-4.1"
 
     user_message = {
         "role": "user",
@@ -494,7 +494,7 @@ def calculate_cost(llm_input_tokens, llm_output_tokens, stt_audio_seconds, tts_c
 
 
 async def get_location_from_openai_async(address):
-    model = "gpt-4o"
+    model = "gpt-4.1"
     # api_key = os.getenv("OPENAI_API_KEY")
     # client = AsyncOpenAI(api_key=api_key)
 
@@ -531,7 +531,7 @@ async def get_location_from_openai_async(address):
 
 
 async def summarize_address_results(address):
-    model = "gpt-4o"
+    model = "gpt-4.1"
 
     system_message = {
         "role": "system",
