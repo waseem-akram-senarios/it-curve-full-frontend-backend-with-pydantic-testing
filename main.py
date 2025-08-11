@@ -67,7 +67,7 @@ logger = logging.getLogger("voice-agent")
 
 async def transfer_call_dtmf(participant, room, participant_identity: str = None, room_name: str = None) -> None:
     try:
-        print("In call transfer dtmf function....")
+        logger.info("In call transfer dtmf function....")
         async with api.LiveKitAPI() as livekit_api:
             asterisk_ip = os.getenv("ASTERISK_SERVER_IP")
             transfer_to = f"sip:5000@{str(asterisk_ip)}"
@@ -85,7 +85,7 @@ async def transfer_call_dtmf(participant, room, participant_identity: str = None
 
             # Transfer caller
             await livekit_api.sip.transfer_sip_participant(transfer_request)
-            logger.info(f"Call transferred to: {transfer_to}")
+            logger.info(f"User Pressed 0 and Call transferred to: {transfer_to}")
     except Exception as e:
         logger.info(e)
 

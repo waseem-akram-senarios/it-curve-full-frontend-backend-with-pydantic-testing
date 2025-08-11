@@ -2417,7 +2417,7 @@ class Assistant(Agent):
     async def asterisk_call_disconnect(self, participant_identity: str = None, room_name: str = None) -> None:
 
         try:
-            print("Asterisk call disconnect function called...")
+            logger.info("Asterisk call disconnect function called...")
             async with api.LiveKitAPI() as livekit_api:
                 asterisk_ip = os.getenv("ASTERISK_SERVER_IP")
                 transfer_to = f"sip:6000@{str(asterisk_ip)}"
@@ -2451,7 +2451,7 @@ class Assistant(Agent):
         The function transfer call to live agent.
         room: room no of the agent
         """
-        logger.info("tranfer_call function called...")
+        logger.info("transfer_call_voice function called...")
         try:
             async with api.LiveKitAPI() as livekit_api:
                 asterisk_ip = os.getenv("ASTERISK_SERVER_IP")
