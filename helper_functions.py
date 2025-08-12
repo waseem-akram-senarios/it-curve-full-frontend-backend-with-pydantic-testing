@@ -723,7 +723,7 @@ class Assistant(Agent):
         try:
             # Use the OpenAI API client to make the call
             response = await openai_client.responses.create(
-                model="gpt-4.1-mini",
+                model="gpt-4.1",
                 tools=[{"type": "web_search_preview"}],
                 input=prompt
             )
