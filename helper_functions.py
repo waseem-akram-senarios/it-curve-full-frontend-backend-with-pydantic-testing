@@ -723,9 +723,10 @@ class Assistant(Agent):
         try:
             # Use the OpenAI API client to make the call
             response = await openai_client.responses.create(
-                model="o4-mini", # do not change this model, this is must for web address search
+                model="gpt-4.1", # do not change this model, this is must for web address search
                 tools=[{
                         "type": "web_search_preview",
+                        "search_context_size": "low",
                         "user_location": {
                             "type": "approximate",
                             "country": "US",
@@ -930,6 +931,7 @@ class Assistant(Agent):
     @function_tool()
     async def get_IDs(self,
                       account_: str,
+                      payment_method: str
                       ):
         """Function to fetch Funding Source Id, Program Id, Payment Type, and Copay Status based on provided account and affiliate details.
         Args:
@@ -1041,7 +1043,7 @@ class Assistant(Agent):
                                     You are given a list of dictionaries enclosed in triple backticks: ```{response_dict}```
 
                                     Your task is to find the dictionary whose 'PaymentType Name' value closely matches
-                                     the account enclosed in double quotes: ``{account_}``
+                                     the account enclosed in double quotes: ``{payment_method}``
 
                                     Return the matching dictionary in JSON format with the following fields:
 
@@ -2483,3 +2485,5 @@ class Assistant(Agent):
         except Exception as e:
             logger.info(e)
             return "Issue with call transfer"
+
+
