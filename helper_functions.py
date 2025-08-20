@@ -1720,11 +1720,11 @@ class Assistant(Agent):
         """"Function that is used to collect the payload for the trips.
         Args:
             pickup_street_address: Pickup Street Address confirmed by rider. Do not include city, state, country
-            dropoff_street_address: Dropoff Street Address confirmed by rider. Do not include city, state, country
+            dropoff_street_address: Drop off Street Address confirmed by rider. Do not include city, state, country
             pickup_city: Pickup city confirmed by rider else ''
-            dropoff_city: Dropoff city confirmed by rider else ''
+            dropoff_city: Drop off city confirmed by rider else ''
             pickup_state: Pickup State confirmed by rider else ''
-            dropoff_state: Dropoff State confirmed by rider else ''
+            dropoff_state: Drop off State confirmed by rider else ''
             pickup_city_zip_code: Pick Up City Zip Code else ''
             dropoff_city_zip_code: Drop Off City Zip Code else ''
             extra_details: Additional Notes if mentioned by rider for the driver else ''
@@ -1732,7 +1732,7 @@ class Assistant(Agent):
             client_id: Client Id else -1. I am applying  python int() so generate value accordingly
             funding_source_id: Funding Source Id else -1. I am applying  python int() so generate value accordingly
             affilaite_id: Affiliate Id else -1. I am applying  python int() so generate value accordingly
-            rider_name: Complete verified name of the rider if available. If you do not have verified name, use Complete Name of the rider used in conversation. If you do not have nane in your memory set it to ''
+            rider_name: Complete verified name of the rider if available. If you do not have verified name, use Complete Name of the Caller or rider used in conversation. If you do not have name in your memory ask it from caller.
             payment_type_id: Payment Type Id else -1. I am applying  python int() so generate value accordingly
             copay_funding_source_id: Copay Funding Source Id else -1. I am applying  python int() so generate value accordingly
             copay_payment_type_id: Copay Payment Type Id else -1. I am applying  python int() so generate value accordingly
@@ -2060,7 +2060,7 @@ class Assistant(Agent):
             client_id: Client Id else -1. I am applying  python int() so generate value accordingly
             funding_source_id: Funding Source Id else -1. I am applying  python int() so generate value accordingly
             affilaite_id: Affiliate Id else -1. I am applying  python int() so generate value accordingly
-            rider_name: Complete verified name of the rider if available. If you do not have verified name, use Complete Name of the rider used in conversation. If you do not have nane in your memory set it to ''
+            rider_name: Complete verified name of the rider if available. If you do not have verified name, use Complete Name of the Caller or rider used in conversation. If you do not have name in your memory ask it from caller.
             payment_type_id: Payment Type Id else -1. I am applying  python int() so generate value accordingly
             copay_funding_source_id: Copay Funding Source Id else -1. I am applying  python int() so generate value accordingly
             copay_payment_type_id: Copay Payment Type Id else -1. I am applying  python int() so generate value accordingly
