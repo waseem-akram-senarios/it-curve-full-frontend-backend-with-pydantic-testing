@@ -22,6 +22,8 @@ from livekit import api
 from livekit.rtc import SipDTMF
 from side_functions import *
 import logging
+from typing import Annotated
+from pydantic import Field, BaseModel
 
 # Load variables from .env file
 load_dotenv()
@@ -41,6 +43,91 @@ MUSIC_PATH = os.path.join(App_Directory, "music.wav")
 openai_client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
+# Pydantic model for return trip payload
+class ReturnTripPayload(BaseModel):
+    pickup_street_address: str = Field(..., description="Pickup Street Address confirmed by rider. Do not include city, state, country")
+    dropoff_street_address: str = Field(..., description="Dropoff Street Address confirmed by rider. Do not include city, state, country")
+    pickup_city: str = Field(..., description="Pickup city confirmed by rider else ''")
+    dropoff_city: str = Field(..., description="Dropoff city confirmed by rider else ''")
+    pickup_state: str = Field(..., description="Pickup State confirmed by rider else ''")
+    dropoff_state: str = Field(..., description="Dropoff State confirmed by rider else ''")
+    extra_details: str = Field(..., description="Additional Notes if mentioned by rider for the driver else ''")
+    phone_number: str = Field(..., description="Phone number of rider else caller's phone number")
+    client_id: str = Field(..., description="Client Id else -1. I am applying python int() so generate value accordingly")
+    funding_source_id: str = Field(..., description="Funding Source Id else -1. I am applying python int() so generate value accordingly")
+    rider_name: str = Field(..., description="Complete verified name of the rider if available. If you do not have verified name, use Complete Name of the Caller or rider used in conversation. If you do not have name in your memory ask it from caller.")
+    payment_type_id: str = Field(..., description="Payment Type Id else -1. I am applying python int() so generate value accordingly")
+    copay_funding_source_id: str = Field(..., description="Copay Funding Source Id else -1. I am applying python int() so generate value accordingly")
+    copay_payment_type_id: str = Field(..., description="Copay Payment Type Id else -1. I am applying python int() so generate value accordingly")
+    booking_time: str = Field(..., description="Booking Time if mentioned by rider in this format 'Year-Month-Date HH:MM' for the driver else ''. If the rider wants to book for now, get current time from memory. if is_will_call is true, set it to date today.")
+    pickup_lat: str = Field(..., description="Pickup address latitude else 0. I am applying python float() so generate value accordingly")
+    pickup_lng: str = Field(..., description="Pickup address longitude else 0. I am applying python float() so generate value accordingly")
+    dropoff_lat: str = Field(..., description="Drop off address latitude else 0. I am applying python float() so generate value accordingly")
+    dropoff_lng: str = Field(..., description="Drop off address longitude else 0. I am applying python float() so generate value accordingly")
+    rider_id: str = Field(..., description="Rider Id available in the memory either already in the memory or provided by the customer. If not available set it to -1. I am applying python int() so generate value accordingly")
+    number_of_wheel_chairs: str = Field(..., description="Number of wheelchairs if required by rider else 0. For example if rider is missing leg or specifically says, 'they require wheel chair'. I am applying python int() so generate value accordingly")
+    number_of_passengers: str = Field(..., description="Number of passengers. If rider mentioned more than 1 passenger, set accordingly otherwise set it to 1. I am applying python int() so generate value accordingly")
+    family_id: str = Field(..., description="Family Id else 0. I am applying python int() so generate value accordingly")
+    is_schedule: str = Field(..., description="1 if the trip is scheduled for 20+ minutes from current time, also 1 if is_will_call true, else 0 if the trip is scheduled for now. I am applying python int() so generate value accordingly, or if")
+    pickup_city_zip_code: str = Field(..., description="Pick Up City Zip Code else ''")
+    dropoff_city_zip_code: str = Field(..., description="Drop Off City Zip Code else ''")
+    rider_home_address: str = Field(..., description="Home location of the rider present in the memory. If not available, set it to ''")
+    rider_home_city: str = Field(..., description="City of rider's home address. If not available, set it to ''")
+    rider_home_state: str = Field(..., description="State of rider's home address. If not available, set it to ''")
+    home_phone: str = Field(..., description="Rider's home phone no. If not available, set it to ''")
+    office_phone: str = Field(..., description="Rider's Office Phone no. if not available, set it to ''")
+    total_passengers: int = Field(..., description="total passenger count if not available, set it to 1")
+    total_wheelchairs: int = Field(..., description="total wheelchair count if not available, set it to 0")
+    is_will_call: bool = Field(..., description="true if booking time is not provided or booking time is will call else false")
+    will_call_day: str = Field(..., description="Booking Date if mentioned by rider in this format 'Year-Month-Date 00:00:00' for the driver else get current date from memory, applicable only if is_will_call is true.")
+    pickup_remarks: str = Field(..., description="any remarks given explicitly for pickup address else ''")
+    pickup_phone_number: str = Field(..., description="if pickup phone number is explicitly provided else ''")
+    dropoff_remarks: str = Field(..., description="any remarks given explicitly for drop off address else ''")
+    dropoff_phone_number: str = Field(..., description="if drop off phone number is explicitly provided else ''")
+
+
+class MainTripPayload(BaseModel):
+        pickup_street_address: str
+        dropoff_street_address: str
+        pickup_city: str
+        dropoff_city: str
+        pickup_state: str
+        dropoff_state: str
+        extra_details: str
+        phone_number: str
+        client_id: str
+        funding_source_id: str
+        rider_name: str
+        payment_type_id: str
+        copay_funding_source_id: str
+        copay_payment_type_id: str
+        booking_time: str
+        pickup_lat: str
+        pickup_lng: str
+        dropoff_lat: str
+        dropoff_lng: str
+        rider_id: str
+        number_of_wheel_chairs: str
+        number_of_passengers: str
+        family_id: str
+        is_schedule: str
+        pickup_city_zip_code: str
+        dropoff_city_zip_code: str
+        rider_home_address: str
+        rider_home_city: str
+        rider_home_state: str
+        home_phone: str
+        office_phone: str
+        total_passengers: int
+        total_wheelchairs: int
+        is_will_call: bool
+        will_call_day: str
+        pickup_remarks: str
+        pickup_phone_number: str
+        dropoff_remarks: str
+        dropoff_phone_number: str
+
+
 class Assistant(Agent):
     def __init__(self, call_sid=None, room=None, affiliate_id=None, instructions=None, main_leg=None, return_leg=None):
         """Initialize the assistant with a call SID and LiveKit room."""
@@ -52,7 +139,7 @@ class Assistant(Agent):
         self.return_leg = return_leg
         super().__init__(instructions=instructions)  # Initialize Agent with the instructions argument
 
-    async def Play_Music(self):
+    async def Play_Music(self) -> str:
         """Function to publish an audio track in the LiveKit room with stoppable music."""
         if not self.room:
             return "No active room to play music."
@@ -99,7 +186,7 @@ class Assistant(Agent):
             print(f"\n\nError publishing music: {e}\n\n")
             return "Failed to play music."
 
-    async def Stop_Music(self):
+    async def Stop_Music(self) -> str:
         """Function to stop playing music in the LiveKit room."""
         if not self.room:
             return "No active room to stop music."
@@ -114,7 +201,7 @@ class Assistant(Agent):
             return "Failed to stop music."
 
     @function_tool()
-    async def Close_Call(self):
+    async def Close_Call(self) -> str:
         """Function to end Twilio call and disconnect from the LiveKit room."""
         print(f"\n\n\ncalled close call function\n\n\n")
         await self.session.say('Thank you for reaching out. Have a great day!')
@@ -150,14 +237,19 @@ class Assistant(Agent):
         return f"{call_closed_msg} {room_closed_msg}"
 
     @function_tool()
-    async def get_client_name(self,
-                              caller_number: str,
-                              family_id: str,
-                              ):
-        """Function to get Rider Profile
+    async def get_client_name(
+        self,
+        caller_number: Annotated[str, Field(description="Rider Phone Number in digits")],
+        family_id: Annotated[str, Field(description="Family id of the rider else 1. Only a number so that it can be converted into integer")]
+    ) -> str:
+        """
+        Function to get Rider Profile.
         Args:
-            caller_number: Rider Phone Number in digits
-            family_id: Family id of the rider else 1. Only a number so that it can be converted into integer"""
+            caller_number (str): Rider Phone Number in digits. Pydantic validated.
+            family_id (str): Family id of the rider, else 1. Only a number so that it can be converted into integer. Pydantic validated.
+        Returns:
+            str: JSON string with rider profile or error message.
+        """
 
         print(f"\n\nCalled get_client_name function\n\n")
 
@@ -621,18 +713,22 @@ class Assistant(Agent):
     #         return "Trip has not been booked!"
 
     @function_tool()
-    async def get_ETA(self, client_id: str):
+    async def get_ETA(
+        self,
+        client_id: Annotated[str, Field(description="Client Id in digits (string or convertible to string)")]
+    ) -> str:
         """
-        Function to get
-        - Last pickup/Last drop off Address
-        - Last trip details
-        - Latest/Recent trip that was booked
-        - Their current trip ETA 
-        - Where their ride/vehicle/trip is
-        - Existing rides/trips status
-
+        Function to get:
+            - Last pickup/Last drop off Address
+            - Last trip details
+            - Latest/Recent trip that was booked
+            - Their current trip ETA
+            - Where their ride/vehicle/trip is
+            - Existing rides/trips status
         Args:
-            client_id: Client Id in digits (string or convertible to string)
+            client_id (str): Client Id in digits (string or convertible to string). Pydantic validated.
+        Returns:
+            str: JSON string with trip details or error message.
         """
         print(f"\n\nCalled get_ETA function\n\n")
 
@@ -707,13 +803,16 @@ class Assistant(Agent):
             return "No data found for ETA!"
 
     @function_tool()
-    async def search_web(self,
-                         prompt: str,
-                         ):
-
-        """Function to search web to get knowledge.
+    async def search_web(
+        self,
+        prompt: Annotated[str, Field(description="Prompt for web search. Keep it as precise and to the point as possible at max 3-4 lines.")]
+    ) -> str:
+        """
+        Function to search web to get knowledge.
         Args:
-            prompt: Prompt for web search. Keep it as precise and to the point as possible at max 3-4 lines.
+            prompt (str): Prompt for web search. Pydantic validated.
+        Returns:
+            str: Output text from web search or error message.
         """
         print("\n\nCalled search_web function\n\n")
         # _ = asyncio.create_task(self.Play_Music())
@@ -807,12 +906,16 @@ class Assistant(Agent):
     #         return "Address retrieval failed!"
 
     @function_tool()
-    async def get_valid_addresses(self,
-                                  address: str
-                                  ):
-        """Function to search valid addresses based on input address.
+    async def get_valid_addresses(
+        self,
+        address: Annotated[str, Field(description="Complete Address confirmed by the rider to be validated.")]
+    ) -> str:
+        """
+        Function to search valid addresses based on input address.
         Args:
-            address: Complete Address confirmed by the rider to be validated.
+            address (str): Complete Address confirmed by the rider to be validated. Pydantic validated.
+        Returns:
+            str: JSON string with valid address information or error message.
         """
         print(f"\n\nCalled get_valid_address function with address: {address}\n\n")
         # await self.session.say('Let me verify if that address is valid. Please wait a moment.')
@@ -878,14 +981,18 @@ class Assistant(Agent):
         return str(result)
 
     @function_tool()
-    async def check_bounds(self,
-                           latitude: str,
-                           longitude: str
-                           ):
-        """Function to check if the address is within the service area based on provided coordinates.
+    async def check_bounds(
+        self,
+        latitude: Annotated[str, Field(description="Latitude of the location to be checked.")],
+        longitude: Annotated[str, Field(description="Longitude of the location to be checked.")]
+    ) -> bool:
+        """
+        Function to check if the address is within the service area based on provided coordinates.
         Args:
-            latitude: Latitude of the location to be checked.
-            longitude: Longitude of the location to be checked.
+            latitude (str): Latitude of the location to be checked.
+            longitude (str): Longitude of the location to be checked.
+        Returns:
+            bool: True if within bounds, False otherwise.
         """
         print(f"\n\nCalled check_bounds function\n\n")
         # _ = asyncio.create_task(self.Play_Music())
@@ -929,13 +1036,18 @@ class Assistant(Agent):
             return True
 
     @function_tool()
-    async def get_IDs(self,
-                      account_: str,
-                      payment_method: str
-                      ):
-        """Function to fetch Funding Source Id, Program Id, Payment Type, and Copay Status based on provided account and affiliate details.
+    async def get_IDs(
+        self,
+        account_: Annotated[str, Field(description="Account name provided by the rider")],
+        payment_method: Annotated[str, Field(description="Payment method provided by the rider")]
+    ) -> str:
+        """
+        Function to fetch Funding Source Id, Program Id, Payment Type, and Copay Status based on provided account and affiliate details.
         Args:
-            account_: Account name provided by the rider, else None
+            account_ (str): Account name provided by the rider.
+            payment_method (str): Payment method provided by the rider.
+        Returns:
+            str: Verification summary or error message.
         """
         # _ = asyncio.create_task(self.Play_Music())
         # await asyncio.sleep(2)
@@ -1110,12 +1222,16 @@ class Assistant(Agent):
                 f" Require Copay Status is: {copay_status}, Program Id is {program_id}")
 
     @function_tool()
-    async def get_copay_ids(self,
-                            copay_account_name: str
-                            ):
-        """Function to fetch copay payment type based on affiliate ID and copay account name.
+    async def get_copay_ids(
+        self,
+        copay_account_name: Annotated[str, Field(description="Copay Account Name provided by the rider")]
+    ) -> str:
+        """
+        Function to fetch copay payment type based on affiliate ID and copay account name.
         Args:
-            copay_account_name: Copay Account Name provided by the rider, else None.
+            copay_account_name (str): Copay Account Name provided by the rider.
+        Returns:
+            str: Copay verification summary or error message.
         """
         # _ = asyncio.create_task(self.Play_Music())
         # await asyncio.sleep(2)
@@ -1246,14 +1362,18 @@ class Assistant(Agent):
             f" Copay Payment Type Id: {payment_type_id}")
 
     @function_tool()
-    async def verify_rider(self,
-                           rider_id: str,
-                           program_id: str
-                           ):
-        """Function to verify rider based on rider_id, affiliate_id, and program_id.
+    async def verify_rider(
+        self,
+        rider_id: Annotated[str, Field(description="Rider Id, else -1.")],
+        program_id: Annotated[str, Field(description="Program Id, else -1.")]
+    ) -> str:
+        """
+        Function to verify rider based on rider_id, affiliate_id, and program_id.
         Args:
-            rider_id: Rider Id, else -1.
-            program_id: Program Id, else -1.
+            rider_id (str): Rider Id, else -1.
+            program_id (str): Program Id, else -1.
+        Returns:
+            str: Verification result message.
         """
         # _ = asyncio.create_task(self.Play_Music())
         # await asyncio.sleep(2)
@@ -1332,12 +1452,15 @@ class Assistant(Agent):
                 return f"Rider is Verified! Verified Rider Name is {verified_rider_name}"
 
     @function_tool()
-    async def get_Trip_Stats(self,
-                             client_id: str
-                             ):
+    async def get_Trip_Stats(
+        self,
+        client_id: Annotated[int, Field(description="Client Id in digits", ge=1)]
+    ) -> str:
         """Function to get Trip ETA or to know where is rider's current ride.
         Args:
             client_id: Client Id in digits
+        Returns:
+            JSON string if successful, or error string if failed
         """
 
         print(f"\n\nCalled get_Trip_Stats function\n\n")
@@ -1347,8 +1470,6 @@ class Assistant(Agent):
 
         # Define the API endpoint
         url = os.getenv("TRIP_STATS_API")
-
-        client_id = int(client_id)
 
         # Create the payload (request body)
         payload = {
@@ -1390,9 +1511,10 @@ class Assistant(Agent):
             return "No data found!"
 
     @function_tool()
-    async def get_historic_rides(self,
-                                 client_id: str
-                                 ):
+    async def get_historic_rides(
+        self,
+        client_id: Annotated[int, Field(description="Client Id in digits", ge=1)]
+    ) -> str:
         """Function to get
         - Performed trips
         - Latest/Last Historic trip
@@ -1403,6 +1525,8 @@ class Assistant(Agent):
         - Historic trips
         Args:
             client_id: Client Id in digits
+        Returns:
+            String with JSON or error message
         """
 
         print(f"\n\nCalled get_historic_rides function\n\n")
@@ -1426,33 +1550,36 @@ class Assistant(Agent):
         historic_trips_data = ""
         print(f"\n\nPayload sent to get frequent addresses: {payload}\n\n")
 
-        async with aiohttp.ClientSession() as session:
-            async with session.post(url, json=payload, headers=headers) as response:
-                # print(f"Status Code: {response.status}")
-                response_text = await response.text()
-                print(f"\n\nResponse from FrequentDataAPI: {response_text}\n\n")
-                try:
-                    response_json = json.loads(response_text)
-                    historic_trips = json.loads(response_json["responseJSON"])  # this is the list
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.post(url, json=payload, headers=headers) as response:
+                    # print(f"Status Code: {response.status}")
+                    response_text = await response.text()
+                    print(f"\n\nResponse from FrequentDataAPI: {response_text}\n\n")
+                    try:
+                        response_json = json.loads(response_text)
+                        historic_trips = json.loads(response_json["responseJSON"])  # this is the list
 
-                    if historic_trips:
-                        last_historic_trip = max(historic_trips, key=lambda x: int(x['iRefId']))
-                        last_historic_refid = last_historic_trip.get('iRefId')
-                    else:
-                        last_historic_refid = None
+                        if historic_trips:
+                            last_historic_trip = max(historic_trips, key=lambda x: int(x['iRefId']))
+                            last_historic_refid = last_historic_trip.get('iRefId')
+                        else:
+                            last_historic_refid = None
 
-                    if last_historic_refid:
-                        result = {
-                            "trips": historic_trips,
-                            "latest_historic_trip": last_historic_refid
-                        }
-                        historic_trips_data = json.dumps(result, indent=4)
-                    else:
-                        historic_trips_data = json.dumps(historic_trips, indent=4)
+                        if last_historic_refid:
+                            result = {
+                                "trips": historic_trips,
+                                "latest_historic_trip": last_historic_refid
+                            }
+                            historic_trips_data = json.dumps(result, indent=4)
+                        else:
+                            historic_trips_data = json.dumps(historic_trips, indent=4)
 
-                except json.JSONDecodeError:
-                    print("Failed to parse response as JSON.")
-                    print("Raw Response:", response_text)
+                    except json.JSONDecodeError:
+                        print("Failed to parse response as JSON.")
+                        print("Raw Response:", response_text)
+        except Exception as e:
+            print(f"\n\nError occurred in getting historic rides: {e}\n\n")
 
         if historic_trips_data.strip() == "":
             historic_trips_data = "No Data Available"
@@ -1465,11 +1592,15 @@ class Assistant(Agent):
         return historic_trips_data_result
 
     @function_tool()
-    async def get_frequnt_addresses(self, client_id: str):
-
+    async def get_frequnt_addresses(
+        self,
+        client_id: Annotated[int, Field(description="Client Id in digits", ge=1)]
+    ) -> str:
         """Function to get Rider Frequently Used Addresses
         Args:
             client_id: Client Id in digits
+        Returns:
+            String with addresses or error message
         """
 
         print(f"\n\nCalled get_frequnt_addresses function\n\n")
@@ -1496,29 +1627,30 @@ class Assistant(Agent):
         frequent_addresses = ""
         print(f"\n\nPayload sent to get frequent addresses: {payload}\n\n")
 
-        async with aiohttp.ClientSession() as session:
-            async with session.post(url, json=payload, headers=headers) as response:
-                # print(f"Status Code: {response.status}")
-                response_text = await response.text()
-                print(f"\n\nResponse from FrequentDataAPI: {response_text}\n\n")
-                try:
-                    response_json = json.loads(response_text)
-                    if response_json.get("responseCode") == 200:
-                        address_data = response_json.get("responseJSON", "[]")
-                        address_data_json = json.loads(address_data)
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.post(url, json=payload, headers=headers) as response:
+                    # print(f"Status Code: {response.status}")
+                    response_text = await response.text()
+                    print(f"\n\nResponse from FrequentDataAPI: {response_text}\n\n")
+                    try:
+                        response_json = json.loads(response_text)
+                        if response_json.get("responseCode") == 200:
+                            address_data = response_json.get("responseJSON", "[]")
+                            address_data_json = json.loads(address_data)
 
-                        for trip in address_data_json:
-                            pickup_address = trip.get("PUAddress", "") + trip.get("PUCity", "") + trip.get("PUState",
-                                                                                                           "")
-                            dropoff_address = trip.get("DOAddress", "") + trip.get("DOCity", "") + trip.get("DOState",
-                                                                                                            "")
-                            frequent_addresses += pickup_address + "\n" + dropoff_address + "\n"
-                    else:
-                        frequent_addresses = ""
+                            for trip in address_data_json:
+                                pickup_address = trip.get("PUAddress", "") + trip.get("PUCity", "") + trip.get("PUState", "")
+                                dropoff_address = trip.get("DOAddress", "") + trip.get("DOCity", "") + trip.get("DOState", "")
+                                frequent_addresses += pickup_address + "\n" + dropoff_address + "\n"
+                        else:
+                            frequent_addresses = ""
 
-                except json.JSONDecodeError:
-                    print("Failed to parse response as JSON.")
-                    print("Raw Response:", response_text)
+                    except json.JSONDecodeError:
+                        print("Failed to parse response as JSON.")
+                        print("Raw Response:", response_text)
+        except Exception as e:
+            print(f"\n\nError occurred in getting frequent addresses: {e}\n\n")
 
         if frequent_addresses.strip() == "":
             frequent_addresses = "No Data Available"
@@ -1532,23 +1664,27 @@ class Assistant(Agent):
 
     @function_tool()
     async def get_distance_duration_fare(self,
-                                         pickup_latitude: str,
-                                         dropoff_latitude: str,
-                                         pickup_longitude: str,
-                                         dropoff_longitude: str,
-                                         number_of_wheel_chairs: str,
-                                         number_of_passengers: str,
-                                         rider_id: str,
-                                         ):
-        """Function to Distance and Trip Duration between two locations
+        pickup_latitude: Annotated[str, Field(description="Pickup Address Latitude in string. If not available, set it to 0.")],
+        dropoff_latitude: Annotated[str, Field(description="Dropoff Address Latitude in string. If not available, set it to 0.")],
+        pickup_longitude: Annotated[str, Field(description="Pickup Address Longitude in string. If not available, set it to 0.")],
+        dropoff_longitude: Annotated[str, Field(description="Dropoff Address Longitude in string. If not available, set it to 0.")],
+        number_of_wheel_chairs: Annotated[str, Field(description="Number of wheel chairs if required by rider else 0. For example if rider is missing leg or specifically says, 'they require wheel chair'. I am applying python int() so generate value accordingly")],
+        number_of_passengers: Annotated[str, Field(description="Number of passengers. If rider mentioned more than 1 passengers, set accordingly otherwise set it to 1. I am applying python int() so generate value accordingly")],
+        rider_id: Annotated[str, Field(description="Rider Id available in the memory either already in the memory or provided by the customer. If not available set it to 0. I am applying python int() so generate value accordingly")],
+    ) -> str:
+        """
+        Function to get distance and trip duration between two locations.
+
         Args:
-            pickup_latitude: Pickup Address Latitude in string. If not available, set it to 0.
-            pickup_longitude: Pickup Address Longitude in string. If not available, set it to 0.
-            dropoff_latitude: Dropoff Address Latitude in string. If not available, set it to 0.
-            dropoff_longitude: Dropoff Address Longitude in string. If not available, set it to 0.
-            rider_id: Rider Id available in the memory either already in the memory or provided by the customer. If not available set it to 0. I am applying  python int() so generate value accordingly
-            number_of_wheel_chairs: Number of wheel chairs if required by rider else 0. For example if rider is missing leg or specifically says, 'they require wheel chair'. I am applying  python int() so generate value accordingly
-            number_of_passengers: Number of passengers. If rider mentioned more than 1 passengers, set accordingly otherwise set it to 1. I am applying  python int() so generate value accordingly
+            pickup_latitude (str): Pickup Address Latitude in string. If not available, set it to 0.
+            pickup_longitude (str): Pickup Address Longitude in string. If not available, set it to 0.
+            dropoff_latitude (str): Dropoff Address Latitude in string. If not available, set it to 0.
+            dropoff_longitude (str): Dropoff Address Longitude in string. If not available, set it to 0.
+            number_of_wheel_chairs (str): Number of wheel chairs if required by rider else 0. For example if rider is missing leg or specifically says, 'they require wheel chair'. I am applying python int() so generate value accordingly.
+            number_of_passengers (str): Number of passengers. If rider mentioned more than 1 passengers, set accordingly otherwise set it to 1. I am applying python int() so generate value accordingly.
+            rider_id (str): Rider Id available in the memory either already in the memory or provided by the customer. If not available set it to 0. I am applying python int() so generate value accordingly.
+        Returns:
+            str: Distance, duration, and fare information.
         """
 
         print(f"\n\nCalled get_distance_duration_fare function\n\n")
@@ -1676,91 +1812,54 @@ class Assistant(Agent):
     #     return "Paused for a while"
 
     @function_tool()
-    async def collect_main_trip_payload(self,
-                                        pickup_street_address: str,
-                                        dropoff_street_address: str,
-                                        pickup_city: str,
-                                        dropoff_city: str,
-                                        pickup_state: str,
-                                        dropoff_state: str,
-                                        extra_details: str,
-                                        phone_number: str,
-                                        client_id: str,
-                                        funding_source_id: str,
-                                        rider_name: str,
-                                        payment_type_id: str,
-                                        copay_funding_source_id: str,
-                                        copay_payment_type_id: str,
-                                        booking_time: str,
-                                        pickup_lat: str,
-                                        pickup_lng: str,
-                                        dropoff_lat: str,
-                                        dropoff_lng: str,
-                                        rider_id: str,
-                                        number_of_wheel_chairs: str,
-                                        number_of_passengers: str,
-                                        family_id: str,
-                                        is_schedule: str,
-                                        pickup_city_zip_code: str,
-                                        dropoff_city_zip_code: str,
-                                        rider_home_address: str,
-                                        rider_home_city: str,
-                                        rider_home_state: str,
-                                        home_phone: str,
-                                        office_phone: str,
-                                        total_passengers: int,
-                                        total_wheelchairs: int,
-                                        is_will_call: bool,
-                                        will_call_day: str,
-                                        pickup_remarks: str,
-                                        pickup_phone_number: str,
-                                        dropoff_remarks: str,
-                                        dropoff_phone_number: str,
-                                        ):
-        """"Function that is used to collect the payload for the trips.
-        Args:
-            pickup_street_address: Pickup Street Address confirmed by rider. Do not include city, state, country
-            dropoff_street_address: Drop off Street Address confirmed by rider. Do not include city, state, country
-            pickup_city: Pickup city confirmed by rider else ''
-            dropoff_city: Drop off city confirmed by rider else ''
-            pickup_state: Pickup State confirmed by rider else ''
-            dropoff_state: Drop off State confirmed by rider else ''
-            pickup_city_zip_code: Pick Up City Zip Code else ''
-            dropoff_city_zip_code: Drop Off City Zip Code else ''
-            extra_details: Additional Notes if mentioned by rider for the driver else ''
-            phone_number: Phone number of rider else caller's phone number
-            client_id: Client Id else -1. I am applying  python int() so generate value accordingly
-            funding_source_id: Funding Source Id else -1. I am applying  python int() so generate value accordingly
-            affilaite_id: Affiliate Id else -1. I am applying  python int() so generate value accordingly
-            rider_name: Complete verified name of the rider if available. If you do not have verified name, use Complete Name of the Caller or rider used in conversation. If you do not have name in your memory ask it from caller.
-            payment_type_id: Payment Type Id else -1. I am applying  python int() so generate value accordingly
-            copay_funding_source_id: Copay Funding Source Id else -1. I am applying  python int() so generate value accordingly
-            copay_payment_type_id: Copay Payment Type Id else -1. I am applying  python int() so generate value accordingly
-            booking_time: Booking Time if mentioned by rider in this format 'Year-Month-Date HH:MM' for the driver else ''. If the rider wants to book for now, get current time from memory. if is_will_call is true, set it to date today.
-            pickup_lat: Pickup address latitude else 0. I am applying  python float() so generate value accordingly
-            pickup_lng: Pickup address longitude else 0. I am applying  python float() so generate value accordingly
-            dropoff_lat: Drop off address latitude else 0. I am applying  python float() so generate value accordingly
-            dropoff_lng: Drop off address longitude else 0. I am applying  python float() so generate value accordingly
-            number_of_wheel_chairs: Number of wheelchairs if required by rider else 0. For example if rider is missing leg or specifically says, 'they require wheel chair'. I am applying  python int() so generate value accordingly
-            number_of_passengers: Number of passengers. If rider mentioned more than 1 passenger, set accordingly otherwise set it to 1. I am applying  python int() so generate value accordingly
-            family_id: Family Id else 0. I am applying  python int() so generate value accordingly
-            is_schedule: 1 if the trip is scheduled for 20+ minutes from current time,also 1 if is_will_call true , else 0 if the trip is scheduled for now. I am applying  python int() so generate value accordingly,or if
-            rider_id: Rider Id available in the memory either already in the memory or provided by the customer. If not available set it to -1. I am applying  python int() so generate value accordingly
-            rider_home_address: Home location of the rider present in the memory. If not available, set it to "".
-            rider_home_city: City of rider's home address. If not available, set it to "".
-            rider_home_state: State of rider's home address. If not available, set it to "".
-            home_phone: Rider's home phone no. If not available, set it to "".
-            office_phone: Rider's Office Phone no. if not available, set it to "".
-            total_passengers: total passenger count if not available, set it to 1.
-            total_wheelchairs: total wheelchair count if not available, set it to 0.
-            is_will_call: true if booking time is not provided or booking time is will call else fasle.
-            will_call_day:Booking Date if mentioned by rider in this format 'Year-Month-Date 00:00:00' for the driver else get current date from memory, applicable only if is_will_call is true.
-            pickup_remarks: any remarks given explicitly for pickup address else "".
-            pickup_phone_number: if pickup phone number is explicitly provided else "".
-            dropoff_remarks: any remarks given explicitly for drop off address else "".
-            dropoff_phone_number: if drop off  phone number is explicitly provided else "".
-
+    async def collect_main_trip_payload(self, payload: MainTripPayload) -> str:
         """
+        Function that is used to collect the payload for the main trip.
+        Args:
+            payload (MainTripPayload): Pydantic model containing all main trip payload fields.
+        Returns:
+            str: Confirmation message or error message.
+        """
+        # Extract all payload fields to local variables for minimal refactor impact
+        pickup_street_address = payload.pickup_street_address
+        dropoff_street_address = payload.dropoff_street_address
+        pickup_city = payload.pickup_city
+        dropoff_city = payload.dropoff_city
+        pickup_state = payload.pickup_state
+        dropoff_state = payload.dropoff_state
+        extra_details = payload.extra_details
+        phone_number = payload.phone_number
+        client_id = payload.client_id
+        funding_source_id = payload.funding_source_id
+        rider_name = payload.rider_name
+        payment_type_id = payload.payment_type_id
+        copay_funding_source_id = payload.copay_funding_source_id
+        copay_payment_type_id = payload.copay_payment_type_id
+        booking_time = payload.booking_time
+        pickup_lat = payload.pickup_lat
+        pickup_lng = payload.pickup_lng
+        dropoff_lat = payload.dropoff_lat
+        dropoff_lng = payload.dropoff_lng
+        rider_id = payload.rider_id
+        number_of_wheel_chairs = payload.number_of_wheel_chairs
+        number_of_passengers = payload.number_of_passengers
+        family_id = payload.family_id
+        is_schedule = payload.is_schedule
+        pickup_city_zip_code = payload.pickup_city_zip_code
+        dropoff_city_zip_code = payload.dropoff_city_zip_code
+        rider_home_address = payload.rider_home_address
+        rider_home_city = payload.rider_home_city
+        rider_home_state = payload.rider_home_state
+        home_phone = payload.home_phone
+        office_phone = payload.office_phone
+        total_passengers = payload.total_passengers
+        total_wheelchairs = payload.total_wheelchairs
+        is_will_call = payload.is_will_call
+        will_call_day = payload.will_call_day
+        pickup_remarks = payload.pickup_remarks
+        pickup_phone_number = payload.pickup_phone_number
+        dropoff_remarks = payload.dropoff_remarks
+        dropoff_phone_number = payload.dropoff_phone_number
         # print(f"\n\n\nCalled collect_trip_payload function at: {datetime.now()}\n\n\n")
         logging.info(f"\n\n\nCalled collect_trip_payload function at: {datetime.now()}\n\n\n")
         # Start playing music asynchronously
@@ -2004,91 +2103,54 @@ class Assistant(Agent):
             return f"error: {e}"
 
     @function_tool()
-    async def collect_return_trip_payload(self,
-                                          pickup_street_address: str,
-                                          dropoff_street_address: str,
-                                          pickup_city: str,
-                                          dropoff_city: str,
-                                          pickup_state: str,
-                                          dropoff_state: str,
-                                          extra_details: str,
-                                          phone_number: str,
-                                          client_id: str,
-                                          funding_source_id: str,
-                                          rider_name: str,
-                                          payment_type_id: str,
-                                          copay_funding_source_id: str,
-                                          copay_payment_type_id: str,
-                                          booking_time: str,
-                                          pickup_lat: str,
-                                          pickup_lng: str,
-                                          dropoff_lat: str,
-                                          dropoff_lng: str,
-                                          rider_id: str,
-                                          number_of_wheel_chairs: str,
-                                          number_of_passengers: str,
-                                          family_id: str,
-                                          is_schedule: str,
-                                          pickup_city_zip_code: str,
-                                          dropoff_city_zip_code: str,
-                                          rider_home_address: str,
-                                          rider_home_city: str,
-                                          rider_home_state: str,
-                                          home_phone: str,
-                                          office_phone: str,
-                                          total_passengers: int,
-                                          total_wheelchairs: int,
-                                          is_will_call: bool,
-                                          will_call_day: str,
-                                          pickup_remarks: str,
-                                          pickup_phone_number: str,
-                                          dropoff_remarks: str,
-                                          dropoff_phone_number: str,
-                                          ):
-        """"Function that is used to collect return trip payload.
-        Args:
-            pickup_street_address: Pickup Street Address confirmed by rider. Do not include city, state, country
-            dropoff_street_address: Dropoff Street Address confirmed by rider. Do not include city, state, country
-            pickup_city: Pickup city confirmed by rider else ''
-            dropoff_city: Dropoff city confirmed by rider else ''
-            pickup_state: Pickup State confirmed by rider else ''
-            dropoff_state: Dropoff State confirmed by rider else ''
-            pickup_city_zip_code: Pick Up City Zip Code else ''
-            dropoff_city_zip_code: Drop Off City Zip Code else ''
-            extra_details: Additional Notes if mentioned by rider for the driver else ''
-            phone_number:  Phone number of rider else caller's phone number
-            client_id: Client Id else -1. I am applying  python int() so generate value accordingly
-            funding_source_id: Funding Source Id else -1. I am applying  python int() so generate value accordingly
-            affilaite_id: Affiliate Id else -1. I am applying  python int() so generate value accordingly
-            rider_name: Complete verified name of the rider if available. If you do not have verified name, use Complete Name of the Caller or rider used in conversation. If you do not have name in your memory ask it from caller.
-            payment_type_id: Payment Type Id else -1. I am applying  python int() so generate value accordingly
-            copay_funding_source_id: Copay Funding Source Id else -1. I am applying  python int() so generate value accordingly
-            copay_payment_type_id: Copay Payment Type Id else -1. I am applying  python int() so generate value accordingly
-            booking_time: Booking Time if mentioned by rider in this format 'Year-Month-Date HH:MM' for the driver else ''. If the rider wants to book for now, get current time from memory. if is_will_call is true, set it to date today.
-            pickup_lat: Pickup address latitude else 0. I am applying  python float() so generate value accordingly
-            pickup_lng: Pickup address longitude else 0. I am applying  python float() so generate value accordingly
-            dropoff_lat: Drop off address latitude else 0. I am applying  python float() so generate value accordingly
-            dropoff_lng: Drop off address longitude else 0. I am applying  python float() so generate value accordingly
-            number_of_wheel_chairs: Number of wheelchairs if required by rider else 0. For example if rider is missing leg or specifically says, 'they require wheel chair'. I am applying  python int() so generate value accordingly
-            number_of_passengers: Number of passengers. If rider mentioned more than 1 passenger, set accordingly otherwise set it to 1. I am applying  python int() so generate value accordingly
-            family_id: Family Id else 0. I am applying  python int() so generate value accordingly
-            is_schedule: 1 if the trip is scheduled for 20+ minutes from current time,also 1 if is_will_call true , else 0 if the trip is scheduled for now. I am applying  python int() so generate value accordingly,or if
-            rider_id: Rider Id available in the memory either already in the memory or provided by the customer. If not available set it to -1. I am applying  python int() so generate value accordingly
-            rider_home_address: Home location of the rider present in the memory. If not available, set it to "".
-            rider_home_city: City of rider's home address. If not available, set it to "".
-            rider_home_state: State of rider's home address. If not available, set it to "".
-            home_phone: Rider's home phone no. If not available, set it to "".
-            office_phone: Rider's Office Phone no. if not available, set it to "".
-            total_passengers: total passenger count if not available, set it to 1.
-            total_wheelchairs: total wheelchair count if not available, set it to 0.
-            is_will_call: true if booking time is not provided or booking time is will call else fasle.
-            will_call_day:Booking Date if mentioned by rider in this format 'Year-Month-Date 00:00:00' for the driver else get current date from memory, applicable only if is_will_call is true.
-            pickup_remarks: any remarks given explicitly for pickup address else "".
-            pickup_phone_number: if pickup phone number is explicitly provided else "".
-            dropoff_remarks: any remarks given explicitly for drop off address else "".
-            dropoff_phone_number: if drop off  phone number is explicitly provided else "".
-
+    async def collect_return_trip_payload(self, payload: ReturnTripPayload) -> str:
         """
+        Function that is used to collect return trip payload.
+        Args:
+            payload (ReturnTripPayload): Pydantic model containing all return trip payload fields.
+        Returns:
+            str: Confirmation message or error message.
+        """
+        # Extract all payload fields to local variables for minimal refactor impact
+        pickup_street_address = payload.pickup_street_address
+        dropoff_street_address = payload.dropoff_street_address
+        pickup_city = payload.pickup_city
+        dropoff_city = payload.dropoff_city
+        pickup_state = payload.pickup_state
+        dropoff_state = payload.dropoff_state
+        extra_details = payload.extra_details
+        phone_number = payload.phone_number
+        client_id = payload.client_id
+        funding_source_id = payload.funding_source_id
+        rider_name = payload.rider_name
+        payment_type_id = payload.payment_type_id
+        copay_funding_source_id = payload.copay_funding_source_id
+        copay_payment_type_id = payload.copay_payment_type_id
+        booking_time = payload.booking_time
+        pickup_lat = payload.pickup_lat
+        pickup_lng = payload.pickup_lng
+        dropoff_lat = payload.dropoff_lat
+        dropoff_lng = payload.dropoff_lng
+        rider_id = payload.rider_id
+        number_of_wheel_chairs = payload.number_of_wheel_chairs
+        number_of_passengers = payload.number_of_passengers
+        family_id = payload.family_id
+        is_schedule = payload.is_schedule
+        pickup_city_zip_code = payload.pickup_city_zip_code
+        dropoff_city_zip_code = payload.dropoff_city_zip_code
+        rider_home_address = payload.rider_home_address
+        rider_home_city = payload.rider_home_city
+        rider_home_state = payload.rider_home_state
+        home_phone = payload.home_phone
+        office_phone = payload.office_phone
+        total_passengers = payload.total_passengers
+        total_wheelchairs = payload.total_wheelchairs
+        is_will_call = payload.is_will_call
+        will_call_day = payload.will_call_day
+        pickup_remarks = payload.pickup_remarks
+        pickup_phone_number = payload.pickup_phone_number
+        dropoff_remarks = payload.dropoff_remarks
+        dropoff_phone_number = payload.dropoff_phone_number
         # print(f"\n\n\nCalled collect_return_trip_payload function at: {datetime.now()}\n\n\n")
         logging.info(f"\n\n\nCalled collect_return_trip_payload function at: {datetime.now()}\n\n\n")
         # Start playing music asynchronously
@@ -2332,10 +2394,12 @@ class Assistant(Agent):
             print(f"\n\nError occurred in collecting trip payload: {e}\n\n")
             return f"error: {e}"
 
-    @function_tool()
-    async def book_trips(self):
-        """The function book the trip(s) by calling the booking API's that
-         uses agent's main_leg and return leg parameter."""
+    async def book_trips(self) -> str:
+        """
+        The function books the trip(s) by calling the booking APIs that use the agent's main_leg and return_leg parameters.
+        Returns:
+            str: Booking confirmation, error message, or API response summary.
+        """
 
         logging.info("book_trips function called...")
         try:
@@ -2423,8 +2487,19 @@ class Assistant(Agent):
             return f"error in booking:{e}"
 
     @function_tool()
-    async def asterisk_call_disconnect(self, participant_identity: str = None, room_name: str = None) -> None:
-
+    async def asterisk_call_disconnect(
+        self,
+        participant_identity: Annotated[str | None, Field(description="Participant identity to disconnect")] = None,
+        room_name: Annotated[str | None, Field(description="Room name for the call")] = None
+    ) -> None:
+        """
+        Function to disconnect a participant from the Asterisk call via LiveKit.
+        Args:
+            participant_identity (str | None): Participant identity to disconnect. Pydantic validated.
+            room_name (str | None): Room name for the call. Pydantic validated.
+        Returns:
+            None
+        """
         try:
             logger.info("Asterisk call disconnect function called...")
             async with api.LiveKitAPI() as livekit_api:
@@ -2457,8 +2532,9 @@ class Assistant(Agent):
     @function_tool()
     async def transfer_call(self) -> str:
         """
-        The function transfer call to live agent.
-        room: room no of the agent
+        Function to transfer the call to a live agent using LiveKit and Asterisk SIP transfer.
+        Returns:
+            str: Success message or error message if transfer fails.
         """
         logger.info("transfer_call_voice function called...")
         try:
