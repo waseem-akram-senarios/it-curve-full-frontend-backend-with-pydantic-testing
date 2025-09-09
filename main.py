@@ -30,6 +30,7 @@ from helper_functions import *
 from side_functions import *
 from datetime import datetime
 import copy
+from supervisor import Supervisor
 
 
 load_dotenv()
@@ -451,6 +452,9 @@ async def entrypoint(ctx: agents.JobContext):
             text_enabled=True
         ),
     )
+    supervisor = Supervisor(session=session,
+                            llm=openai.LLM(model="gpt-4o-mini"))
+    await supervisor.start()
 
     conversation_history = []
     @session.on("conversation_item_added")
