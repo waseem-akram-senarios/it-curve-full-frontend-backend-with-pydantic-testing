@@ -453,6 +453,7 @@ async def entrypoint(ctx: agents.JobContext):
         ),
     )
     supervisor = Supervisor(session=session,
+                            room_name=agent.room.name,
                             llm=openai.LLM(model="gpt-4o-mini"))
     await supervisor.start()
 
