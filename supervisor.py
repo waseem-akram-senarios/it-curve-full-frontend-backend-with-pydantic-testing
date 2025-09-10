@@ -1,9 +1,11 @@
-from dotenv import load_dotenv
-
+import os
 import json
 import asyncio
+
 from decimal import Decimal
 from pydantic import BaseModel, Field
+from livekit import api
+from livekit.protocol.sip import TransferSIPParticipantRequest
 from livekit.agents.llm import ChatContext, ChatMessage
 from livekit.plugins import openai
 from livekit.plugins.turn_detector.multilingual import MultilingualModel
@@ -21,12 +23,15 @@ class SupervisorScore(BaseModel):
 class Supervisor:
     def __init__(self,
                  session: AgentSession,
+                 room_name,
                  llm = None) -> None:
         self.session = session
         self.llm = llm if llm else openai.LLM(model="gpt-4o-mini")
+        self.room_name = room_name
 
         self.first_greeting_done = False
         self.escalated_to_live_agent = False
+        self.nth_issue = 0
 
     async def start(self):
         # Create a synchronous wrapper for the close event since it's async
@@ -38,11 +43,10 @@ class Supervisor:
         self.session.on("close")(on_close_wrapper)
 
     def _on_added(self, ev: ConversationItemAddedEvent):
-        print(f"[checkthis added] '{ev}'")
+        if self.escalated_to_live_agent:
+            return
         if self.first_greeting_done is False and ev.item.role == "assistant":
             self.first_greeting_done = True
-            return
-        if self.escalated_to_live_agent:
             return
 
         if ev.item.role == "assistant":
@@ -84,13 +88,42 @@ If uncertain, choose the lower score."""
             print(f"[checkthis llm response] {result}")
             print(f"[checkthis score parse error] {e}")
             return
-        
+
         avg_score = (score.relevance + score.completeness + score.groundedness) / 3
-        
-        if avg_score < 0.5:
+
+        if avg_score > 0.7:
+            self.nth_issue = 0
+            return
+
+        self.nth_issue += 1
+        if self.nth_issue >= 2:
             self.escalated_to_live_agent = True
             await self.session.interrupt()
             await self.session.say("Let me transfer you to live agent", allow_interruptions=False)
+            await self.transfer_call_voice()
+
+    async def transfer_call_voice(self):
+        print("transfer_call_voice function called...")
+        try:
+            async with api.LiveKitAPI() as livekit_api:
+                asterisk_ip = os.getenv("ASTERISK_SERVER_IP")
+                transfer_to = f"sip:5000@{str(asterisk_ip)}"
+                # transfer_to = "sip:5000@139.64.158.216"
+                participant_identity = list(self.room.remote_participants.values())[0].identity
+                # Create transfer request
+                transfer_request = TransferSIPParticipantRequest(
+                    participant_identity=participant_identity,
+                    room_name=self.room_name,
+                    transfer_to=transfer_to,
+                    play_dialtone=False,
+                    # wait_until_answered=True,
+                )
+
+                # Transfer caller
+                await livekit_api.sip.transfer_sip_participant(transfer_request)
+        except Exception as e:
+            print(f"Error during call transfer: {e}")
+            return "Issue with call transfer"
 
 
     async def _on_close(self, _: CloseEvent):
