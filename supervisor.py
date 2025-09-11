@@ -23,11 +23,11 @@ class SupervisorScore(BaseModel):
 class Supervisor:
     def __init__(self,
                  session: AgentSession,
-                 room_name,
+                 room,
                  llm = None) -> None:
         self.session = session
         self.llm = llm if llm else openai.LLM(model="gpt-4o-mini")
-        self.room_name = room_name
+        self.room = room
 
         self.first_greeting_done = False
         self.escalated_to_live_agent = False
@@ -116,7 +116,7 @@ If uncertain, choose the lower score."""
                 # Create transfer request
                 transfer_request = TransferSIPParticipantRequest(
                     participant_identity=participant_identity,
-                    room_name=self.room_name,
+                    room_name=self.room.name,
                     transfer_to=transfer_to,
                     play_dialtone=False,
                     # wait_until_answered=True,
