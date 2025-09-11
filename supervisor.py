@@ -60,10 +60,13 @@ Inputs (in the user message):
 - "user_text": the user's utterance for this turn.
 - "bot_text": the bot's reply for this turn.
 
-Scoring (0-1, two decimals; prefer {1.00, 0.50, 0.00}):
+Scoring (0-1, two decimals; any value in this range is allowed):
 - Relevance: how directly the reply addresses the user's intent or asks a focused clarifying question that advances it.
 - Completeness: whether the reply covers the necessary elements for this step or gives a clear next action; major omissions → lower score.
-- Groundedness: whether statements are supported by provided "facts" or make no external claims; unsupported/conflicting claims → lower score.
+- Groundedness: whether statements are supported by provided context or make no external claims; unsupported/conflicting claims → lower score.
+
+Frustration handling:
+- If the user appears frustrated (e.g., complaints, “you're not listening,” repeated re-asks) and the bot fails to address or fix the issue in this turn, assign **lower values** to the scores to reflect the poor experience.
 
 Output format — output ONLY this JSON (no extra text/keys):
 {"relevance": x.xx, "completeness": x.xx, "groundedness": x.xx}
@@ -96,7 +99,7 @@ If uncertain, choose the lower score."""
             return
 
         self.nth_issue += 1
-        if self.nth_issue >= 2:
+        if self.nth_issue >= 1:
             self.escalated_to_live_agent = True
             await self.session.interrupt()
             await self.session.say("Let me transfer you to live agent", allow_interruptions=False)
