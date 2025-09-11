@@ -85,10 +85,10 @@ If uncertain, choose the lower score."""
 
         try:
             score = SupervisorScore.model_validate(json.loads(result))
-            print(f"[checkthis score] {score}")
+            print(f"[supervisor score] {score}")
         except Exception as e:
-            print(f"[checkthis llm response] {result}")
-            print(f"[checkthis score parse error] {e}")
+            print(f"[supervisor llm response] {result}")
+            print(f"[supervisor score parse error] {e}")
             return
 
         avg_score = (score.relevance + score.completeness + score.groundedness) / 3
@@ -98,7 +98,7 @@ If uncertain, choose the lower score."""
             return
 
         self.nth_issue += 1
-        if self.nth_issue >= 1:
+        if self.nth_issue >= 2:
             self.escalated_to_live_agent = True
             await self.session.interrupt()
             await self.session.say("Let me transfer you to live agent", allow_interruptions=False)
