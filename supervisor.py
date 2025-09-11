@@ -74,7 +74,7 @@ Output format — output ONLY this JSON (no extra text/keys):
 If uncertain, choose the lower score."""
 
         chat_ctx = ChatContext([ChatMessage(role="system", content=[prompt]),
-                                self.session._chat_ctx.items[-6:]])
+                                *self.session._chat_ctx.items[-6:]])
 
         result = ""
         async with self.llm.chat(chat_ctx=chat_ctx) as stream:
