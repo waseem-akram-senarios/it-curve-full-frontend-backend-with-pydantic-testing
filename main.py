@@ -114,6 +114,104 @@ async def transfer_call_dtmf_driver(participant, room, participant_identity: str
     except Exception as e:
         logger.info(e)
 
+class PhoneNumberCollector:
+    """Handle phone number collection via voice and DTMF"""
+    def __init__(self):
+        self.collecting_phone = False
+        self.current_number = ""
+        self.collection_start_time = None
+        
+    def start_collection(self):
+        """Start collecting a phone number"""
+        self.collecting_phone = True
+        self.current_number = ""
+        self.collection_start_time = datetime.now()
+        logger.info("Started phone number collection")
+        
+    def add_digit(self, digit: str):
+        """Add a digit to the current number"""
+        if digit.isdigit():
+            self.current_number += digit
+            logger.info(f"Added digit {digit}, current number: {self.current_number}")
+            
+    def clear_number(self):
+        """Clear the current number being collected"""
+        self.current_number = ""
+        logger.info("Cleared phone number")
+        
+    def finish_collection(self):
+        """Finish collection and return the number"""
+        self.collecting_phone = False
+        number = self.current_number
+        self.current_number = ""
+        logger.info(f"Finished phone collection: {number}")
+        return number
+        
+    def is_valid_phone(self, number: str) -> bool:
+        """Check if the collected number is valid (10 digits)"""
+        digits_only = re.sub(r'\D', '', number)
+        return len(digits_only) >= 10
+        
+    def format_phone(self, number: str) -> str:
+        """Format phone number for display"""
+        digits_only = re.sub(r'\D', '', number)
+        if len(digits_only) == 10:
+            return f"({digits_only[:3]}) {digits_only[3:6]}-{digits_only[6:]}"
+        elif len(digits_only) == 11 and digits_only[0] == '1':
+            return f"+1 ({digits_only[1:4]}) {digits_only[4:7]}-{digits_only[7:]}"
+        else:
+            return number
+async def handle_phone_dtmf(digit: str, session, collector: PhoneNumberCollector):
+    """Handle DTMF during phone number collection"""
+    
+    if digit == "*":
+        
+        # Finalize phone number collection
+        number = collector.finish_collection()
+        if collector.is_valid_phone(number):
+            formatted_number = collector.format_phone(number)
+            await session.generate_reply(
+                instructions=f"Customer entered {formatted_number} via keypad. Say 'I have {formatted_number} for your phone number. Is that correct?' and wait for confirmation.",
+                allow_interruptions=True
+            )
+        else:
+            await session.generate_reply(
+                instructions="The number seems too short. Please enter your complete 10-digit phone number and press pound when finished.",
+                allow_interruptions=True
+            )
+    elif digit == "#":
+        # Reset phone number collection
+        collector.clear_number()
+        await session.generate_reply(
+            instructions="Let me get your phone number again. Please enter it using the keypad and press pound when finished.",
+            allow_interruptions=True
+        )
+    elif digit.isdigit():
+        # Add digit to the current number being collected
+        collector.add_digit(digit)
+        # Optional: provide feedback after every few digits
+        #if len(collector.current_number) % 3 == 0 and len(collector.current_number) > 0:
+         #   await session.generate_reply(
+          #      instructions=f"I have {len(collector.current_number)} digits so far. Continue entering your number and press pound when finished.",
+           #     allow_interruptions=False
+            #)
+
+def setup_room_dtmf_handler(room: rtc.Room, session, phone_collector, agent):
+    """Setup the SIP DTMF handler for the room"""
+    
+    @room.on("sip_dtmf_received")
+    def dtmf_received(dtmf: rtc.SipDTMF):
+        logger.info(f"DTMF received from {dtmf.participant.identity}: {dtmf.code} / {dtmf.digit}")
+        
+        digit = dtmf.digit
+        
+        # Only process DTMF when explicitly collecting phone numbers
+        if phone_collector.collecting_phone:
+            logger.info(f"Processing DTMF {digit} for phone collection")
+            asyncio.create_task(handle_phone_dtmf(digit, session, phone_collector))
+        else:
+            logger.info(f"DTMF {digit} ignored - not in phone collection mode")
+            # Don't process DTMF if not collecting phone numbers
 
 async def entrypoint(ctx: agents.JobContext):
 
@@ -528,6 +626,18 @@ async def entrypoint(ctx: agents.JobContext):
             asyncio.create_task(transfer_call_dtmf(agent.room, agent.room.name))
         if digit == "1":
             asyncio.create_task(transfer_call_dtmf_driver(agent.room, agent.room.name))
+
+    phone_collector = PhoneNumberCollector()
+    phone_collector.start_collection()
+
+    def on_dtmf_received(event):
+        digit = event.digit
+        logger.info(f"Session DTMF digit received: {digit}")
+        
+        if phone_collector.collecting_phone:
+            asyncio.create_task(handle_phone_dtmf(digit, session, phone_collector))
+        # else:
+        #     asyncio.create_task(handle_regular_dtmf(digit, session, agent))
 
     # Log aggregated summary of usage metrics generated by usage collector
     async def log_usage(starting_time, call_sid, conversation_history):
