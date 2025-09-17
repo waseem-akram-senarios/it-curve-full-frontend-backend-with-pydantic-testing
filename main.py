@@ -31,6 +31,7 @@ from side_functions import *
 from datetime import datetime
 import copy
 from supervisor import Supervisor
+import cache_manager
 
 
 load_dotenv()
@@ -214,7 +215,14 @@ def setup_room_dtmf_handler(room: rtc.Room, session, phone_collector, agent):
             # Don't process DTMF if not collecting phone numbers
 
 async def entrypoint(ctx: agents.JobContext):
-
+    """
+    Main entry point for the IT Curves Bot application.
+    
+    Key features:
+    1. Immediate greeting for quick user engagement
+    2. Background processing of API calls with caching
+    3. Personalized follow-up after data is loaded
+    """
     # Store active tasks to prevent garbage collection
     _active_tasks = set()
 
@@ -257,6 +265,67 @@ async def entrypoint(ctx: agents.JobContext):
     # if call_sid == "Unknown":
     call_sid = 'chat-' + str(uuid.uuid4())
     print(f"\n\nCall SID: {call_sid}\n\n")
+    
+    # Set up the session and background audio early to prepare for immediate greeting
+    background_audio = BackgroundAudioPlayer(thinking_sound=[
+        AudioConfig(BuiltinAudioClip.KEYBOARD_TYPING2, volume=0.5),
+        AudioConfig(BuiltinAudioClip.KEYBOARD_TYPING, volume=0.6)
+    ])
+    
+    allow_interruption_status = False
+    
+    session = AgentSession(
+        stt=openai.STT(model='gpt-4o-transcribe', language="en", use_realtime=True),
+        allow_interruptions=allow_interruption_status,
+        llm=openai.LLM(model="gpt-4o-mini", temperature=0.5),
+        tts=deepgram.TTS(model="aura-asteria-en"),
+        vad=silero.VAD.load(min_silence_duration=0.75),
+        turn_detection=EnglishModel(),
+    )
+    
+    # Simple default prompt to start with - will be updated later
+    default_prompt = """You are a Caring, Sympathetic voice assistant helping riders with their queries. Your primary goal is to provide efficient and clear assistance while maintaining casual tone. Keep your responses concise and clear since this is a voice interface.
+Your name is Alina and you are an AI assistant for agency whose name is mentioned in the greetings. Keep your tone casual like a human and not extremely professional.
+Service Area in which the company/agency operates are also included in the greetings.."""
+    
+    
+    # Create agent with default prompt initially
+    initial_agent = Assistant(call_sid=call_sid, room=ctx.room, instructions=default_prompt, affiliate_id=65)
+    
+    # Set a simple flag we can use to track interruption state
+    interruptions_enabled = False
+    
+    # Ensure interruptions are disabled for the initial greeting
+    session.allow_interruptions = False
+    
+    # Use the existing background audio player created earlier
+    print("Using pre-configured background audio player for typing sounds")
+    
+    await session.start(
+        room=ctx.room,
+        agent=initial_agent,
+        room_input_options=RoomInputOptions(
+            text_enabled=True
+        )
+        # allow_interruptions is set on the session object, not the start method
+    )
+    
+    # Provide immediate generic greeting with interruptions disabled
+    await session.say(f"Hello! My name is Alina, your digital agent. I'm retrieving your information. Please wait", allow_interruptions=False)
+    
+    # COMPLETELY DISABLE AUDIO INPUT during API fetching
+    # This is the key to preventing the agent from processing voice during API calls
+    session.input.set_audio_enabled(False)
+    print("Audio input DISABLED - agent will not process any speech during API calls")
+    
+    # Start the background audio player for typing sounds
+    await background_audio.start(room=ctx.room, agent_session=session)
+    
+    # Play typing sounds while fetching APIs
+    typing_handle = background_audio.play(BuiltinAudioClip.KEYBOARD_TYPING, loop=True)
+    print("Started typing sounds during API fetching")
+    
+    # We'll re-enable audio input after APIs are fetched and personalized greeting is delivered
 
     # Specify the US Eastern time zone
     eastern = pytz.timezone('US/Eastern')
@@ -335,8 +404,18 @@ async def entrypoint(ctx: agents.JobContext):
             # metadata = participant.metadata
             caller = participant.attributes['sip.phoneNumber']
             recipient = participant.attributes['sip.trunkPhoneNumber']
-
-            affiliate = await recognize_affiliate(recipient)
+            
+            # Try to get affiliate from cache
+            cached_affiliate = cache_manager.get_affiliate_from_cache(recipient)
+            if cached_affiliate:
+                affiliate = cached_affiliate
+                logger.info(f"Using cached affiliate for {recipient}")
+            else:
+                # If not in cache, call the original function
+                affiliate = await recognize_affiliate(recipient)
+                # Store result in cache for future use
+                cache_manager.store_affiliate_in_cache(recipient, affiliate)
+                
             success = True
             ivr = True
             affiliate_id = affiliate["AffiliateID"]
@@ -344,7 +423,17 @@ async def entrypoint(ctx: agents.JobContext):
 
             phone_number = await extract_phone_number(caller)
             # print(f"\n\nPhone Number: {phone_number}")
-            all_riders_info = await get_client_name_voice(phone_number, affiliate_id, family_id)
+            
+            # Try to get client info from cache
+            cached_client = cache_manager.get_client_from_cache(phone_number, affiliate_id, family_id)
+            if cached_client:
+                all_riders_info = cached_client
+                logger.info(f"Using cached client info for {phone_number}")
+            else:
+                # If not in cache, call the original function
+                all_riders_info = await get_client_name_voice(phone_number, affiliate_id, family_id)
+                # Store result in cache for future use
+                cache_manager.store_client_in_cache(phone_number, affiliate_id, family_id, all_riders_info)
 
         except Exception as e:
             print(f"Error in recognizing affiliate from number: {e}")
@@ -353,13 +442,35 @@ async def entrypoint(ctx: agents.JobContext):
             try:
                 family_id = metadata['familyId']
                 affiliate_id = metadata['affiliateId']
-                affiliate = await recognize_affiliate_by_ids(family_id, affiliate_id)
+                
+                # Try to get affiliate from cache using IDs
+                cache_key = f"ids:{family_id}:{affiliate_id}"
+                cached_affiliate = cache_manager.get_affiliate_from_cache(cache_key)
+                if cached_affiliate:
+                    affiliate = cached_affiliate
+                    logger.info(f"Using cached affiliate for IDs {family_id}:{affiliate_id}")
+                else:
+                    # If not in cache, call the original function
+                    affiliate = await recognize_affiliate_by_ids(family_id, affiliate_id)
+                    # Store result in cache for future use
+                    cache_manager.store_affiliate_in_cache(cache_key, affiliate)
+                
                 print("*************AFFILIATE*******:\n", affiliate)
                 phone_number = metadata['phoneNo']
                 if phone_number != "":
                     phone_number = await extract_phone_number(phone_number)
                     # print(f"\n\nPhone Number: {phone_number}")
-                    all_riders_info = await get_client_name_voice(phone_number, affiliate_id, family_id)
+                    
+                    # Try to get client info from cache
+                    cached_client = cache_manager.get_client_from_cache(phone_number, affiliate_id, family_id)
+                    if cached_client:
+                        all_riders_info = cached_client
+                        logger.info(f"Using cached client info for {phone_number}")
+                    else:
+                        # If not in cache, call the original function
+                        all_riders_info = await get_client_name_voice(phone_number, affiliate_id, family_id)
+                        # Store result in cache for future use
+                        cache_manager.store_client_in_cache(phone_number, affiliate_id, family_id, all_riders_info)
                 else:
                     all_riders_info["number_of_riders"] = 1
                     all_riders_info["rider_1"] = unknow_rider
@@ -514,101 +625,158 @@ async def entrypoint(ctx: agents.JobContext):
             """
             pass
 
-    print(f"\n\nPrompt: {prompt}\n\n")
+    # print(f"\n\nPrompt: {prompt}\n\n")
 
-    background_audio = BackgroundAudioPlayer(thinking_sound=[
-                        AudioConfig(BuiltinAudioClip.KEYBOARD_TYPING2, volume=0.5),
-                        AudioConfig(BuiltinAudioClip.KEYBOARD_TYPING,volume=0.6)
-                    ])
-
-    allow_interruption_status = False
-
-    session = AgentSession(
-        # stt = deepgram.STT(model="nova-3",language="en-US",keyterms=["snouffer"]),
-        stt=openai.STT(model='nova-2-phonecall',language="en", use_realtime=True),
-        allow_interruptions=allow_interruption_status,
-        llm=openai.LLM(model="gpt-4o-mini", temperature=0.5),
-        tts=deepgram.TTS(model="aura-asteria-en"),
-        vad=silero.VAD.load(min_silence_duration=0.75),
-        # min_interruption_duration=1.0,
-        # min_endpointing_delay = 1.0,
-        turn_detection=EnglishModel(),
-        # turn_detection="vad",
-    )
+    # Create user context information that we'll use in both the agent prompt and personalized message
+    user_context = ""
+    
+    # We've already created the session and background audio player earlier
+    # First build the user context, then create the full agent
     try:
-        agent = Assistant(call_sid=call_sid, room=ctx.room, instructions=prompt, affiliate_id=int(affiliate_id))
+        # Give a small pause to ensure initial greeting is complete
+        await asyncio.sleep(1)
+        
+        print("Building user context information")
+        
+        # Create a knowledge base update with key user details to inject into conversation
+        user_context = """\n\nIMPORTANT RIDER INFORMATION: Please keep this information in mind for the entire conversation.\n"""
+        
+        # Add affiliate details if available
+        if affiliate_name and affiliate_name != "Default":
+            user_context += f"Affiliate Name: {affiliate_name}\n"
+            user_context += f"Affiliate ID: {affiliate_id}\n"
+            if "AffiliateFamilyID" in affiliate:
+                user_context += f"Affiliate Family ID: {affiliate['AffiliateFamilyID']}\n"
+        
+        # Add rider information
+        if all_riders_info["number_of_riders"] == 1:
+            rider = all_riders_info["rider_1"]
+            user_context += f"Rider Name: {rider['name']}\n"
+            user_context += f"Rider ID: {rider['rider_id']}\n"
+            user_context += f"Client ID: {rider['client_id']}\n"
+            user_context += f"Rider Location: {rider.get('city', 'Unknown')}, {rider.get('state', 'Unknown')}\n"
+            
+            if "number_of_existing_trips" in rider:
+                user_context += f"Number of Existing Trips: {rider['number_of_existing_trips']}\n"
+            
+            # Add phone number if available
+            if phone_number:
+                user_context += f"Phone Number: {phone_number}\n"
+        
+        elif all_riders_info["number_of_riders"] > 1:
+            user_context += f"Multiple riders ({all_riders_info['number_of_riders']}) associated with this phone number\n"
+            
+        user_context += "\nPlease maintain this context throughout the conversation, even if the user asks unrelated questions.\n"
+        
+        print("User context built successfully")
+        
+        # Now create the final agent with the full context
+        try:
+            # Include user context in the final prompt to ensure the agent remembers it
+            final_prompt = prompt + "\n\n" + user_context
+            agent = Assistant(call_sid=call_sid, room=ctx.room, instructions=final_prompt, affiliate_id=int(affiliate_id))
+        except Exception as e:
+            print(f"\n\n\nError in generating agent object: {e}\n\n")
+            agent = Assistant(call_sid=call_sid, room=ctx.room, instructions=prompt, affiliate_id=65)
+        
     except Exception as e:
-        print(f"\n\n\nError in generating agent object: {e}\n\n")
-        agent = Assistant(call_sid=call_sid, room=ctx.room, instructions=prompt, affiliate_id=65)
-
-    await background_audio.start(room=ctx.room, agent_session=session)
-
-    await session.start(
-        room=ctx.room,
-        agent=agent,
-        room_input_options=RoomInputOptions(
-            text_enabled=True
-        ),
-    )
+        print(f"Error building user context: {e}")
+        # Create a basic agent if we failed to build the context
+        agent = Assistant(call_sid=call_sid, room=ctx.room, instructions=prompt, affiliate_id=int(affiliate_id))
+    # Define the conversation history collection function before we have the session reference
+    conversation_history = []
+    def setup_conversation_listeners(current_session):
+        @current_session.on("conversation_item_added")
+        def on_conversation_item_added(event: ConversationItemAddedEvent):
+            print(f"Conversation item added from {event.item.role}: {event.item.text_content}. interrupted: {event.item.interrupted}")
+            if event.item.text_content != '':
+                if event.item.role == 'assistant':
+                    conversation_history.append({
+                    'speaker': 'Agent',
+                    'transcription': event.item.text_content,
+                    'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    })
+                if event.item.role == 'user':
+                    conversation_history.append({
+                    'speaker': 'User',
+                    'transcription': event.item.text_content,
+                    'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    })
+    
+    # Setup initial conversation listeners
+    setup_conversation_listeners(session)
+    
+    # Setup supervisor with the final session
     supervisor = Supervisor(session=session,
-                            room=agent.room,
-                            llm=openai.LLM(model="gpt-4o-mini"))
+                          room=agent.room,
+                          llm=openai.LLM(model="gpt-4o-mini"))
     await supervisor.start()
 
-    conversation_history = []
-    @session.on("conversation_item_added")
-    def on_conversation_item_added(event: ConversationItemAddedEvent):
-        print(f"Conversation item added from {event.item.role}: {event.item.text_content}. interrupted: {event.item.interrupted}")
-        if event.item.text_content != '':
-            if event.item.role == 'assistant':
-                conversation_history.append({
-                'speaker': 'Agent',
-                'transcription': event.item.text_content,
-                'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                })
-            if event.item.role == 'user':
-                conversation_history.append({
-                'speaker': 'User',
-                'transcription': event.item.text_content,
-                'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                })
-
+    # User information is now loaded, so we can provide a personalized follow-up message
+    # This will only run after the API calls are complete and we've already given an initial greeting
     try:
-        if ivr:
-            greeting = f"""Thank you for contacting {affiliate_name} agency. My name is Alina, your digital agent,
-            I can assist you with anything you need regarding your ride reservation, and more."""
-        else:
-            greeting = f"Thank you for contacting {affiliate_name} agency. My name is Alina, your digital agent"
-
-    except Exception as e:
-        greeting = "My name is Alina, your digital agent. How can I help you today?"
-        print(f"\n\nError in getting greetings: {e}\n\n")
-
-    try:
+        # Create a simple personalized message based on what we know
+        personalized_message = ""
+        
+        # Add affiliate information if available
+        if affiliate_name and affiliate_name != "Default":
+            personalized_message += f"I now have your information from {affiliate_name} agency. "
+        
+        # Add personalized greeting based on rider info
         if all_riders_info["number_of_riders"] == 1:
             rider = all_riders_info["rider_1"]
             if rider["name"] == "new_rider":
-                await session.say(f"Hello! {greeting}. Can I have your name please?", allow_interruptions=allow_interruption_status)
-
+                personalized_message += "Can I have your name please?"
+                
             elif rider["name"] == "Unknown":
-                await session.say(f"Hello! {greeting}. Can I have your phone number please?", allow_interruptions=allow_interruption_status)
-
+                personalized_message += "Can I have your phone number please?"
+                
             elif rider["name"]:
                 try:
                     no_of_trips = rider.get("number_of_existing_trips", "0")
                     if int(no_of_trips) > 0:
-                        await session.say(f"Hello {rider['name']}! {greeting}. You have {no_of_trips} existing trips in the system. How can I help you today?", allow_interruptions=allow_interruption_status)
+                        personalized_message += f"I see that you are {rider['name']} and you have {no_of_trips} existing trips. How can I help you today?"
                     else:
-                        await session.say(f"Hello {rider['name']}! {greeting}. How can I help you today?", allow_interruptions=allow_interruption_status)
-                except:
-                    await session.say(f"Hello {rider['name']}! {greeting}. How can I help you today?", allow_interruptions=allow_interruption_status)
-
+                        personalized_message += f"I see that you are {rider['name']}. How can I help you today?"
+                except Exception as e:
+                    print(f"Error in personalizing message: {e}")
+                    personalized_message += f"I see that you are {rider['name']}. How can I help you today?"
+                    
         elif all_riders_info["number_of_riders"] > 1:
-            await session.say(f"Hello! {greeting}. I have multiple profiles for your number. Can I have your name please?", allow_interruptions=allow_interruption_status)
-
+            personalized_message += "I see that I have multiple profiles for your number. Can I confirm your name please?"
+        
+        # Stop typing sounds before delivering personalized message
+        typing_handle.stop()
+        print("Stopped typing sounds, preparing to deliver personalized follow-up message")
+        
+        # Only send follow-up if we have something meaningful to say
+        if personalized_message:
+            # First deliver the personalized message with interruptions still disabled
+            await session.say(personalized_message, allow_interruptions=False)
+            
+        # Now that all API fetching and personalized greeting is done, re-enable audio input and allow interruptions
+        # This happens regardless of whether we had a personalized message or not
+        session.input.set_audio_enabled(True)  # RE-ENABLE AUDIO INPUT
+        session.allow_interruptions = True
+        interruptions_enabled = True
+        print("APIs fetched and processing complete. Audio input RE-ENABLED and interruptions now allowed.")
+            
     except Exception as e:
-        print(f"Error occured in starting initial statement: {e}")
-        await session.say(f"Hello! {greeting}. How can I help you today?", allow_interruptions=allow_interruption_status)
+        print(f"Error in providing personalized follow-up: {e}")
+        # Make sure typing sounds are stopped if there's an error
+        try:
+            typing_handle.stop()
+            print("Stopped typing sounds due to error")
+        except Exception as stop_error:
+            print(f"Error stopping typing sounds: {stop_error}")
+        
+        # Don't send another message if we fail - the initial greeting is enough
+        
+        # Make sure audio input and interruptions are enabled even if we fail
+        session.input.set_audio_enabled(True)  # RE-ENABLE AUDIO INPUT
+        session.allow_interruptions = True
+        interruptions_enabled = True
+        print("Error occurred, but ensuring audio input is RE-ENABLED and interruptions are allowed.")
 
     # Use the usage collector to aggregate agent usage metrics
     usage_collector = metrics.UsageCollector()
