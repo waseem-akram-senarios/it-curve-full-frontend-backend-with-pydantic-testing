@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator, FieldValidationInfo
 from typing import Annotated, Literal
 
 
@@ -82,49 +82,50 @@ class ReturnTripPayload(BaseModel):
     dropoff_phone_number: str = Field(
         default="", description="if drop off phone number is explicitly provided else ''")
 
-    @validator('pickup_lat', 'dropoff_lat', 'pickup_lng', 'dropoff_lng')
-    def validate_coordinates(cls, v, values, field):
+    @field_validator('pickup_lat', 'dropoff_lat', 'pickup_lng', 'dropoff_lng', mode='before')
+    def validate_coordinates(cls, v, info: FieldValidationInfo):
         """Validate coordinates are within valid ranges"""
         if v not in ["0", "0.0", ""]:
             try:
                 float_val = float(v)
-                if "lat" in field.name and (float_val < -90 or float_val > 90):
+                if "lat" in info.field_name and (float_val < -90 or float_val > 90):
                     raise ValueError(
-                        f'{field.name} must be between -90 and 90 degrees')
-                if "lng" in field.name and (float_val < -180 or float_val > 180):
+                        f'{info.field_name} must be between -90 and 90 degrees')
+                if "lng" in info.field_name and (float_val < -180 or float_val > 180):
                     raise ValueError(
-                        f'{field.name} must be between -180 and 180 degrees')
+                        f'{info.field_name} must be between -180 and 180 degrees')
             except ValueError:
-                raise ValueError(f'{field.name} must be a valid number')
+                raise ValueError(f'{info.field_name} must be a valid number')
         return v
 
-    @validator('number_of_wheel_chairs', 'number_of_passengers')
-    def validate_counts(cls, v, values, field):
+    @field_validator('number_of_wheel_chairs', 'number_of_passengers', mode='before')
+    def validate_counts(cls, v, info: FieldValidationInfo):
         """Validate passenger and wheelchair counts are non-negative"""
         if v not in ["", "0"]:
             try:
                 int_val = int(v)
                 if int_val < 0:
-                    raise ValueError(f'{field.name} cannot be negative')
-                if "passenger" in field.name and int_val == 0:
+                    raise ValueError(f'{info.field_name} cannot be negative')
+                if "passenger" in info.field_name and int_val == 0:
                     return "1"  # Default to 1 passenger if 0
             except ValueError:
-                raise ValueError(f'{field.name} must be a valid number')
-        elif "passenger" in field.name and v == "0":
+                raise ValueError(f'{info.field_name} must be a valid number')
+        elif "passenger" in info.field_name and v == "0":
             return "1"  # Default to 1 passenger
         return v
 
-    @validator('total_passengers', 'total_wheelchairs')
-    def validate_total_counts(cls, v, field):
+    @field_validator('total_passengers', 'total_wheelchairs', mode='after')
+    def validate_total_counts(cls, v):
         """Validate total counts are non-negative integers"""
         if v < 0:
-            raise ValueError(f'{field.name} cannot be negative')
-        if "passenger" in field.name and v == 0:
+            raise ValueError('total count cannot be negative')
+        # specific to passengers
+        if v == 0 and 'passenger' in 'total_passengers':
             return 1  # Default to 1 passenger
         return v
 
-    @validator('client_id', 'funding_source_id', 'payment_type_id', 'copay_funding_source_id',
-               'copay_payment_type_id', 'rider_id', 'family_id')
+    @field_validator('client_id', 'funding_source_id', 'payment_type_id', 'copay_funding_source_id',
+                     'copay_payment_type_id', 'rider_id', 'family_id', mode='before')
     def validate_ids(cls, v):
         """Ensure IDs are either valid or -1/0 for defaults"""
         if v not in ["-1", "0", ""]:
@@ -134,8 +135,8 @@ class ReturnTripPayload(BaseModel):
                 raise ValueError('ID fields must be valid numbers, -1, or 0')
         return v
 
-    @validator('phone_number', 'home_phone', 'office_phone', 'pickup_phone_number', 'dropoff_phone_number')
-    def validate_phone_numbers(cls, v, values, field):
+    @field_validator('phone_number', 'home_phone', 'office_phone', 'pickup_phone_number', 'dropoff_phone_number', mode='before')
+    def validate_phone_numbers(cls, v, info: FieldValidationInfo):
         """Basic validation for phone number format"""
         if v and v not in ["-1", "0", ""]:
             # Remove common separators and spaces
@@ -144,14 +145,14 @@ class ReturnTripPayload(BaseModel):
             # Check if the result contains only digits
             if not cleaned.isdigit():
                 raise ValueError(
-                    f'{field.name} should contain only digits and common separators')
+                    f'{info.field_name} should contain only digits and common separators')
             # Check reasonable length (most phone numbers are between 7 and 15 digits)
             if len(cleaned) < 7 or len(cleaned) > 15:
                 raise ValueError(
-                    f'{field.name} should have a reasonable length (7-15 digits)')
+                    f'{info.field_name} should have a reasonable length (7-15 digits)')
         return v
 
-    @validator('is_schedule')
+    @field_validator('is_schedule', mode='before')
     def validate_schedule(cls, v):
         """Validate is_schedule is either 0 or 1"""
         if v not in ["0", "1", ""]:
@@ -242,43 +243,43 @@ class MainTripPayload(BaseModel):
     dropoff_phone_number: str = Field(
         default="", description="Drop off phone number if explicitly provided else ''")
 
-    @validator('pickup_lat', 'dropoff_lat', 'pickup_lng', 'dropoff_lng')
-    def validate_coordinates(cls, v, values, field):
+    @field_validator('pickup_lat', 'dropoff_lat', 'pickup_lng', 'dropoff_lng', mode='before')
+    def validate_coordinates(cls, v, info: FieldValidationInfo):
         """Validate coordinates are within valid ranges"""
         if v not in ["0", "0.0", ""]:
             try:
                 float_val = float(v)
-                if "lat" in field.name and (float_val < -90 or float_val > 90):
+                if "lat" in info.field_name and (float_val < -90 or float_val > 90):
                     raise ValueError(
-                        f'{field.name} must be between -90 and 90 degrees')
-                if "lng" in field.name and (float_val < -180 or float_val > 180):
+                        f'{info.field_name} must be between -90 and 90 degrees')
+                if "lng" in info.field_name and (float_val < -180 or float_val > 180):
                     raise ValueError(
-                        f'{field.name} must be between -180 and 180 degrees')
+                        f'{info.field_name} must be between -180 and 180 degrees')
             except ValueError:
-                raise ValueError(f'{field.name} must be a valid number')
+                raise ValueError(f'{info.field_name} must be a valid number')
         return v
 
-    @validator('number_of_wheel_chairs', 'number_of_passengers', 'total_passengers', 'total_wheelchairs')
-    def validate_counts(cls, v, values, field):
+    @field_validator('number_of_wheel_chairs', 'number_of_passengers', 'total_passengers', 'total_wheelchairs', mode='before')
+    def validate_counts(cls, v, info: FieldValidationInfo):
         """Validate passenger and wheelchair counts are non-negative"""
         if isinstance(v, str) and v not in ["", "0"]:
             try:
                 int_val = int(v)
                 if int_val < 0:
-                    raise ValueError(f'{field.name} cannot be negative')
-                if "passenger" in field.name and int_val == 0:
+                    raise ValueError(f'{info.field_name} cannot be negative')
+                if "passenger" in info.field_name and int_val == 0:
                     # Default to 1 passenger
                     return "1" if isinstance(v, str) else 1
             except ValueError:
-                raise ValueError(f'{field.name} must be a valid number')
+                raise ValueError(f'{info.field_name} must be a valid number')
         elif isinstance(v, int) and v < 0:
-            raise ValueError(f'{field.name} cannot be negative')
-        elif isinstance(v, int) and "passenger" in field.name and v == 0:
+            raise ValueError(f'{info.field_name} cannot be negative')
+        elif isinstance(v, int) and "passenger" in info.field_name and v == 0:
             return 1  # Default to 1 passenger
         return v
 
-    @validator('client_id', 'funding_source_id', 'payment_type_id', 'copay_funding_source_id',
-               'copay_payment_type_id', 'rider_id', 'family_id')
+    @field_validator('client_id', 'funding_source_id', 'payment_type_id', 'copay_funding_source_id',
+                     'copay_payment_type_id', 'rider_id', 'family_id', mode='before')
     def validate_ids(cls, v):
         """Ensure IDs are either valid or -1/0 for defaults"""
         if v not in ["-1", "0", ""]:
@@ -288,8 +289,8 @@ class MainTripPayload(BaseModel):
                 raise ValueError('ID fields must be valid numbers, -1, or 0')
         return v
 
-    @validator('phone_number', 'home_phone', 'office_phone', 'pickup_phone_number', 'dropoff_phone_number')
-    def validate_phone_numbers(cls, v, values, field):
+    @field_validator('phone_number', 'home_phone', 'office_phone', 'pickup_phone_number', 'dropoff_phone_number', mode='before')
+    def validate_phone_numbers(cls, v, info: FieldValidationInfo):
         """Basic validation for phone number format"""
         if v and v not in ["-1", "0", ""]:
             # Remove common separators and spaces
@@ -298,11 +299,11 @@ class MainTripPayload(BaseModel):
             # Check if the result contains only digits
             if not cleaned.isdigit():
                 raise ValueError(
-                    f'{field.name} should contain only digits and common separators')
+                    f'{info.field_name} should contain only digits and common separators')
             # Check reasonable length (most phone numbers are between 7 and 15 digits)
             if len(cleaned) < 7 or len(cleaned) > 15:
                 raise ValueError(
-                    f'{field.name} should have a reasonable length (7-15 digits)')
+                    f'{info.field_name} should have a reasonable length (7-15 digits)')
         return v
 
 
@@ -312,7 +313,7 @@ class RiderVerificationParams(BaseModel):
     program_id: Annotated[str, Field(
         description="Program Id if provided, else defaults to '-1'")] = "-1"
 
-    @validator('rider_id', 'program_id')
+    @field_validator('rider_id', 'program_id')
     def validate_ids(cls, v):
         """If no value is explicitly provided, ensure we return '-1'"""
         if not v or v.strip() == "":
@@ -343,7 +344,7 @@ class DistanceFareParams(BaseModel):
     rider_id: Annotated[str, Field(
         description="Rider Id available in the memory either already in the memory or provided by the customer. If not available set it to 0. I am applying python int() so generate value accordingly")]
 
-    @validator('pickup_latitude', 'dropoff_latitude')
+    @field_validator('pickup_latitude', 'dropoff_latitude')
     def validate_latitude(cls, v):
         """Validate latitude values are within valid range"""
         if v != "0" and v != "0.0":
@@ -356,7 +357,7 @@ class DistanceFareParams(BaseModel):
                 raise ValueError('Latitude must be a valid number')
         return v
 
-    @validator('pickup_longitude', 'dropoff_longitude')
+    @field_validator('pickup_longitude', 'dropoff_longitude')
     def validate_longitude(cls, v):
         """Validate longitude values are within valid range"""
         if v != "0" and v != "0.0":
