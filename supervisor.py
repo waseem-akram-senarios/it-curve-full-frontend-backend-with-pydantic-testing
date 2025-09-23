@@ -10,7 +10,11 @@ from livekit.agents.llm import ChatContext, ChatMessage
 from livekit.plugins import openai
 from livekit.plugins.turn_detector.multilingual import MultilingualModel
 from livekit.agents import (
-    AgentSession, ConversationItemAddedEvent, CloseEvent
+    AgentSession,
+    ConversationItemAddedEvent,
+    CloseEvent,
+    metrics,
+    MetricsCollectedEvent
 )
 
 class SupervisorScore(BaseModel):
@@ -41,6 +45,11 @@ class Supervisor:
         # Wire event handlers (class-bound methods)
         self.session.on("conversation_item_added")(self._on_added)
         self.session.on("close")(on_close_wrapper)
+
+        self.usage_collector = metrics.UsageCollector()
+        @self.llm.on("metrics_collected")
+        def on_metrics_collected(ev: MetricsCollectedEvent):
+            self.usage_collector.collect(ev.metrics)
 
     def _on_added(self, ev: ConversationItemAddedEvent):
         if self.escalated_to_live_agent:

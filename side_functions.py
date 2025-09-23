@@ -467,9 +467,9 @@ async def get_client_name_voice(caller_number, affiliate_id, family_id):
 
 
 def calculate_cost(llm_input_tokens, llm_output_tokens, stt_audio_seconds, tts_characters):
-    # Pricing per unit
-    llm_input_cost_per_million = 2.50  # $ per 1M tokens
-    llm_output_cost_per_million = 10  # $ per 1M tokens
+    # Pricing per unit for gpt-4o-mini
+    llm_input_cost_per_million = 0.15  # $ per 1M tokens
+    llm_output_cost_per_million = 0.6  # $ per 1M tokens
     stt_cost_per_minute = 0.004
     tts_cost_per_million_character = 15  
     
@@ -485,6 +485,30 @@ def calculate_cost(llm_input_tokens, llm_output_tokens, stt_audio_seconds, tts_c
     cost = {
         'stt_cost': stt_cost,
         'tts_cost': tts_cost,
+        'llm_input_cost': llm_input_cost,
+        'llm_output_cost': llm_output_cost,
+        'total_cost': total_cost
+    }
+    
+    return cost
+
+
+def calculate_supervisor_cost(usage_collector):
+    llm_input_tokens = usage_collector.get_total_input_tokens()
+    llm_output_tokens = usage_collector.get_total_output_tokens()
+    
+    # Pricing per unit for gpt-4o-mini
+    llm_input_cost_per_million = 0.15  # $ per 1M tokens
+    llm_output_cost_per_million = 0.6  # $ per 1M tokens
+    
+    # Cost calculations
+    llm_input_cost = (llm_input_tokens / 1000000) * llm_input_cost_per_million
+    llm_output_cost = (llm_output_tokens / 1000000) * llm_output_cost_per_million
+    
+    # Total cost
+    total_cost = llm_input_cost + llm_output_cost
+
+    cost = {
         'llm_input_cost': llm_input_cost,
         'llm_output_cost': llm_output_cost,
         'total_cost': total_cost
