@@ -7,3 +7,4 @@ itcurves/
 *.log
 .idea/
 *.pkl
+test_pydantic_models.py
