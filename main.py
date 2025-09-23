@@ -275,7 +275,7 @@ async def entrypoint(ctx: agents.JobContext):
     allow_interruption_status = False
     
     session = AgentSession(
-        stt=openai.STT(model='nova-2-phonecall', language="en", use_realtime=True),
+        stt=deepgram.STT(model="nova-2-phonecall", language="en", use_realtime=True),
         allow_interruptions=allow_interruption_status,
         llm=openai.LLM(model="gpt-4o-mini", temperature=0.5),
         tts=deepgram.TTS(model="aura-asteria-en"),
@@ -822,6 +822,7 @@ Service Area in which the company/agency operates are also included in the greet
         ending_time = end_date_time.strftime("%Y-%m-%d %H:%M:%S")
 
         cost = calculate_cost(llm_input_tokens, llm_output_tokens, stt_audio_seconds, tts_characters)
+        supervisor_cost = calculate_supervisor_cost(supervisor.usage_collector)
 
         # Format conversation history for MongoDB
         formatted_history = []
@@ -842,9 +843,9 @@ Service Area in which the company/agency operates are also included in the greet
             "cost": {
                 "stt_cost": cost.get('stt_cost', 0),
                 "tts_cost": cost.get('tts_cost', 0),
-                "llm_input_cost": cost.get('llm_input_cost', 0),
-                "llm_output_cost": cost.get('llm_output_cost', 0),
-                "total_cost": cost.get('total_cost', 0)
+                "llm_input_cost": cost.get('llm_input_cost', 0) + supervisor_cost.get('llm_input_cost', 0),
+                "llm_output_cost": cost.get('llm_output_cost', 0) + supervisor_cost.get('llm_output_cost', 0),
+                "total_cost": cost.get('total_cost', 0) + supervisor_cost.get('total_cost', 0)
             },
             "conversation_history": formatted_history,
             "createdAt": datetime.now()
@@ -862,7 +863,7 @@ Service Area in which the company/agency operates are also included in the greet
             "start_time": starting_time,
             "end_time": ending_time,
             "call_sid": call_sid,
-            "cost": cost['total_cost'],
+            "cost": cost['total_cost'] + supervisor_cost.get('total_cost', 0),
             "conversation_history": conversation_history
         }
         print(f"\n\n\nPayload Sent: {data}\n\n\n")
