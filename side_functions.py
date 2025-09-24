@@ -467,9 +467,9 @@ async def get_client_name_voice(caller_number, affiliate_id, family_id):
 
 
 def calculate_cost(llm_input_tokens, llm_output_tokens, stt_audio_seconds, tts_characters):
-    # Pricing per unit for gpt-4o-mini
-    llm_input_cost_per_million = 0.15  # $ per 1M tokens
-    llm_output_cost_per_million = 0.6  # $ per 1M tokens
+    # Pricing per unit for gpt-4.1-mini
+    llm_input_cost_per_million = 0.4  # $ per 1M tokens
+    llm_output_cost_per_million = 1.6  # $ per 1M tokens
     stt_cost_per_minute = 0.004
     tts_cost_per_million_character = 15  
     
