@@ -318,37 +318,70 @@ Service Area in which the company/agency operates are also included in the greet
     session.input.set_audio_enabled(False)
     print("Audio input DISABLED - agent will not process any speech during API calls")
     
-    # Start the background audio player only - we'll play sounds during each API call
+    # Start the background audio player for continuous typing sounds
     await background_audio.start(room=ctx.room, agent_session=session)
-    print("Initialized background audio for API call typing sounds")
+    print("Initialized background audio player")
     
-    # Create a helper function to play typing sounds during API calls
-    async def with_typing_sound(api_func, *args, **kwargs):
-        # Start typing sound
-        try:
-            typing_handle = background_audio.play(BuiltinAudioClip.KEYBOARD_TYPING, loop=True)
-            print(f"Started typing sounds for API call: {api_func.__name__}")
-        except Exception as e:
-            print(f"Warning: Couldn't start typing sounds for {api_func.__name__}: {e}")
-            typing_handle = None
+    # Start a single typing sound that will continue throughout all API calls
+    typing_handle = None
+    try:
+        typing_handle = background_audio.play(BuiltinAudioClip.KEYBOARD_TYPING, loop=True)
+        print("Started typing sounds for API fetching phase")
+    except Exception as e:
+        print(f"Warning: Couldn't start typing sounds: {e}")
+    
+    # Create a helper function to log API calls without managing typing sounds
+    async def with_api_logging(api_func, *args, **kwargs):
+        # Only log the API call
+        print(f"Calling API: {api_func.__name__}")
         
+        try:
+            # Call the API function
+            result = await api_func(*args, **kwargs)
+            print(f"Completed API call: {api_func.__name__}")
+            return result
+        except Exception as e:
+            print(f"Error in API call {api_func.__name__}: {e}")
+            raise  # Re-raise the exception to be handled by the caller
+            
+    # ==============================================================================
+    # TYPING SOUNDS DURING CONVERSATION API CALLS
+    # ==============================================================================
+    # This helper function plays typing sounds during any API call that happens 
+    # during conversation with the user (after the initial greeting phase).
+    # 
+    # HOW TO USE:
+    # When making API calls during conversation (e.g. address validation, location lookup,
+    # booking confirmation), wrap the API call with this function:
+    #
+    # EXAMPLE:
+    # Instead of: result = await verify_address(address)
+    # Use: result = await with_typing_during_api(verify_address, address)
+    #
+    # This will automatically play typing sounds while the API call is processing
+    # and stop them when the call completes, providing a better user experience.
+    # ==============================================================================
+    async def with_typing_during_api(api_func, *args, **kwargs):
+        # Start typing sound
+        temp_typing_handle = None
+        try:
+            temp_typing_handle = background_audio.play(BuiltinAudioClip.KEYBOARD_TYPING, loop=True)
+            print(f"Started typing sounds for conversation API call: {api_func.__name__}")
+        except Exception as e:
+            print(f"Warning: Couldn't start typing sounds for conversation: {e}")
+            
         try:
             # Call the API function
             result = await api_func(*args, **kwargs)
             return result
         finally:
-            # Stop typing sound regardless of success or failure
-            if typing_handle is not None:
+            # Always stop the typing sound
+            if temp_typing_handle is not None:
                 try:
-                    typing_handle.stop()
-                    print(f"Stopped typing sounds for API call: {api_func.__name__}")
-                except RuntimeError as e:
-                    if "asynchronous generator is already running" in str(e):
-                        print(f"Note: Typing sound was already stopping for {api_func.__name__}")
-                    else:
-                        print(f"Warning: Error stopping typing sounds for {api_func.__name__}: {e}")
+                    temp_typing_handle.stop()
+                    print(f"Stopped typing sounds for conversation API call: {api_func.__name__}")
                 except Exception as e:
-                    print(f"Warning: Error stopping typing sounds for {api_func.__name__}: {e}")
+                    print(f"Error stopping conversation typing sounds: {e}")
 
     
     # We'll re-enable audio input after APIs are fetched and personalized greeting is delivered
@@ -437,8 +470,8 @@ Service Area in which the company/agency operates are also included in the greet
                 affiliate = cached_affiliate
                 logger.info(f"Using cached affiliate for {recipient}")
             else:
-                # If not in cache, call the original function with typing sound
-                affiliate = await with_typing_sound(recognize_affiliate, recipient)
+                # If not in cache, call the original function with logging
+                affiliate = await with_api_logging(recognize_affiliate, recipient)
                 # Store result in cache for future use
                 cache_manager.store_affiliate_in_cache(recipient, affiliate)
                 
@@ -456,8 +489,8 @@ Service Area in which the company/agency operates are also included in the greet
                 all_riders_info = cached_client
                 logger.info(f"Using cached client info for {phone_number}")
             else:
-                # If not in cache, call the original function with typing sound
-                all_riders_info = await with_typing_sound(get_client_name_voice, phone_number, affiliate_id, family_id)
+                # If not in cache, call the original function with logging
+                all_riders_info = await with_api_logging(get_client_name_voice, phone_number, affiliate_id, family_id)
                 # Store result in cache for future use
                 cache_manager.store_client_in_cache(phone_number, affiliate_id, family_id, all_riders_info)
 
@@ -476,8 +509,8 @@ Service Area in which the company/agency operates are also included in the greet
                     affiliate = cached_affiliate
                     logger.info(f"Using cached affiliate for IDs {family_id}:{affiliate_id}")
                 else:
-                    # If not in cache, call the original function with typing sound
-                    affiliate = await with_typing_sound(recognize_affiliate_by_ids, family_id, affiliate_id)
+                    # If not in cache, call the original function with logging
+                    affiliate = await with_api_logging(recognize_affiliate_by_ids, family_id, affiliate_id)
                     # Store result in cache for future use
                     cache_manager.store_affiliate_in_cache(cache_key, affiliate)
                 
@@ -493,8 +526,8 @@ Service Area in which the company/agency operates are also included in the greet
                         all_riders_info = cached_client
                         logger.info(f"Using cached client info for {phone_number}")
                     else:
-                        # If not in cache, call the original function with typing sound
-                        all_riders_info = await with_typing_sound(get_client_name_voice, phone_number, affiliate_id, family_id)
+                        # If not in cache, call the original function with logging
+                        all_riders_info = await with_api_logging(get_client_name_voice, phone_number, affiliate_id, family_id)
                         # Store result in cache for future use
                         cache_manager.store_client_in_cache(phone_number, affiliate_id, family_id, all_riders_info)
                 else:
@@ -613,13 +646,13 @@ Service Area in which the company/agency operates are also included in the greet
 
     Servica_Area = ""
     try:
-        bounds, _, _ = await with_typing_sound(fetch_affiliate_details, affiliate_id)
+        bounds, _, _ = await with_api_logging(fetch_affiliate_details, affiliate_id)
         counties_prompt = f"""What are the counties that lies within these coordinates {bounds}. Only return names of the counties separated by commas. 
         Do not add name of the states. Do not add any other line or comment. I just need the name of the counties
         Sample response would be 'county_1, county_2, ......, county_n'
         DO NOT RETURN MORE THAN 10 COUNTY NAMES
         """
-        Servica_Area = await with_typing_sound(search_web_manual, counties_prompt)
+        Servica_Area = await with_api_logging(search_web_manual, counties_prompt)
         prompt = f"""{prompt}\n\n
         ``Agency Operate in the following counties: {Servica_Area}``\n\n
         """
@@ -631,7 +664,7 @@ Service Area in which the company/agency operates are also included in the greet
         client_id = rider_info["client_id"]
         frequent_rides = ""
         try:
-            frequent_rides = await with_typing_sound(get_frequnt_addresses_manual, client_id, affiliate_id)
+            frequent_rides = await with_api_logging(get_frequnt_addresses_manual, client_id, affiliate_id)
             if frequent_rides.strip() != "":
                 prompt = f"""{prompt}\n\n
                 {frequent_rides}
@@ -771,7 +804,14 @@ Service Area in which the company/agency operates are also included in the greet
         elif all_riders_info["number_of_riders"] > 1:
             personalized_message += "I see that I have multiple profiles for your number. Can I confirm your name please?"
         
-        # All typing sounds are already stopped after each API call
+        # Stop the continuous typing sound before delivering the personalized message
+        if typing_handle is not None:
+            try:
+                typing_handle.stop()
+                print("Stopped typing sounds - API fetching complete")
+            except Exception as e:
+                print(f"Error stopping typing sounds: {e}")
+        
         print("Preparing to deliver personalized follow-up message")
         
         # Only send follow-up if we have something meaningful to say
@@ -788,7 +828,14 @@ Service Area in which the company/agency operates are also included in the greet
             
     except Exception as e:
         print(f"Error in providing personalized follow-up: {e}")
-        # No need to stop typing sounds here - they're stopped after each API call
+        # Make sure typing sounds are stopped even on errors
+        if typing_handle is not None:
+            try:
+                typing_handle.stop()
+                print("Stopped typing sounds due to error")
+            except Exception as e:
+                print(f"Error stopping typing sounds after error: {e}")
+        
         print("Error occurred during API fetching")
         
         # Don't send another message if we fail - the initial greeting is enough
