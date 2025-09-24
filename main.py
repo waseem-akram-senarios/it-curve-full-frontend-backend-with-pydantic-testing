@@ -888,9 +888,14 @@ Service Area in which the company/agency operates are also included in the greet
         end_date_time = datetime.now(pytz.utc).astimezone(eastern)
 
         ending_time = end_date_time.strftime("%Y-%m-%d %H:%M:%S")
+        elapsed_time = (ending_time - starting_time).total_seconds()
 
         cost = calculate_cost(llm_input_tokens, llm_output_tokens, stt_audio_seconds, tts_characters)
-        supervisor_cost = calculate_supervisor_cost(supervisor.usage_collector)
+
+        summary = usage_collector.get_summary()
+        supervisor_llm_input_tokens = summary.llm_prompt_tokens
+        supervisor_llm_output_tokens = summary.llm_completion_tokens
+        supervisor_cost = calculate_supervisor_cost(supervisor_llm_input_tokens, supervisor_llm_output_tokens)
 
         # Format conversation history for MongoDB
         formatted_history = []
@@ -908,6 +913,9 @@ Service Area in which the company/agency operates are also included in the greet
             "call_sid": f"{call_sid} , (Phone number: {phone_number})",
             "start_time": datetime.strptime(starting_time, "%Y-%m-%d %H:%M:%S"),
             "end_time": datetime.strptime(ending_time, "%Y-%m-%d %H:%M:%S"),
+            "duration_seconds": elapsed_time,
+            "llm_input_tokens": llm_input_tokens + supervisor_llm_input_tokens,
+            "llm_output_tokens": llm_output_tokens + supervisor_llm_output_tokens,
             "cost": {
                 "stt_cost": cost.get('stt_cost', 0),
                 "tts_cost": cost.get('tts_cost', 0),
