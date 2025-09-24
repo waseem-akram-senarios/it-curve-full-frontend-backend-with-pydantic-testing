@@ -318,12 +318,25 @@ Service Area in which the company/agency operates are also included in the greet
     session.input.set_audio_enabled(False)
     print("Audio input DISABLED - agent will not process any speech during API calls")
     
-    # Start the background audio player for typing sounds
+    # Start the background audio player only - we'll play sounds during each API call
     await background_audio.start(room=ctx.room, agent_session=session)
+    print("Initialized background audio for API call typing sounds")
     
-    # Play typing sounds while fetching APIs
-    typing_handle = background_audio.play(BuiltinAudioClip.KEYBOARD_TYPING, loop=True)
-    print("Started typing sounds during API fetching")
+    # Create a helper function to play typing sounds during API calls
+    async def with_typing_sound(api_func, *args, **kwargs):
+        # Start typing sound
+        typing_handle = background_audio.play(BuiltinAudioClip.KEYBOARD_TYPING, loop=True)
+        print(f"Started typing sounds for API call: {api_func.__name__}")
+        
+        try:
+            # Call the API function
+            result = await api_func(*args, **kwargs)
+            return result
+        finally:
+            # Stop typing sound regardless of success or failure
+            typing_handle.stop()
+            print(f"Stopped typing sounds for API call: {api_func.__name__}")
+
     
     # We'll re-enable audio input after APIs are fetched and personalized greeting is delivered
 
@@ -411,8 +424,8 @@ Service Area in which the company/agency operates are also included in the greet
                 affiliate = cached_affiliate
                 logger.info(f"Using cached affiliate for {recipient}")
             else:
-                # If not in cache, call the original function
-                affiliate = await recognize_affiliate(recipient)
+                # If not in cache, call the original function with typing sound
+                affiliate = await with_typing_sound(recognize_affiliate, recipient)
                 # Store result in cache for future use
                 cache_manager.store_affiliate_in_cache(recipient, affiliate)
                 
@@ -430,8 +443,8 @@ Service Area in which the company/agency operates are also included in the greet
                 all_riders_info = cached_client
                 logger.info(f"Using cached client info for {phone_number}")
             else:
-                # If not in cache, call the original function
-                all_riders_info = await get_client_name_voice(phone_number, affiliate_id, family_id)
+                # If not in cache, call the original function with typing sound
+                all_riders_info = await with_typing_sound(get_client_name_voice, phone_number, affiliate_id, family_id)
                 # Store result in cache for future use
                 cache_manager.store_client_in_cache(phone_number, affiliate_id, family_id, all_riders_info)
 
@@ -450,8 +463,8 @@ Service Area in which the company/agency operates are also included in the greet
                     affiliate = cached_affiliate
                     logger.info(f"Using cached affiliate for IDs {family_id}:{affiliate_id}")
                 else:
-                    # If not in cache, call the original function
-                    affiliate = await recognize_affiliate_by_ids(family_id, affiliate_id)
+                    # If not in cache, call the original function with typing sound
+                    affiliate = await with_typing_sound(recognize_affiliate_by_ids, family_id, affiliate_id)
                     # Store result in cache for future use
                     cache_manager.store_affiliate_in_cache(cache_key, affiliate)
                 
@@ -467,8 +480,8 @@ Service Area in which the company/agency operates are also included in the greet
                         all_riders_info = cached_client
                         logger.info(f"Using cached client info for {phone_number}")
                     else:
-                        # If not in cache, call the original function
-                        all_riders_info = await get_client_name_voice(phone_number, affiliate_id, family_id)
+                        # If not in cache, call the original function with typing sound
+                        all_riders_info = await with_typing_sound(get_client_name_voice, phone_number, affiliate_id, family_id)
                         # Store result in cache for future use
                         cache_manager.store_client_in_cache(phone_number, affiliate_id, family_id, all_riders_info)
                 else:
@@ -587,13 +600,13 @@ Service Area in which the company/agency operates are also included in the greet
 
     Servica_Area = ""
     try:
-        bounds, _, _ = await fetch_affiliate_details(affiliate_id)
+        bounds, _, _ = await with_typing_sound(fetch_affiliate_details, affiliate_id)
         counties_prompt = f"""What are the counties that lies within these coordinates {bounds}. Only return names of the counties separated by commas. 
         Do not add name of the states. Do not add any other line or comment. I just need the name of the counties
         Sample response would be 'county_1, county_2, ......, county_n'
         DO NOT RETURN MORE THAN 10 COUNTY NAMES
         """
-        Servica_Area = await search_web_manual(counties_prompt)
+        Servica_Area = await with_typing_sound(search_web_manual, counties_prompt)
         prompt = f"""{prompt}\n\n
         ``Agency Operate in the following counties: {Servica_Area}``\n\n
         """
@@ -605,7 +618,7 @@ Service Area in which the company/agency operates are also included in the greet
         client_id = rider_info["client_id"]
         frequent_rides = ""
         try:
-            frequent_rides = await get_frequnt_addresses_manual(client_id, affiliate_id)
+            frequent_rides = await with_typing_sound(get_frequnt_addresses_manual, client_id, affiliate_id)
             if frequent_rides.strip() != "":
                 prompt = f"""{prompt}\n\n
                 {frequent_rides}
@@ -745,9 +758,8 @@ Service Area in which the company/agency operates are also included in the greet
         elif all_riders_info["number_of_riders"] > 1:
             personalized_message += "I see that I have multiple profiles for your number. Can I confirm your name please?"
         
-        # Stop typing sounds before delivering personalized message
-        typing_handle.stop()
-        print("Stopped typing sounds, preparing to deliver personalized follow-up message")
+        # All typing sounds are already stopped after each API call
+        print("Preparing to deliver personalized follow-up message")
         
         # Only send follow-up if we have something meaningful to say
         if personalized_message:
@@ -763,12 +775,8 @@ Service Area in which the company/agency operates are also included in the greet
             
     except Exception as e:
         print(f"Error in providing personalized follow-up: {e}")
-        # Make sure typing sounds are stopped if there's an error
-        try:
-            typing_handle.stop()
-            print("Stopped typing sounds due to error")
-        except Exception as stop_error:
-            print(f"Error stopping typing sounds: {stop_error}")
+        # No need to stop typing sounds here - they're stopped after each API call
+        print("Error occurred during API fetching")
         
         # Don't send another message if we fail - the initial greeting is enough
         
