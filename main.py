@@ -918,8 +918,9 @@ Remember: You are ONLY here to assist with transportation services for the agenc
         eastern = pytz.timezone('US/Eastern')
         end_date_time = datetime.now(pytz.utc).astimezone(eastern)
 
+        fmt = "%Y-%m-%d %H:%M:%S"
         ending_time = end_date_time.strftime("%Y-%m-%d %H:%M:%S")
-        elapsed_time = (ending_time - starting_time).total_seconds()
+        elapsed_time = (datetime.strptime(ending_time, fmt) - datetime.strptime(starting_time, fmt)).total_seconds()
 
         cost = calculate_cost(llm_input_tokens, llm_output_tokens, stt_audio_seconds, tts_characters)
 
