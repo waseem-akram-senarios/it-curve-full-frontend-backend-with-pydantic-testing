@@ -494,8 +494,10 @@ def calculate_cost(llm_input_tokens, llm_output_tokens, stt_audio_seconds, tts_c
 
 
 def calculate_supervisor_cost(usage_collector):
-    llm_input_tokens = usage_collector.get_total_input_tokens()
-    llm_output_tokens = usage_collector.get_total_output_tokens()
+    summary = usage_collector.get_summary()
+    llm_input_tokens = summary.llm_prompt_tokens
+    llm_output_tokens = summary.llm_completion_tokens
+
     
     # Pricing per unit for gpt-4o-mini
     llm_input_cost_per_million = 0.15  # $ per 1M tokens
