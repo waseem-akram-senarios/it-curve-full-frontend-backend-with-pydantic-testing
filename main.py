@@ -942,6 +942,8 @@ Remember: You are ONLY here to assist with transportation services for the agenc
         mongo_doc = {
             "user": ObjectId(DEFAULT_USER_ID),
             "call_sid": f"{call_sid} , (Phone number: {phone_number})",
+            "phone_number": phone_number,
+            "call_sid_new": call_sid,
             "start_time": datetime.strptime(starting_time, "%Y-%m-%d %H:%M:%S"),
             "end_time": datetime.strptime(ending_time, "%Y-%m-%d %H:%M:%S"),
             "duration_seconds": elapsed_time,
