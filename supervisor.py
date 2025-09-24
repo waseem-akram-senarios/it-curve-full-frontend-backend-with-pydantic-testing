@@ -107,7 +107,7 @@ If uncertain, choose the lower score."""
             return
 
         self.nth_issue += 1
-        if self.nth_issue >= 1:
+        if self.nth_issue >= 2:
             self.escalated_to_live_agent = True
             await self.session.interrupt()
             await self.session.say("Let me transfer you to live agent", allow_interruptions=False)
