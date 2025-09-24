@@ -325,8 +325,12 @@ Service Area in which the company/agency operates are also included in the greet
     # Create a helper function to play typing sounds during API calls
     async def with_typing_sound(api_func, *args, **kwargs):
         # Start typing sound
-        typing_handle = background_audio.play(BuiltinAudioClip.KEYBOARD_TYPING, loop=True)
-        print(f"Started typing sounds for API call: {api_func.__name__}")
+        try:
+            typing_handle = background_audio.play(BuiltinAudioClip.KEYBOARD_TYPING, loop=True)
+            print(f"Started typing sounds for API call: {api_func.__name__}")
+        except Exception as e:
+            print(f"Warning: Couldn't start typing sounds for {api_func.__name__}: {e}")
+            typing_handle = None
         
         try:
             # Call the API function
@@ -334,8 +338,17 @@ Service Area in which the company/agency operates are also included in the greet
             return result
         finally:
             # Stop typing sound regardless of success or failure
-            typing_handle.stop()
-            print(f"Stopped typing sounds for API call: {api_func.__name__}")
+            if typing_handle is not None:
+                try:
+                    typing_handle.stop()
+                    print(f"Stopped typing sounds for API call: {api_func.__name__}")
+                except RuntimeError as e:
+                    if "asynchronous generator is already running" in str(e):
+                        print(f"Note: Typing sound was already stopping for {api_func.__name__}")
+                    else:
+                        print(f"Warning: Error stopping typing sounds for {api_func.__name__}: {e}")
+                except Exception as e:
+                    print(f"Warning: Error stopping typing sounds for {api_func.__name__}: {e}")
 
     
     # We'll re-enable audio input after APIs are fetched and personalized greeting is delivered
