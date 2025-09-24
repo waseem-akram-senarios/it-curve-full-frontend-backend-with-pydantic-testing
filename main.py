@@ -515,15 +515,15 @@ Remember: You are ONLY here to assist with transportation services for the agenc
             # print(f"\n\nPhone Number: {phone_number}")
             
             # Try to get client info from cache
-            cached_client = cache_manager.get_client_from_cache(phone_number, affiliate_id, family_id)
-            if cached_client:
-                all_riders_info = cached_client
-                logger.info(f"Using cached client info for {phone_number}")
-            else:
+            # cached_client = cache_manager.get_client_from_cache(phone_number, affiliate_id, family_id)
+            # if cached_client:
+            #     all_riders_info = cached_client
+            #     logger.info(f"Using cached client info for {phone_number}")
+            # else:
                 # If not in cache, call the original function with logging
-                all_riders_info = await with_api_logging(get_client_name_voice, phone_number, affiliate_id, family_id)
+            all_riders_info = await with_api_logging(get_client_name_voice, phone_number, affiliate_id, family_id)
                 # Store result in cache for future use
-                cache_manager.store_client_in_cache(phone_number, affiliate_id, family_id, all_riders_info)
+            # cache_manager.store_client_in_cache(phone_number, affiliate_id, family_id, all_riders_info)
 
         except Exception as e:
             print(f"Error in recognizing affiliate from number: {e}")
@@ -552,15 +552,15 @@ Remember: You are ONLY here to assist with transportation services for the agenc
                     # print(f"\n\nPhone Number: {phone_number}")
                     
                     # Try to get client info from cache
-                    cached_client = cache_manager.get_client_from_cache(phone_number, affiliate_id, family_id)
-                    if cached_client:
-                        all_riders_info = cached_client
-                        logger.info(f"Using cached client info for {phone_number}")
-                    else:
+                    # cached_client = cache_manager.get_client_from_cache(phone_number, affiliate_id, family_id)
+                    # if cached_client:
+                    #     all_riders_info = cached_client
+                    #     logger.info(f"Using cached client info for {phone_number}")
+                    # else:
                         # If not in cache, call the original function with logging
-                        all_riders_info = await with_api_logging(get_client_name_voice, phone_number, affiliate_id, family_id)
+                    all_riders_info = await with_api_logging(get_client_name_voice, phone_number, affiliate_id, family_id)
                         # Store result in cache for future use
-                        cache_manager.store_client_in_cache(phone_number, affiliate_id, family_id, all_riders_info)
+                        # cache_manager.store_client_in_cache(phone_number, affiliate_id, family_id, all_riders_info)
                 else:
                     all_riders_info["number_of_riders"] = 1
                     all_riders_info["rider_1"] = unknow_rider
