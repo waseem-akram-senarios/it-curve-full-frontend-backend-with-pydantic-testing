@@ -49,7 +49,7 @@ class Supervisor:
         self.usage_collector = metrics.UsageCollector()
         @self.llm.on("metrics_collected")
         def on_metrics_collected(ev: MetricsCollectedEvent):
-            self.usage_collector.collect(ev.metrics)
+            self.usage_collector.collect(ev)
 
     def _on_added(self, ev: ConversationItemAddedEvent):
         if self.escalated_to_live_agent:
