@@ -164,9 +164,24 @@ class PhoneNumberCollector:
             return number
 async def handle_phone_dtmf(digit: str, session, collector: PhoneNumberCollector):
     """Handle DTMF during phone number collection"""
-    
-    if digit == "*":
-        
+
+    # Enhanced debugging for Asterisk DTMF
+    logger.info(f"[ASTERISK DTMF DEBUG] Raw digit received: '{digit}' (ord={ord(digit[0]) if digit else 'empty'})")
+
+    # Map potential Asterisk DTMF representations
+    dtmf_map = {
+        "11": "#",
+        "pound": "#",
+        "10": "*",
+        "star": "*"
+    }
+
+    # Normalize the digit if needed
+    normalized_digit = dtmf_map.get(digit.lower(), digit)
+
+    logger.info(f"[ASTERISK DTMF] Original: '{digit}', Normalized: '{normalized_digit}'")
+
+    if normalized_digit == "#":  # CHANGED: # should submit the number
         # Finalize phone number collection
         number = collector.finish_collection()
         if collector.is_valid_phone(number):
@@ -180,16 +195,17 @@ async def handle_phone_dtmf(digit: str, session, collector: PhoneNumberCollector
                 instructions="The number seems too short. Please enter your complete 10-digit phone number and press pound when finished.",
                 allow_interruptions=True
             )
-    elif digit == "#":
+    elif normalized_digit == "*":  # CHANGED: * should clear/reset
         # Reset phone number collection
         collector.clear_number()
         await session.generate_reply(
-            instructions="Let me get your phone number again. Please enter it using the keypad and press pound when finished.",
+            instructions="Let me clear that. Please enter your phone number again using the keypad and press pound when finished.",
             allow_interruptions=True
         )
-    elif digit.isdigit():
+    elif normalized_digit.isdigit():
         # Add digit to the current number being collected
-        collector.add_digit(digit)
+        collector.add_digit(normalized_digit)
+        logger.info(f"[ASTERISK DTMF] Added digit {normalized_digit}, current number: {collector.current_number}")
         # Optional: provide feedback after every few digits
         #if len(collector.current_number) % 3 == 0 and len(collector.current_number) > 0:
          #   await session.generate_reply(
@@ -199,19 +215,26 @@ async def handle_phone_dtmf(digit: str, session, collector: PhoneNumberCollector
 
 def setup_room_dtmf_handler(room: rtc.Room, session, phone_collector, agent):
     """Setup the SIP DTMF handler for the room"""
-    
+
     @room.on("sip_dtmf_received")
     def dtmf_received(dtmf: rtc.SipDTMF):
-        logger.info(f"DTMF received from {dtmf.participant.identity}: {dtmf.code} / {dtmf.digit}")
-        
+        # Enhanced logging for Asterisk debugging
+        logger.info(f"[ASTERISK DTMF] Received signal - Identity: {dtmf.participant.identity}")
+        logger.info(f"[ASTERISK DTMF] Code: {dtmf.code} | Digit: '{dtmf.digit}' | Type: {type(dtmf.digit)}")
+
         digit = dtmf.digit
-        
+
+        # Check for potential Asterisk-specific DTMF encoding issues
+        if digit is None or digit == "":
+            logger.warning(f"[ASTERISK DTMF] Empty or None digit received, code was: {dtmf.code}")
+            return
+
         # Only process DTMF when explicitly collecting phone numbers
         if phone_collector.collecting_phone:
-            logger.info(f"Processing DTMF {digit} for phone collection")
+            logger.info(f"[ASTERISK DTMF] Processing digit '{digit}' for phone collection")
             asyncio.create_task(handle_phone_dtmf(digit, session, phone_collector))
         else:
-            logger.info(f"DTMF {digit} ignored - not in phone collection mode")
+            logger.info(f"[ASTERISK DTMF] Digit '{digit}' ignored - not in phone collection mode")
             # Don't process DTMF if not collecting phone numbers
 
 async def entrypoint(ctx: agents.JobContext):
@@ -788,11 +811,15 @@ Service Area in which the company/agency operates are also included in the greet
 
     @ctx.room.on("sip_dtmf_received")
     def handle_dtmf(dtmf: SipDTMF):
+        # Enhanced logging for Asterisk debugging
+        logger.info(f"[ASTERISK DTMF - Secondary Handler] Code: {dtmf.code} | Digit: '{dtmf.digit}'")
         digit = dtmf.digit
-        logger.info(f"DTMF received from sip: {digit}")
+
         if digit == "0":
+            logger.info("[ASTERISK DTMF] Transferring to dispatcher")
             asyncio.create_task(transfer_call_dtmf(agent.room, agent.room.name))
-        if digit == "1":
+        elif digit == "1":
+            logger.info("[ASTERISK DTMF] Transferring to driver")
             asyncio.create_task(transfer_call_dtmf_driver(agent.room, agent.room.name))
 
     phone_collector = PhoneNumberCollector()
