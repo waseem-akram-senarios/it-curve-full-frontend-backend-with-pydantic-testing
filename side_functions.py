@@ -353,11 +353,13 @@ async def recognize_affiliate(receiver):
     
     url = os.getenv("GET_AFFILIATE_API")
 
-    response = requests.post(url)
-
     try:
-        if response.status_code == 200:
-            data = response.json()
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url) as response:
+                response_data = await response.json()
+        # Response data is already loaded via await response.json()
+        if response.status == 200:
+            data = response_data
         else:
             return "GetIVRAIAffiliate API failed!"
     except Exception as e:

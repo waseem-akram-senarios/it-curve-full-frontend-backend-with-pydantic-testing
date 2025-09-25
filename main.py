@@ -511,7 +511,7 @@ Remember: You are ONLY here to assist with transportation services for the agenc
             affiliate_id = affiliate["AffiliateID"]
             family_id = affiliate["AffiliateFamilyID"]
 
-            phone_number = await extract_phone_number(caller)
+            phone_number = await with_api_logging(extract_phone_number, caller)
             # print(f"\n\nPhone Number: {phone_number}")
             
             # Try to get client info from cache
@@ -548,7 +548,7 @@ Remember: You are ONLY here to assist with transportation services for the agenc
                 print("*************AFFILIATE*******:\n", affiliate)
                 phone_number = metadata['phoneNo']
                 if phone_number != "":
-                    phone_number = await extract_phone_number(phone_number)
+                    phone_number = await with_api_logging(extract_phone_number, phone_number)
                     # print(f"\n\nPhone Number: {phone_number}")
                     
                     # Try to get client info from cache
@@ -980,13 +980,16 @@ Remember: You are ONLY here to assist with transportation services for the agenc
 
         url = os.getenv("PYTHON_ANYWHERE_COST_LOGGING")
 
-        # Send the POST request with JSON data
+        # Send the POST request with JSON data using async HTTP
         try:
-            response = requests.post(url, json=data)
-            if response.status_code == 201:
-                print(f"Success: {response.json()}")
-            else:
-                print(f"Error: {response.status_code}, {response.text}")
+            async with aiohttp.ClientSession() as session:
+                async with session.post(url, json=data) as response:
+                    if response.status == 201:
+                        response_data = await response.json()
+                        print(f"Success: {response_data}")
+                    else:
+                        response_text = await response.text()
+                        print(f"Error: {response.status}, {response_text}")
         except Exception as e:
             print(f"Error sending data to API: {e}")
 
