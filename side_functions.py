@@ -352,14 +352,15 @@ async def recognize_affiliate(receiver):
         return "Receiver Number not found!"
     
     url = os.getenv("GET_AFFILIATE_API")
-
+    headers = {"Accept": "application/json"}
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.post(url) as response:
+            async with session.post(url, headers=headers) as response:
                 response_data = await response.json()
         # Response data is already loaded via await response.json()
         if response.status == 200:
             data = response_data
+            data = eval(data)
         else:
             return "GetIVRAIAffiliate API failed!"
     except Exception as e:
