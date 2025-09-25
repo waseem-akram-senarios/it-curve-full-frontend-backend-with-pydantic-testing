@@ -362,18 +362,18 @@ Remember: You are ONLY here to assist with transportation services for the agenc
         print(f"Warning: Couldn't start typing sounds: {e}")
     
     # Create a helper function to log API calls without managing typing sounds
-    async def with_api_logging(api_func, *args, **kwargs):
-        # Only log the API call
-        print(f"Calling API: {api_func.__name__}")
+    # async def with_typing_during_api(api_func, *args, **kwargs):
+    #     # Only log the API call
+    #     print(f"Calling API: {api_func.__name__}")
         
-        try:
-            # Call the API function
-            result = await api_func(*args, **kwargs)
-            print(f"Completed API call: {api_func.__name__}")
-            return result
-        except Exception as e:
-            print(f"Error in API call {api_func.__name__}: {e}")
-            raise  # Re-raise the exception to be handled by the caller
+    #     try:
+    #         # Call the API function
+    #         result = await api_func(*args, **kwargs)
+    #         print(f"Completed API call: {api_func.__name__}")
+    #         return result
+    #     except Exception as e:
+    #         print(f"Error in API call {api_func.__name__}: {e}")
+    #         raise  # Re-raise the exception to be handled by the caller
             
     # ==============================================================================
     # TYPING SOUNDS DURING CONVERSATION API CALLS
@@ -502,7 +502,7 @@ Remember: You are ONLY here to assist with transportation services for the agenc
                 logger.info(f"Using cached affiliate for {recipient}")
             else:
                 # If not in cache, call the original function with logging
-                affiliate = await with_api_logging(recognize_affiliate, recipient)
+                affiliate = await with_typing_during_api(recognize_affiliate, recipient)
                 # Store result in cache for future use
                 cache_manager.store_affiliate_in_cache(recipient, affiliate)
                 
@@ -511,7 +511,7 @@ Remember: You are ONLY here to assist with transportation services for the agenc
             affiliate_id = affiliate["AffiliateID"]
             family_id = affiliate["AffiliateFamilyID"]
 
-            phone_number = await with_api_logging(extract_phone_number, caller)
+            phone_number = await with_typing_during_api(extract_phone_number, caller)
             # print(f"\n\nPhone Number: {phone_number}")
             
             # Try to get client info from cache
@@ -521,7 +521,7 @@ Remember: You are ONLY here to assist with transportation services for the agenc
             #     logger.info(f"Using cached client info for {phone_number}")
             # else:
                 # If not in cache, call the original function with logging
-            all_riders_info = await with_api_logging(get_client_name_voice, phone_number, affiliate_id, family_id)
+            all_riders_info = await with_typing_during_api(get_client_name_voice, phone_number, affiliate_id, family_id)
                 # Store result in cache for future use
             # cache_manager.store_client_in_cache(phone_number, affiliate_id, family_id, all_riders_info)
 
@@ -541,14 +541,14 @@ Remember: You are ONLY here to assist with transportation services for the agenc
                     logger.info(f"Using cached affiliate for IDs {family_id}:{affiliate_id}")
                 else:
                     # If not in cache, call the original function with logging
-                    affiliate = await with_api_logging(recognize_affiliate_by_ids, family_id, affiliate_id)
+                    affiliate = await with_typing_during_api(recognize_affiliate_by_ids, family_id, affiliate_id)
                     # Store result in cache for future use
                     cache_manager.store_affiliate_in_cache(cache_key, affiliate)
                 
                 print("*************AFFILIATE*******:\n", affiliate)
                 phone_number = metadata['phoneNo']
                 if phone_number != "":
-                    phone_number = await with_api_logging(extract_phone_number, phone_number)
+                    phone_number = await with_typing_during_api(extract_phone_number, phone_number)
                     # print(f"\n\nPhone Number: {phone_number}")
                     
                     # Try to get client info from cache
@@ -558,7 +558,7 @@ Remember: You are ONLY here to assist with transportation services for the agenc
                     #     logger.info(f"Using cached client info for {phone_number}")
                     # else:
                         # If not in cache, call the original function with logging
-                    all_riders_info = await with_api_logging(get_client_name_voice, phone_number, affiliate_id, family_id)
+                    all_riders_info = await with_typing_during_api(get_client_name_voice, phone_number, affiliate_id, family_id)
                         # Store result in cache for future use
                         # cache_manager.store_client_in_cache(phone_number, affiliate_id, family_id, all_riders_info)
                 else:
@@ -677,13 +677,13 @@ Remember: You are ONLY here to assist with transportation services for the agenc
 
     Servica_Area = ""
     try:
-        bounds, _, _ = await with_api_logging(fetch_affiliate_details, affiliate_id)
+        bounds, _, _ = await with_typing_during_api(fetch_affiliate_details, affiliate_id)
         counties_prompt = f"""What are the counties that lies within these coordinates {bounds}. Only return names of the counties separated by commas. 
         Do not add name of the states. Do not add any other line or comment. I just need the name of the counties
         Sample response would be 'county_1, county_2, ......, county_n'
         DO NOT RETURN MORE THAN 10 COUNTY NAMES
         """
-        Servica_Area = await with_api_logging(search_web_manual, counties_prompt)
+        Servica_Area = await with_typing_during_api(search_web_manual, counties_prompt)
         prompt = f"""{prompt}\n\n
         ``Agency Operate in the following counties: {Servica_Area}``\n\n
         """
@@ -695,7 +695,7 @@ Remember: You are ONLY here to assist with transportation services for the agenc
         client_id = rider_info["client_id"]
         frequent_rides = ""
         try:
-            frequent_rides = await with_api_logging(get_frequnt_addresses_manual, client_id, affiliate_id)
+            frequent_rides = await with_typing_during_api(get_frequnt_addresses_manual, client_id, affiliate_id)
             if frequent_rides.strip() != "":
                 prompt = f"""{prompt}\n\n
                 {frequent_rides}
