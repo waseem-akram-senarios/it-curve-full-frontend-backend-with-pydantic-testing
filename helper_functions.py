@@ -2325,6 +2325,7 @@ class Assistant(Agent):
             print(f"\n\nError occurred in collecting trip payload: {e}\n\n")
             return f"error: {e}"
 
+    @function_tool()
     async def book_trips(self) -> str:
         """
         The function books the trip(s) by calling the booking APIs that use the agent's main_leg and return_leg parameters.
