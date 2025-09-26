@@ -2335,6 +2335,7 @@ class Assistant(Agent):
 
         logging.info("book_trips function called...")
         try:
+            print("hhiihhi_start",self.main_leg,self.return_leg)
             # Check if function is called with empty arguments
             if not hasattr(self, 'main_leg') or not hasattr(self, 'return_leg'):
                 logging.warning("\n\nbook_trips called but no leg attributes exist\n\n")
@@ -2431,6 +2432,7 @@ class Assistant(Agent):
                         self.return_leg = None
 
                         logging.info(f"Booking response:{response_text}")
+                        print("hhiihhi_end")
                         return response_text
                     
                     else:
