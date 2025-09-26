@@ -2335,8 +2335,18 @@ class Assistant(Agent):
 
         logging.info("book_trips function called...")
         try:
+            # Check if function is called with empty arguments
+            if not hasattr(self, 'main_leg') or not hasattr(self, 'return_leg'):
+                logging.warning("\n\nbook_trips called but no leg attributes exist\n\n")
+                return "Please provide trip details before booking. You need to specify at least pickup and dropoff locations."
+            
+            # Check if legs exist but are empty
+            if not self.main_leg and not self.return_leg:
+                logging.warning("\n\nBoth legs are None or empty\n\n")
+                return "No trip details found. Please provide pickup and dropoff information before booking."
 
-            if self.return_leg and self. main_leg:
+            # Prepare the payload based on available legs
+            if self.return_leg and self.main_leg:
                 payload = await combine_payload(self.main_leg, self.return_leg)
             elif self.main_leg:
                 payload = self.main_leg
@@ -2344,24 +2354,38 @@ class Assistant(Agent):
                 payload = self.return_leg
             else:
                 logging.warning("\n\nNo legs provided for booking.\n\n")
-                return "Error: No valid trip legs payload found."
+                return "Error: No valid trip details found. Please provide pickup and dropoff information."
 
             # Step 2: Set the endpoint
             url = os.getenv("TRIP_BOOKING_API")
 
-            # print(f"\n\n\nPayload Sent for booking: {payload}\n\n\n")
-            logging.info("\n\n\nPayload Sent for booking:", payload)
+            # Properly log the payload
+            logging.info(f"\n\nPayload Sent for booking: {payload}")
 
-            # Step 3: Send the data to the API
+            # Step 3: Send the data to the API with proper error handling
             async with aiohttp.ClientSession() as session:
-                async with session.post(url, json=payload) as response:
-                    response = await response.json()
+                async with session.post(url, json=payload, headers={"Content-Type": "application/json"}) as response:
+                    # Check if response status is OK before trying to parse JSON
+                    if response.status != 200:
+                        logging.info(f"\n\n**********\nBooking API HTTP Error: {response.status}\n**********\n\n")
+                        return f"Trip booking failed with HTTP status {response.status}. Please try again later."
+                    
+                    # Try to parse the response as JSON with better error handling
+                    try:
+                        response_data = await response.json()
+                    except Exception as e:
+                        logging.info(f"\n\n**********\nBooking API JSON Parsing Error: {e}\nContent-Type: {response.headers.get('Content-Type')}\n**********\n\n")
+                        # Try to get text response as fallback
+                        text_response = await response.text()
+                        logging.info(f"Raw response: {text_response[:200]}...")
+                        return f"Trip booking system returned an invalid response format. Please try again later."
 
-                    if response['responseCode'] == 200:
+                    # Continue processing if we successfully parsed JSON
+                    if response_data.get('responseCode') == 200:
 
-                        irefid_list = [response['iRefID']]
-                        if not response['returnLegsList'] is None:
-                            irefid_list.append(response['returnLegsList'])
+                        irefid_list = [response_data.get('iRefID')]
+                        if response_data.get('returnLegsList') is not None:
+                            irefid_list.append(response_data.get('returnLegsList'))
 
                         response_text = ""
 
@@ -2410,9 +2434,10 @@ class Assistant(Agent):
                         return response_text
                     
                     else:
-                        error_message = response["responseMessage"]
-                        logging.info(f"\n\n**********\nBooking API Payload ERROR: {error_message}\n**********\n\n")
-                        return f"Trip has not been booked with error message {error_message}"
+                        error_message = response_data.get("responseMessage", "Unknown error")
+                        error_code = response_data.get("responseCode", "Unknown")
+                        logging.info(f"\n\n**********\nBooking API Payload ERROR: Code {error_code} - {error_message}\n**********\n\n")
+                        return f"Trip has not been booked. Error: {error_message}"
 
         except Exception as e:
             logging.info(f"\n\n**********\nBooking API Server ERROR: {e}\n**********\n\n")
