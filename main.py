@@ -300,7 +300,7 @@ async def entrypoint(ctx: agents.JobContext):
     session = AgentSession(
         stt=deepgram.STT(model="nova-2-phonecall", language="en"),
         allow_interruptions=allow_interruption_status,
-        llm=openai.LLM(model="gpt-4.1-mini", temperature=0.5),
+        llm=openai.LLM(model="gpt-4.1", temperature=0.5),
         tts=deepgram.TTS(model="aura-asteria-en"),
         vad=silero.VAD.load(min_silence_duration=0.75),
         turn_detection=EnglishModel(),
