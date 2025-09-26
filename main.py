@@ -295,7 +295,9 @@ async def entrypoint(ctx: agents.JobContext):
         AudioConfig(BuiltinAudioClip.KEYBOARD_TYPING, volume=0.6)
     ])
     
-    allow_interruption_status = False
+    # Start with interruptions disabled for the initial greeting only
+    interruptions_enabled = False
+    allow_interruption_status=False
     
     session = AgentSession(
         stt=deepgram.STT(model="nova-2-phonecall", language="en"),
@@ -307,42 +309,42 @@ async def entrypoint(ctx: agents.JobContext):
     )
     
     # Simple default prompt to start with - will be updated later
-    default_prompt = """ You are a Caring, Sympathetic voice assistant helping riders with their queries. Your primary goal is to provide efficient and clear assistance while maintaining casual tone. Keep your responses concise and clear since this is a voice interface.
-Your name is Alina and you are an AI assistant for agency whose name is mentioned in the greetings. Keep your tone casual like a human and not extremely professional.
-Service Area in which the company/agency operates are also included in the greetings.
+    default_prompt = """You are a direct, efficient voice assistant named Alina helping riders with transportation queries. Your primary goal is to provide fast, clear assistance with minimal words. Be concise and straight to the point - this is a voice interface where brevity is essential.
 
-## STRICT GUARDRAILS - FOLLOW THESE AT ALL TIMES:
+You represent the transportation agency mentioned in greetings. Use a casual but efficient tone. Service areas are included in the greetings.
 
-1. ONLY provide information and assistance related to:
+## STRICT OPERATIONAL PARAMETERS:
+
+1. ONLY address topics directly related to:
    - Booking rides
-   - Checking ride status
-   - Managing existing bookings
+   - Ride status
+   - Managing bookings
    - Transportation schedules
-   - Agency service areas
+   - Service areas
    - Pickup/dropoff locations
-   - Payment methods for rides
-   - Rider information stored with the agency
+   - Payment methods
+   - Rider account information
 
-2. NEVER provide information about:
-   - Other businesses or services not related to transportation
-   - Personal opinions on politics, religion, or controversial topics
-   - Advice on medical, legal, or financial matters
-   - Information about celebrities, entertainment, or news events
-   - Instructions for activities unrelated to transportation
-   - General knowledge questions not related to transportation services
+2. NEVER discuss:
+   - Non-transportation topics
+   - Politics, religion, or controversies
+   - Medical, legal, or financial advice
+   - Entertainment, celebrities, or news
+   - Activities unrelated to transportation
+   - General knowledge questions
 
-3. If asked about ANY topic outside of transportation services:
-   - Politely redirect the conversation back to ride services
-   - Say something like: "I'm here to help you with your transportation needs. Would you like to book a ride, check a ride status, or get information about our services?"
-   - DO NOT engage with the off-topic question at all
-   
-4. For ambiguous requests:
-   - Always interpret them in the context of transportation services
-   - Ask clarifying questions to understand the rider's transportation needs
+3. For off-topic questions:
+   - Redirect immediately to transportation services
+   - Use brief responses like: "I can only help with transportation needs. Do you need a ride or status check?"
+   - Do not acknowledge or engage with unrelated content
 
-Remember: You are ONLY here to assist with transportation services for the agency mentioned in the greetings. Stay focused on providing helpful, efficient, and friendly ride assistance."""
-    
-    
+4. For unclear requests:
+   - Interpret within transportation context
+   - Use minimal clarifying questions
+   - Focus on completing the transportation task quickly
+
+CRITICAL DIRECTIVE: Keep all responses brief and action-oriented. Avoid unnecessary explanations, pleasantries, or verbosity. You exist solely to efficiently handle transportation tasks for the mentioned agency. """
+
     # Create agent with default prompt initially
     initial_agent = Assistant(call_sid=call_sid, room=ctx.room, instructions=default_prompt, affiliate_id=65)
     
@@ -366,6 +368,11 @@ Remember: You are ONLY here to assist with transportation services for the agenc
     
     # Provide immediate generic greeting with interruptions disabled
     await session.say(f"Hello! My name is Alina, your digital agent. I'm retrieving your information. Please wait", allow_interruptions=False)
+    
+    # Enable interruptions for the rest of the conversation after first greeting
+    session.allow_interruptions = True
+    interruptions_enabled = True
+    print("Interruptions ENABLED after first greeting - user can interrupt the bot now")
     
     # COMPLETELY DISABLE AUDIO INPUT during API fetching
     # This is the key to preventing the agent from processing voice during API calls
@@ -870,15 +877,14 @@ Remember: You are ONLY here to assist with transportation services for the agenc
         
         # Only send follow-up if we have something meaningful to say
         if personalized_message:
-            # First deliver the personalized message with interruptions still disabled
-            await session.say(personalized_message, allow_interruptions=False)
+            # Deliver the personalized message with interruptions enabled
+            await session.say(personalized_message, allow_interruptions=True)
             
-        # Now that all API fetching and personalized greeting is done, re-enable audio input and allow interruptions
+        # Now that all API fetching and personalized greeting is done, re-enable audio input
         # This happens regardless of whether we had a personalized message or not
         session.input.set_audio_enabled(True)  # RE-ENABLE AUDIO INPUT
-        session.allow_interruptions = True
-        interruptions_enabled = True
-        print("APIs fetched and processing complete. Audio input RE-ENABLED and interruptions now allowed.")
+        # Interruptions were already enabled after the first greeting
+        print("APIs fetched and processing complete. Audio input RE-ENABLED.")
             
     except Exception as e:
         print(f"Error in providing personalized follow-up: {e}")
@@ -894,11 +900,10 @@ Remember: You are ONLY here to assist with transportation services for the agenc
         
         # Don't send another message if we fail - the initial greeting is enough
         
-        # Make sure audio input and interruptions are enabled even if we fail
+        # Make sure audio input is enabled even if we fail
+        # (Interruptions were already enabled after the first greeting)
         session.input.set_audio_enabled(True)  # RE-ENABLE AUDIO INPUT
-        session.allow_interruptions = True
-        interruptions_enabled = True
-        print("Error occurred, but ensuring audio input is RE-ENABLED and interruptions are allowed.")
+        print("Error occurred, but ensuring audio input is RE-ENABLED.")
 
     # Use the usage collector to aggregate agent usage metrics
     usage_collector = metrics.UsageCollector()
