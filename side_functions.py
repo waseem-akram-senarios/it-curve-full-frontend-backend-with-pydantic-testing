@@ -427,6 +427,7 @@ async def get_client_name_voice(caller_number, affiliate_id, family_id):
             async with session.post(url, json=payload, headers=headers) as resp:
                 response = await resp.json()
 
+        print(f"[RIDER DETECTION] API Response Code: {response.get('responseCode')}")
         if response.get("responseCode") == 200:
             client_list = json.loads(response.get("responseJSON", "[]"))
             for i, client in enumerate(client_list, 1):
@@ -458,9 +459,21 @@ async def get_client_name_voice(caller_number, affiliate_id, family_id):
                 rider_count += 1
 
             result["number_of_riders"] = rider_count
+            print(f"[RIDER DETECTION] Successfully found {rider_count} riders for phone number")
         else:
-            print("Request failed!")
-            result["number_of_riders"] = 0
+            print("Request failed! Setting as new rider.")
+            result["number_of_riders"] = 1
+            result["rider_1"] = {
+                "name": "new_rider",
+                "client_id": -1,
+                "city": "Unknown",
+                "state": "Unknown",
+                "current_location/home_address": "Unknown",
+                "rider_id": "Unknown",
+                "number_of_existing_trips": 0,
+                "HomePhone": "",
+                "OfficePhone": ""
+            }
 
     except Exception as e:
         print(f"Error occurred in getting client Name: {e}")

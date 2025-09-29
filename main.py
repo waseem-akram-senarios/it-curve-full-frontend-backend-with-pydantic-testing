@@ -541,6 +541,7 @@ Remember: You are ONLY here to assist with transportation services for the agenc
             family_id = affiliate["AffiliateFamilyID"]
 
             phone_number = await with_typing_during_api(extract_phone_number, caller)
+            initial_agent.update_rider_phone(phone_number)
             # print(f"\n\nPhone Number: {phone_number}")
             
             # Try to get client info from cache
@@ -551,6 +552,7 @@ Remember: You are ONLY here to assist with transportation services for the agenc
             # else:
                 # If not in cache, call the original function with logging
             all_riders_info = await with_typing_during_api(get_client_name_voice, phone_number, affiliate_id, family_id)
+            print(f"[RIDER DETECTION] After API call - Number of riders: {all_riders_info.get('number_of_riders', 'MISSING')}")
                 # Store result in cache for future use
             # cache_manager.store_client_in_cache(phone_number, affiliate_id, family_id, all_riders_info)
 
@@ -588,6 +590,7 @@ Remember: You are ONLY here to assist with transportation services for the agenc
                     # else:
                         # If not in cache, call the original function with logging
                     all_riders_info = await with_typing_during_api(get_client_name_voice, phone_number, affiliate_id, family_id)
+                    print(f"[RIDER DETECTION] After API call - Number of riders: {all_riders_info.get('number_of_riders', 'MISSING')}")
                         # Store result in cache for future use
                         # cache_manager.store_client_in_cache(phone_number, affiliate_id, family_id, all_riders_info)
                 else:
@@ -599,6 +602,7 @@ Remember: You are ONLY here to assist with transportation services for the agenc
                 print(f"Error in recognizing affiliate from room matadata: {e}")
 
         if all_riders_info["number_of_riders"] == 0:
+            print("[RIDER DETECTION] WARNING: Found 0 riders, setting to default new rider")
             all_riders_info["number_of_riders"] = 1
             all_riders_info["rider_1"] = new_rider
             all_riders_info["rider_1"]["number_of_existing_trips"] = 0
@@ -635,11 +639,11 @@ Remember: You are ONLY here to assist with transportation services for the agenc
             prompt_file = os.path.join(Agent_Directory, "prompts", "prompt_old_rider_ivr.txt")
 
     elif all_riders_info["number_of_riders"] > 1 and chatbot is True:
-        print("\n\n****************Multiple Riders chatbot Flow Selected****************\n\n")
+        print(f"\n\n****************Multiple Riders chatbot Flow Selected - {all_riders_info['number_of_riders']} riders found****************\n\n")
         prompt_file = os.path.join(Agent_Directory, "prompts", "prompt_multiple_riders.txt")
 
     elif all_riders_info["number_of_riders"] > 1 and ivr is True:
-        print("\n\n****************Multiple Riders IVR Flow Selected****************\n\n")
+        print(f"\n\n****************Multiple Riders IVR Flow Selected - {all_riders_info['number_of_riders']} riders found****************\n\n")
         prompt_file = os.path.join(Agent_Directory, "prompts", "prompt_multiple_riders_ivr.txt")
 
     else:
@@ -676,6 +680,7 @@ Remember: You are ONLY here to assist with transportation services for the agenc
 
             rider_info = json.dumps(riders_data_without_tally, indent=4)
             prompt = f"""{system_prompt}\n\n
+            The rider phone number is "{phone_number}"
             ``Today's date is {today_date} and Current Time is {current_time}``\n\n
             ``Rider's Profile: \n{rider_info}\n\n``
             """
@@ -783,7 +788,7 @@ Remember: You are ONLY here to assist with transportation services for the agenc
                 user_context += f"Phone Number: {phone_number}\n"
         
         elif all_riders_info["number_of_riders"] > 1:
-            user_context += f"Multiple riders ({all_riders_info['number_of_riders']}) associated with this phone number\n"
+            user_context += f"Multiple riders ({all_riders_info['number_of_riders']}) associated with this phone number\n and here are details {all_riders_info}/n"
             
         user_context += "\nPlease maintain this context throughout the conversation, even if the user asks unrelated questions.\n"
         
@@ -793,15 +798,15 @@ Remember: You are ONLY here to assist with transportation services for the agenc
         try:
             # Include user context in the final prompt to ensure the agent remembers it
             final_prompt = prompt + "\n\n" + user_context
-            agent = Assistant(call_sid=call_sid, room=ctx.room, instructions=final_prompt, affiliate_id=int(affiliate_id))
+            agent = Assistant(call_sid=call_sid, room=ctx.room, instructions=final_prompt, affiliate_id=int(affiliate_id), rider_phone=phone_number)
         except Exception as e:
             print(f"\n\n\nError in generating agent object: {e}\n\n")
-            agent = Assistant(call_sid=call_sid, room=ctx.room, instructions=prompt, affiliate_id=65)
+            agent = Assistant(call_sid=call_sid, room=ctx.room, instructions=prompt, affiliate_id=65, rider_phone=phone_number)
         
     except Exception as e:
         print(f"Error building user context: {e}")
         # Create a basic agent if we failed to build the context
-        agent = Assistant(call_sid=call_sid, room=ctx.room, instructions=prompt, affiliate_id=int(affiliate_id))
+        agent = Assistant(call_sid=call_sid, room=ctx.room, instructions=prompt, affiliate_id=int(affiliate_id), rider_phone=phone_number)
     # Define the conversation history collection function before we have the session reference
     conversation_history = []
     def setup_conversation_listeners(current_session):
@@ -862,6 +867,7 @@ Remember: You are ONLY here to assist with transportation services for the agenc
                     personalized_message += f"I see that you are {rider['name']}. How can I help you today?"
                     
         elif all_riders_info["number_of_riders"] > 1:
+            print(f"[RIDER DETECTION] Preparing multiple riders greeting for {all_riders_info['number_of_riders']} riders")
             personalized_message += "I see that I have multiple profiles for your number. Can I confirm your name please?"
         
         # Stop the continuous typing sound before delivering the personalized message
