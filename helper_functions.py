@@ -2446,7 +2446,6 @@ class Assistant(Agent):
                         self.return_leg = None
 
                         logging.info(f"Booking response:{response_text}")
-                        print("hhiihhi_end")
                         return response_text
                     
                     else:
