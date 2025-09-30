@@ -192,7 +192,7 @@ class Assistant(Agent):
                 "iATSPID": int(self.affiliate_id),
                 "iDTSPID": int(family_id)
             }
-
+            print(f"Payload before sending: {payload}")
             # Define the headers
             headers = {
                 "Content-Type": "application/json",
