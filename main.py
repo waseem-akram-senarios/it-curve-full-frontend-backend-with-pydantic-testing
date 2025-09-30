@@ -804,6 +804,7 @@ Remember: You are ONLY here to assist with transportation services for the agenc
             # Include user context in the final prompt to ensure the agent remembers it
             final_prompt = prompt + "\n\n" + user_context
             agent = Assistant(call_sid=call_sid, context=ctx, room=ctx.room, instructions=final_prompt, affiliate_id=int(affiliate_id), rider_phone=phone_number)
+            print("Final prompt",final_prompt)
         except Exception as e:
             print(f"\n\n\nError in generating agent object: {e}\n\n")
             agent = Assistant(call_sid=call_sid, context=ctx, room=ctx.room, instructions=prompt, affiliate_id=65, rider_phone=phone_number)
