@@ -302,7 +302,7 @@ async def entrypoint(ctx: agents.JobContext):
     session = AgentSession(
         stt=deepgram.STT(model="nova-2-phonecall", language="en"),
         allow_interruptions=allow_interruption_status,
-        llm=openai.LLM(model="gpt-4.1", temperature=0.5),
+        llm=openai.LLM(model="gpt-4.1-mini", temperature=0.5),
         tts=deepgram.TTS(model="aura-asteria-en"),
         vad=silero.VAD.load(min_silence_duration=0.75),
         turn_detection=EnglishModel(),
@@ -527,6 +527,7 @@ Remember: You are ONLY here to assist with transportation services for the agenc
             recipient = "+19383481263"
             # Try to get affiliate from cache
             cached_affiliate = cache_manager.get_affiliate_from_cache(recipient)
+            print("cached_affiliate ",cached_affiliate)
             if cached_affiliate:
                 affiliate = cached_affiliate
                 logger.info(f"Using cached affiliate for {recipient}")
@@ -540,8 +541,10 @@ Remember: You are ONLY here to assist with transportation services for the agenc
             ivr = True
             affiliate_id = affiliate["AffiliateID"]
             family_id = affiliate["AffiliateFamilyID"]
+            initial_agent.update_affliate_id_and_family(affiliate_id,family_id)
 
             phone_number = await with_typing_during_api(extract_phone_number, caller)
+            print("\n\nPhone Number Extracted: ", phone_number, "\n\n")
             initial_agent.update_rider_phone(phone_number)
             # print(f"\n\nPhone Number: {phone_number}")
             
@@ -553,6 +556,7 @@ Remember: You are ONLY here to assist with transportation services for the agenc
             # else:
                 # If not in cache, call the original function with logging
             all_riders_info = await with_typing_during_api(get_client_name_voice, phone_number, affiliate_id, family_id)
+            print("All Riders Info: ", all_riders_info)
             print(f"[RIDER DETECTION] After API call - Number of riders: {all_riders_info.get('number_of_riders', 'MISSING')}")
                 # Store result in cache for future use
             # cache_manager.store_client_in_cache(phone_number, affiliate_id, family_id, all_riders_info)
@@ -568,6 +572,7 @@ Remember: You are ONLY here to assist with transportation services for the agenc
                 # Try to get affiliate from cache using IDs
                 cache_key = f"ids:{family_id}:{affiliate_id}"
                 cached_affiliate = cache_manager.get_affiliate_from_cache(cache_key)
+                print("cached_affiliate ",cached_affiliate)
                 if cached_affiliate:
                     affiliate = cached_affiliate
                     logger.info(f"Using cached affiliate for IDs {family_id}:{affiliate_id}")

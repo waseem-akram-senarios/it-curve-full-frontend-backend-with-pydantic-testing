@@ -60,6 +60,11 @@ class Assistant(Agent):
     def update_rider_phone(self, rider_phone):
         self.rider_phone = rider_phone
 
+
+    def update_affliate_id_and_family(self,affiliate_id,family_id):
+        self.affiliate_id=affiliate_id
+        self.family_id=family_id
+        
     async def Play_Music(self) -> str:
         """Function to publish an audio track in the LiveKit room with stoppable music."""
         if not self.room:
@@ -169,17 +174,15 @@ class Assistant(Agent):
         # return f"{call_closed_msg} {room_closed_msg}"
 
     @function_tool()
-    async def get_client_name(self,
-                              family_id: int,
+    async def get_client_name(self
                               ):
-        """Function to get Rider Profile
-        Args:
-            family_id: Family id of the rider else 1. Only a number so that it can be converted into integer
+        """Function to get rider profiles with their client phone number to get their active or existing rides..
         Returns:
             str: JSON string with rider profile or error message.
         """
 
         caller_number = self.rider_phone
+        family_id=self.family_id
 
         print(f"\n\nCalled get_client_name function", str(caller_number), str(family_id), "\n\n")
 
@@ -204,7 +207,7 @@ class Assistant(Agent):
                 "iATSPID": int(self.affiliate_id),
                 "iDTSPID": int(family_id)
             }
-
+            print(f"Payload before sending: {payload}")
             # Define the headers
             headers = {
                 "Content-Type": "application/json",
