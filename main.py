@@ -555,6 +555,7 @@ Remember: You are ONLY here to assist with transportation services for the agenc
             # else:
                 # If not in cache, call the original function with logging
             all_riders_info = await with_typing_during_api(get_client_name_voice, phone_number, affiliate_id, family_id)
+            print("All Riders Info: ", all_riders_info)
             print(f"[RIDER DETECTION] After API call - Number of riders: {all_riders_info.get('number_of_riders', 'MISSING')}")
                 # Store result in cache for future use
             # cache_manager.store_client_in_cache(phone_number, affiliate_id, family_id, all_riders_info)
