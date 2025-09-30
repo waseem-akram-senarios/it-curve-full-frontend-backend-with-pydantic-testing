@@ -115,7 +115,18 @@
               "TotalKids": 0,
               "ServiceAnimalCount": "0",
               "PCACount": "0",
-              "PCAWCCount": "0"
+              "PCAWCCount": "0",
+              "Primary":{
+                 "index":0,
+                 "Name":"Primary"
+              },
+              "PCA":[
+              ],
+              "Guests":[
+              ],
+              "Children":[
+              ],
+              "IsMobility":false
             },
             "addressDetails": {
               "Address": "18567 Brooke Road",
@@ -240,7 +251,18 @@
               "TotalKids": 0,
               "ServiceAnimalCount": "0",
               "PCACount": "0",
-              "PCAWCCount": "0"
+              "PCAWCCount": "0",
+              "Primary":{
+                 "index":0,
+                 "Name":"Primary"
+              },
+              "PCA":[
+              ],
+              "Guests":[
+              ],
+              "Children":[
+              ],
+              "IsMobility":false
             },
             "addressDetails": {
               "Address": "18150 Brooke Road",
