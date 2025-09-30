@@ -162,17 +162,15 @@ class Assistant(Agent):
         return f"{call_closed_msg} {room_closed_msg}"
 
     @function_tool()
-    async def get_client_name(self,
-                              family_id: int,
+    async def get_client_name(self
                               ):
-        """Function to get Rider Profile
-        Args:
-            family_id: Family id of the rider else 1. Only a number so that it can be converted into integer
+        """Function to get Rider Profile with its client name and their active rides/existing rides.
         Returns:
             str: JSON string with rider profile or error message.
         """
 
         caller_number = self.rider_phone
+        family_id=self.family_id
 
         print(f"\n\nCalled get_client_name function", str(caller_number), str(family_id), "\n\n")
 
