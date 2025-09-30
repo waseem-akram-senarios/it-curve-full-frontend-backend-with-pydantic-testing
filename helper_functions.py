@@ -55,7 +55,7 @@ class Assistant(Agent):
         self.return_leg = return_leg
         self.rider_phone = rider_phone
         self.context = context
-        logger.info("Asterisk call disconnect function called...")
+        logger.info("instructions passed to agent: "+str(instructions))
         super().__init__(instructions=instructions)  # Initialize Agent with the instructions argument
 
     def update_rider_phone(self, rider_phone):
