@@ -543,6 +543,7 @@ Remember: You are ONLY here to assist with transportation services for the agenc
             initial_agent.update_affliate_id_and_family(affiliate_id,family_id)
 
             phone_number = await with_typing_during_api(extract_phone_number, caller)
+            print("\n\nPhone Number Extracted: ", phone_number, "\n\n")
             initial_agent.update_rider_phone(phone_number)
             # print(f"\n\nPhone Number: {phone_number}")
             
