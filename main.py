@@ -540,7 +540,7 @@ Remember: You are ONLY here to assist with transportation services for the agenc
             ivr = True
             affiliate_id = affiliate["AffiliateID"]
             family_id = affiliate["AffiliateFamilyID"]
-            initial_agent.update_affliate_number(affiliate_id)
+            initial_agent.update_affliate_id_and_family(affiliate_id,family_id)
 
             phone_number = await with_typing_during_api(extract_phone_number, caller)
             initial_agent.update_rider_phone(phone_number)

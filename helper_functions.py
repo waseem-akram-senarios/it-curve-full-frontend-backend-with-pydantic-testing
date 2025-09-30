@@ -60,8 +60,9 @@ class Assistant(Agent):
         self.rider_phone = rider_phone
 
 
-    def update_affliate_number(self,affiliate_id):
+    def update_affliate_id_and_family(self,affiliate_id,family_id):
         self.affiliate_id=affiliate_id
+        self.family_id=family_id
         
     async def Play_Music(self) -> str:
         """Function to publish an audio track in the LiveKit room with stoppable music."""
