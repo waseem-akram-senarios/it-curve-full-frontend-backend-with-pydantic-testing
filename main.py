@@ -772,7 +772,12 @@ Remember: You are ONLY here to assist with transportation services for the agenc
         if phone_number:
                 user_context += f"""
                 ### Phone Number Verification Notice:
-                You have received a call from the following phone number: {phone_number}. Please use this number for any future verification purposes. Additionally, whenever the user requests the use of this phone number for tasks such as bookings or other queries, refer to the same number ({phone_number}) for all related processes.\n
+                - You have received a call from the following phone number: +1{phone_number}.\n
+                - Please use this number for any future verification purposes: +1{phone_number}.\n
+                - Additionally, whenever the user requests to use of same phone number he/she called from you have to use this phone number (+1{phone_number}).\n
+                - If user ask to repeat or confirm the phone number, you have to say "The phone number is +1{phone_number}".\n
+                - when booking ride or providing any information related to the user, you have to use this phone number (+1{phone_number}).\n
+                - Don't forgot to the send phone number in the [book_ride] function when booking ride. Don't send country code in PhoneNo with number in payload\n
                 """
         
         # Add affiliate details if available
