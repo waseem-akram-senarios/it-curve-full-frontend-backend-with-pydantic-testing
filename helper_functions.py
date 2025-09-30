@@ -1812,6 +1812,7 @@ class Assistant(Agent):
         # Start playing music asynchronously
         # _ = asyncio.create_task(self.Play_Music())
         # await asyncio.sleep(2)
+        phone_number = self.rider_phone
 
         # Check Pickup Address
         pickup_error = await check_address_validity(pickup_lat, pickup_lng, "Pick Up")
