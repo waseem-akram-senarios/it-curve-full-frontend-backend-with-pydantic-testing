@@ -144,7 +144,7 @@
             "dateInfo": {
               "PickupDate": "2025-04-21",
               "ApptTime": "01/01/1900 00:00:00",
-              "WillCallDay": "2025-04-21",
+              "WillCallDay":"2025-09-29",
               "IsWillCall": false,
               "IsScheduled": false,
               "IsMultiSchedule": false
@@ -280,7 +280,7 @@
             "dateInfo": {
               "PickupDate": "2025-04-21 04:52",
               "ApptTime": "01/01/1900 00:00:00",
-              "WillCallDay": "01/01/1900 00:00:00",
+              "WillCallDay": "2025-09-29",
               "IsWillCall": false,
               "IsScheduled": false,
               "IsMultiSchedule": false
