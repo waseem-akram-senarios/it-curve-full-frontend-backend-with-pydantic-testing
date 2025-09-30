@@ -55,7 +55,7 @@ class Assistant(Agent):
         self.return_leg = return_leg
         self.rider_phone = rider_phone
         self.context = context
-        super().__init__(instructions=instructions)  # Initialize Agent with the instructions argument
+        super().__init__(instructions='you are AI Assistant at Senarios. A Software Company')  # Initialize Agent with the instructions argument
 
     def update_rider_phone(self, rider_phone):
         self.rider_phone = rider_phone
