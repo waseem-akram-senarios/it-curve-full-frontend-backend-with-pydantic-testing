@@ -87,7 +87,7 @@
               "AuthorizedBy": "",
               "ServiceStatusID": 0,
               "IsCheckServiceHours": true,
-              "IsPredictive": true,
+              "IsPredictive": "2",
               "IsMultiTrip": false,
               "ReturnRequestAffiliateID": 0,
               "TripPayStatus": 0,
@@ -104,7 +104,8 @@
               "RefID": -1,
               "preSchedule": "",
               "ForcePassServiceHoursCheck": false,
-              "ForceDuplicateTripSave": false
+              "ForceDuplicateTripSave": false,
+              "InsertPredictiveRouteEntry": false
             },
             "passengerInfo": {
               "TotalPassengers": 1,
@@ -130,9 +131,9 @@
               "POIName": ""
             },
             "dateInfo": {
-              "PickupDate": "2025-04-21 04:52",
+              "PickupDate": "2025-04-21",
               "ApptTime": "01/01/1900 00:00:00",
-              "WillCallDay": "01/01/1900 00:00:00",
+              "WillCallDay": "2025-04-21",
               "IsWillCall": false,
               "IsScheduled": false,
               "IsMultiSchedule": false
@@ -211,7 +212,7 @@
               "AuthorizedBy": "",
               "ServiceStatusID": 0,
               "IsCheckServiceHours": true,
-              "IsPredictive": true,
+              "IsPredictive": "2",
               "IsMultiTrip": false,
               "ReturnRequestAffiliateID": 0,
               "TripPayStatus": 0,
@@ -228,7 +229,8 @@
               "RefID": -1,
               "preSchedule": "",
               "ForcePassServiceHoursCheck": false,
-              "ForceDuplicateTripSave": false
+              "ForceDuplicateTripSave": false,
+              "InsertPredictiveRouteEntry": false
             },
             "passengerInfo": {
               "TotalPassengers": 1,

@@ -220,7 +220,7 @@ class Assistant(Agent):
                 for i, client in enumerate(client_list, 1):
                     name = (client['FirstName'] + ' ' + client['LastName']).strip()
                     client_id = client.get('Id', 0)
-                    number_of_existing_trips = await get_Existing_Trips_Number(client_id, self.affiliate_id)
+                    number_of_existing_trips, trips_data = await get_Existing_Trips_Number(client_id, self.affiliate_id)
 
                     medical_id_raw = client.get("MedicalId", "")
                     if medical_id_raw and str(medical_id_raw).isdigit():
@@ -236,7 +236,8 @@ class Assistant(Agent):
                         "state": client["State"],
                         "current_location/home_address": client["Address"],
                         "rider_id": rider_id,
-                        "number_of_existing_trips": number_of_existing_trips
+                        "number_of_existing_trips": number_of_existing_trips,
+                        "trips_data": trips_data
                     }
 
                     result[f"rider_{i}"] = rider_data
@@ -252,7 +253,8 @@ class Assistant(Agent):
                     "state": "Unknown",
                     "current_location": "Unknown",
                     "rider_id": "-1",
-                    "number_of_existing_trips": 0
+                    "number_of_existing_trips": 0,
+                    "trips_data": ""
                 }
         except Exception as e:
             print(f"Error occurred in getting client Name: {e}")

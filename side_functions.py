@@ -660,6 +660,7 @@ async def get_Existing_Trips_Number(client_id : str, affiliate_id: str):
     }
 
     len_existing_trips = 0
+    trips_data = None
 
     print(f"\n\n\nPayload Sent for existing trips: {payload}\n\n\n")
 
@@ -673,25 +674,26 @@ async def get_Existing_Trips_Number(client_id : str, affiliate_id: str):
                     response = json.loads(text)
                 except json.JSONDecodeError:
                     print(f"\n\nFailed to decode JSON. Raw response:\n{text}\n\n")
-                    return len_existing_trips
+                    return len_existing_trips, trips_data
 
                 if response.get("responseCode") == 200:
                     try:
                         data = json.loads(response.get("responseJSON", "{}"))
+                        trips_data = data
                         len_existing_trips = len(data)
                         
-                        return len_existing_trips
+                        return len_existing_trips,trips_data
                     except json.JSONDecodeError:
                         print(f"\n\nFailed to decode nested responseJSON\n\n")
-                        return len_existing_trips
+                        return len_existing_trips, trips_data
                 else:
                     print(f"\n\nNo trip ETA Found for the rider\n\n")
-                    return len_existing_trips
+                    return len_existing_trips, trips_data
 
     except Exception as e:
 
         print(f"\n\nError occurred in getting client ETA: {e}\n\n")
-        return len_existing_trips
+        return len_existing_trips, trips_data
 
 
 async def combine_payload(leg1: dict, leg2: dict):
