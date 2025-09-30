@@ -567,6 +567,7 @@ Remember: You are ONLY here to assist with transportation services for the agenc
                 # Try to get affiliate from cache using IDs
                 cache_key = f"ids:{family_id}:{affiliate_id}"
                 cached_affiliate = cache_manager.get_affiliate_from_cache(cache_key)
+                print("cached_affiliate ",cached_affiliate)
                 if cached_affiliate:
                     affiliate = cached_affiliate
                     logger.info(f"Using cached affiliate for IDs {family_id}:{affiliate_id}")
