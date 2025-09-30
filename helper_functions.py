@@ -45,7 +45,7 @@ openai_client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
 class Assistant(Agent):
-    def __init__(self, call_sid=None, room=None, affiliate_id=None, instructions=None, main_leg=None, return_leg=None, rider_phone=None):
+    def __init__(self, call_sid=None, context=None, room=None, affiliate_id=None, instructions=None, main_leg=None, return_leg=None, rider_phone=None):
         """Initialize the assistant with a call SID and LiveKit room."""
         self.call_sid = call_sid  # Store the call SID for music control
         self.room = room  # Store the LiveKit room instance
@@ -54,6 +54,7 @@ class Assistant(Agent):
         self.main_leg = main_leg
         self.return_leg = return_leg
         self.rider_phone = rider_phone
+        self.context = context
         super().__init__(instructions=instructions)  # Initialize Agent with the instructions argument
 
     def update_rider_phone(self, rider_phone):
@@ -122,12 +123,13 @@ class Assistant(Agent):
 
     @function_tool()
     async def Close_Call(self) -> str:
-        """Function to end Twilio call and disconnect from the LiveKit room."""
+        """Function to end Twilio call and disconnect from the LiveKit room.
+        Whenever conversation ends with a Bye or Thankyou, call this function."""
         print(f"\n\n\ncalled close call function\n\n\n")
         await self.session.say('Thank you for reaching out. Have a great day!')
 
         # Step 1: End the Twilio call
-        call_closed_msg = "No active call found."
+        # call_closed_msg = "No active call found."
         # if self.call_sid:
         #     try:
         #         print(f"Requested Call Ending for Call SID: {self.call_sid}")
@@ -136,25 +138,35 @@ class Assistant(Agent):
         #     except Exception as e:
         #         call_closed_msg = f"Failed to end call: {str(e)}"
         try:
-            # Asterisk end call
-            await self.asterisk_call_disconnect()
-            logging.info("asterisk call disconnected...")
-            # TWILIO_CLIENT.calls(self.call_sid).update(status="completed")
-            call_closed_msg = f"Call has been ended successfully."
-        except Exception as e:
-            call_closed_msg = f"Failed to end call: {str(e)}"
-
-        # Step 2: Disconnect the LiveKit room
-        room_closed_msg = "No active room found."
-        try:
-            if self.room and hasattr(self.room, "disconnect"):
-                print(f"Disconnecting room: {self.room.name}")
-                await self.room.disconnect()
-                room_closed_msg = f"Room disconnected successfully."
+            await self.context.api.room.delete_room(
+                    api.DeleteRoomRequest(room=self.room.name)
+                )
+            room_closed_msg = f"Room disconnected successfully."
         except Exception as e:
             room_closed_msg = f"Error disconnecting room: {str(e)}"
 
-        return f"{call_closed_msg} {room_closed_msg}"
+        return f"{room_closed_msg}"
+
+        # try:
+        #     # Asterisk end call
+        #     await self.asterisk_call_disconnect()
+        #     logging.info("asterisk call disconnected...")
+        #     # TWILIO_CLIENT.calls(self.call_sid).update(status="completed")
+        #     call_closed_msg = f"Call has been ended successfully."
+        # except Exception as e:
+        #     call_closed_msg = f"Failed to end call: {str(e)}"
+
+        # Step 2: Disconnect the LiveKit room
+        # room_closed_msg = "No active room found."
+        # try:
+        #     if self.room and hasattr(self.room, "disconnect"):
+        #         print(f"Disconnecting room: {self.room.name}")
+        #         await self.room.disconnect()
+        #         room_closed_msg = f"Room disconnected successfully."
+        # except Exception as e:
+        #     room_closed_msg = f"Error disconnecting room: {str(e)}"
+
+        # return f"{call_closed_msg} {room_closed_msg}"
 
     @function_tool()
     async def get_client_name(self,
@@ -2476,6 +2488,8 @@ class Assistant(Agent):
 
                 # Transfer caller
                 await livekit_api.sip.transfer_sip_participant(transfer_request)
+
+                
                 logger.info(f"Call disconnected ...")
         except Exception as e:
             logger.info(e)

@@ -345,7 +345,7 @@ Service Area in which the company/agency operates are also included in the greet
 Remember: You are ONLY here to assist with transportation services for the agency mentioned in the greetings. Stay focused on providing helpful, efficient, and friendly ride assistance."""
 
     # Create agent with default prompt initially
-    initial_agent = Assistant(call_sid=call_sid, room=ctx.room, instructions=default_prompt, affiliate_id=65)
+    initial_agent = Assistant(call_sid=call_sid, context=ctx, room=ctx.room, instructions=default_prompt, affiliate_id=65)
     
     # Set a simple flag we can use to track interruption state
     interruptions_enabled = False
@@ -521,9 +521,10 @@ Remember: You are ONLY here to assist with transportation services for the agenc
             # For Asterisk
             logger.info(participant.attributes)
             # metadata = participant.metadata
-            caller = participant.attributes['sip.phoneNumber']
-            recipient = participant.attributes['sip.trunkPhoneNumber']
-            
+            # caller = participant.attributes['sip.phoneNumber']
+            # recipient = participant.attributes['sip.trunkPhoneNumber']
+            caller = "+13854156545"
+            recipient = "+19383481263"
             # Try to get affiliate from cache
             cached_affiliate = cache_manager.get_affiliate_from_cache(recipient)
             if cached_affiliate:
@@ -798,15 +799,15 @@ Remember: You are ONLY here to assist with transportation services for the agenc
         try:
             # Include user context in the final prompt to ensure the agent remembers it
             final_prompt = prompt + "\n\n" + user_context
-            agent = Assistant(call_sid=call_sid, room=ctx.room, instructions=final_prompt, affiliate_id=int(affiliate_id), rider_phone=phone_number)
+            agent = Assistant(call_sid=call_sid, context=ctx, room=ctx.room, instructions=final_prompt, affiliate_id=int(affiliate_id), rider_phone=phone_number)
         except Exception as e:
             print(f"\n\n\nError in generating agent object: {e}\n\n")
-            agent = Assistant(call_sid=call_sid, room=ctx.room, instructions=prompt, affiliate_id=65, rider_phone=phone_number)
+            agent = Assistant(call_sid=call_sid, context=ctx, room=ctx.room, instructions=prompt, affiliate_id=65, rider_phone=phone_number)
         
     except Exception as e:
         print(f"Error building user context: {e}")
         # Create a basic agent if we failed to build the context
-        agent = Assistant(call_sid=call_sid, room=ctx.room, instructions=prompt, affiliate_id=int(affiliate_id), rider_phone=phone_number)
+        agent = Assistant(call_sid=call_sid, context=ctx, room=ctx.room, instructions=prompt, affiliate_id=int(affiliate_id), rider_phone=phone_number)
     # Define the conversation history collection function before we have the session reference
     conversation_history = []
     def setup_conversation_listeners(current_session):
