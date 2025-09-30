@@ -770,7 +770,10 @@ Remember: You are ONLY here to assist with transportation services for the agenc
         # Create a knowledge base update with key user details to inject into conversation
         user_context = """\n\nIMPORTANT RIDER INFORMATION: Please keep this information in mind for the entire conversation.\n"""
         if phone_number:
-                user_context += f"You have phone call from this Phone Number: {phone_number}\n"
+                user_context += f"""
+                ### Phone Number Verification Notice:
+                You have received a call from the following phone number: {phone_number}. Please use this number for any future verification purposes. Additionally, whenever the user requests the use of this phone number for tasks such as bookings or other queries, refer to the same number ({phone_number}) for all related processes.\n
+                """
         
         # Add affiliate details if available
         if affiliate_name and affiliate_name != "Default":
