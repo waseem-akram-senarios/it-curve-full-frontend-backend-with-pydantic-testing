@@ -803,7 +803,7 @@ Remember: You are ONLY here to assist with transportation services for the agenc
         # Now create the final agent with the full context
         try:
             # Include user context in the final prompt to ensure the agent remembers it
-            final_prompt = prompt + "\n\n" + user_context
+            final_prompt = user_context + "\n\n" + prompt
             agent = Assistant(call_sid=call_sid, context=ctx, room=ctx.room, instructions=final_prompt, affiliate_id=int(affiliate_id), rider_phone=phone_number)
             with open("final_prompt.txt","w") as f:
                 f.write(final_prompt)
