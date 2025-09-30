@@ -164,7 +164,7 @@ class Assistant(Agent):
     @function_tool()
     async def get_client_name(self
                               ):
-        """Function to get Rider Profile with its client name and their active rides/existing rides.
+        """Function to get rider profiles with their client phone number to get their active or existing rides..
         Returns:
             str: JSON string with rider profile or error message.
         """
