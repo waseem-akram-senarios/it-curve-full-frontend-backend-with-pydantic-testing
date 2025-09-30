@@ -769,6 +769,8 @@ Remember: You are ONLY here to assist with transportation services for the agenc
         
         # Create a knowledge base update with key user details to inject into conversation
         user_context = """\n\nIMPORTANT RIDER INFORMATION: Please keep this information in mind for the entire conversation.\n"""
+        if phone_number:
+                user_context += f"Phone Number: {phone_number}\n"
         
         # Add affiliate details if available
         if affiliate_name and affiliate_name != "Default":
@@ -789,8 +791,7 @@ Remember: You are ONLY here to assist with transportation services for the agenc
                 user_context += f"Number of Existing Trips: {rider['number_of_existing_trips']}\n"
             
             # Add phone number if available
-            if phone_number:
-                user_context += f"Phone Number: {phone_number}\n"
+            
         
         elif all_riders_info["number_of_riders"] > 1:
             user_context += f"Multiple riders ({all_riders_info['number_of_riders']}) associated with this phone number\n and here are details {all_riders_info}/n"
