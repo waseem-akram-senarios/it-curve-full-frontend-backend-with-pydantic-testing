@@ -2621,4 +2621,19 @@ class Assistant(Agent):
             logger.info(e)
             return "Issue with call transfer"
 
+    @function_tool()
+    async def get_current_date_and_time(self) -> str:
+        """
+        Get the current date and time for immediate ride booking.
+
+        This should be called when the user says they need to book a ride right now.
+        It returns the exact current date and time so the ride can be booked for
+        the present moment.
+
+        Returns:
+            str: Current date and time in 'YYYY-MM-DD HH:MM' format 
+                (e.g., '2025-10-03 19:00').
+        """
+        print("get_current_date_and_time function called...")
+        return datetime.now().strftime('%Y-%m-%d %H:%M')
 
