@@ -53,7 +53,7 @@ class Assistant(Agent):
         self.affiliate_id = affiliate_id
         self.main_leg = main_leg
         self.return_leg = return_leg
-        self.rider_phone = rider_phone
+        self.update_rider_phone(rider_phone)
         self.context = context
         # Store the client ID from API lookup, handle string "-1" and None cases
         if client_id and str(client_id) != "-1" and str(client_id).lower() != "none":
@@ -66,8 +66,17 @@ class Assistant(Agent):
         super().__init__(instructions=instructions)  # Initialize Agent with the instructions argument
 
     def update_rider_phone(self, rider_phone):
+        """
+        Validates and update US-style phone numbers.
+        Accepted formats:
+        - 301-208-2222
+        - 3012082222
+        """
+        pattern = r"^(?:\d{3}-\d{3}-\d{4}|\d{10})$"
         self.rider_phone = rider_phone
 
+        if not bool(re.match(pattern, rider_phone)):
+            print(f"Invalid phone number format: {rider_phone}")
 
     def update_affliate_id_and_family(self,affiliate_id,family_id):
         self.affiliate_id=affiliate_id
@@ -184,7 +193,7 @@ class Assistant(Agent):
     @function_tool()
     async def get_client_name(self
                               ):
-        """Function to get rider profiles with their client phone number to get their active or existing rides..
+        """Function to get rider profiles including their active or existing rides. And their home address
         Returns:
             str: JSON string with rider profile or error message.
         """
@@ -250,9 +259,11 @@ class Assistant(Agent):
                     medical_id_raw = client.get("MedicalId", "")
                     if medical_id_raw and str(medical_id_raw).isdigit():
                         rider_id = int(medical_id_raw)
+                        self.medical_id = int(medical_id_raw)
                         rider_id = rider_id if rider_id != 0 else "Unknown"
                     else:
                         rider_id = "Unknown"
+                        self.medical_id = "Unknown"
 
                     rider_data = {
                         "name": name,
@@ -1869,7 +1880,6 @@ class Assistant(Agent):
         rider_id = payload.rider_id
         number_of_wheel_chairs = payload.number_of_wheel_chairs
         number_of_passengers = payload.number_of_passengers
-        family_id = payload.family_id
         is_schedule = payload.is_schedule
         pickup_city_zip_code = payload.pickup_city_zip_code
         dropoff_city_zip_code = payload.dropoff_city_zip_code
@@ -1896,6 +1906,7 @@ class Assistant(Agent):
         if client_id == 0:
             client_id = -1
         phone_number = self.rider_phone
+        family_id = self.family_id
 
         # Check Pickup Address
         pickup_error = await check_address_validity(pickup_lat, pickup_lng, "Pick Up")
@@ -2053,6 +2064,8 @@ class Assistant(Agent):
             data["riderInfo"]["ClientAddress"] = rider_home_address
             data["riderInfo"]["ClientCity"] = rider_home_city
             data["riderInfo"]["ClientState"] = rider_home_state
+            if self.medical_id != "unknown":
+                data["riderInfo"]["MedicalId"] = self.medical_id
 
             data['addressInfo']["Trips"][0]["Details"][0]["tripInfo"]["AffiliateID"] = affiliate_id
             data['addressInfo']["Trips"][0]["Details"][1]["tripInfo"]["AffiliateID"] = affiliate_id
@@ -2123,6 +2136,9 @@ class Assistant(Agent):
             data['addressInfo']["Trips"][0]["Details"][1]["estimatedInfo"]["EstimatedTime"] = duration
             data['addressInfo']["Trips"][0]["Details"][1]["estimatedInfo"]["EstimatedCost"] = total_cost
             data['addressInfo']["Trips"][0]["Details"][1]["estimatedInfo"]["CoPay"] = copay_cost
+
+            if self.medical_id != "unknown":
+                data['insuranceInfo']['MedicalID'] = self.medical_id
 
             # adding payload to agent memory
 
@@ -2360,6 +2376,8 @@ class Assistant(Agent):
             data["riderInfo"]["ClientAddress"] = rider_home_address
             data["riderInfo"]["ClientCity"] = rider_home_city
             data["riderInfo"]["ClientState"] = rider_home_state
+            if self.medical_id != "unknown":
+                data["riderInfo"]["MedicalId"] = self.medical_id
 
             data['addressInfo']["Trips"][0]["Details"][0]["tripInfo"]["AffiliateID"] = affiliate_id
             data['addressInfo']["Trips"][0]["Details"][1]["tripInfo"]["AffiliateID"] = affiliate_id
@@ -2430,6 +2448,9 @@ class Assistant(Agent):
             data['addressInfo']["Trips"][0]["Details"][1]["estimatedInfo"]["EstimatedTime"] = duration
             data['addressInfo']["Trips"][0]["Details"][1]["estimatedInfo"]["EstimatedCost"] = total_cost
             data['addressInfo']["Trips"][0]["Details"][1]["estimatedInfo"]["CoPay"] = copay_cost
+
+            if self.medical_id != "unknown":
+                data['insuranceInfo']['MedicalID'] = self.medical_id
 
             # adding payload to agent memory
 

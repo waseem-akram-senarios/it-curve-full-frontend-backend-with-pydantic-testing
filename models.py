@@ -87,7 +87,6 @@ class MainTripPayload(BaseModel):
     pickup_state: str
     dropoff_state: str
     extra_details: str
-    phone_number: str
     client_id: str
     funding_source_id: str
     rider_name: str
@@ -102,7 +101,6 @@ class MainTripPayload(BaseModel):
     rider_id: str
     number_of_wheel_chairs: str
     number_of_passengers: str
-    family_id: str
     is_schedule: str
     pickup_city_zip_code: str
     dropoff_city_zip_code: str
