@@ -1864,7 +1864,7 @@ class Assistant(Agent):
         pickup_state = payload.pickup_state
         dropoff_state = payload.dropoff_state
         extra_details = payload.extra_details
-        phone_number = payload.phone_number
+
         # Use stored client_id instead of LLM-provided one to prevent hallucinations
         if self.client_id:
             client_id = str(self.client_id)
