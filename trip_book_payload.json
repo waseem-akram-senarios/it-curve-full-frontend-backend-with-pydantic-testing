@@ -2,20 +2,20 @@
   "generalInfo": {
     "CompleteUserName": "ncs",
     "CreatedBy": "NCS, ITCurves",
-    "CreatedByAppID": 30,
+    "CreatedByAppID": 26,
     "CreatedUserId": 2256,
     "RequestAffiliateID": 21,
     "ReturnDetailID": "",
     "FamilyID": 1
   },
   "riderInfo": {
-    "ID": 609981,
+    "ID": 1200059,
     "PhoneNo": "",
     "PickupPerson": "",
     "DateOfBirth": "01/01/1900",
-    "RiderID": "0",
+    "RiderID": "-1",
     "RiderPassword": "",
-    "MedicalID": "0",
+    "MedicalID": "-1",
     "ClientAddress": "",
     "ClientCity": "",
     "ClientState": "",
@@ -27,7 +27,7 @@
     "CaseWorkerID": 0,
     "AuthID": 0,
     "ServiceCodeID": 0,
-    "MedicalID": "0"
+    "MedicalID": "-1"
   },
   "routeSettingInfo": {
     "TimeWindow": 0,
@@ -49,19 +49,15 @@
     "SRDuplicateCallDelay": "300",
     "ServiceHoursViolation": true
   },
-  "exclusions": [
-    
-  ],
-  "scheduleInfo": {
-    
-  },
+  "exclusions": [],
+  "scheduleInfo": {},
   "addressInfo": {
     "Trips": [
       {
         "Details": [
           {
             "StopType": "pickup",
-            "Name": " ",
+            "Name": "",
             "WaitTime": 0,
             "tripInfo": {
               "AffiliateID": 21,
@@ -116,44 +112,41 @@
               "ServiceAnimalCount": "0",
               "PCACount": "0",
               "PCAWCCount": "0",
-              "Primary":{
-                 "index":0,
-                 "Name":"Primary"
+              "Primary": {
+                "index": 0,
+                "Name": "Primary"
               },
-              "PCA":[
-              ],
-              "Guests":[
-              ],
-              "Children":[
-              ],
-              "IsMobility":false
+              "PCA": [],
+              "Guests": [],
+              "Children": [],
+              "IsMobility": false
             },
             "addressDetails": {
-              "Address": "18567 Brooke Road",
-              "Latitude": 39.15735252269576,
-              "Longitude": -77.02862849459054,
-              "City": "Ashton-Sandy Spring",
-              "State": "MD",
-              "Zip": "20860",
-              "Zone": "",
+              "Address": "8201 Snouffer School Road",
+              "Latitude": 39.1683,
+              "Longitude": -77.1652,
+              "City": "Gaithersburg",
+              "State": "MaryLand",
+              "Zip": "",
+              "Zone": "AIRPK",
               "FareZone": "",
               "Remarks": "",
               "Phone": "",
               "POIName": ""
             },
             "dateInfo": {
-              "PickupDate": "2025-04-21",
+              "PickupDate": "2025-09-29",
               "ApptTime": "01/01/1900 00:00:00",
-              "WillCallDay":"2025-09-29",
+              "WillCallDay": "2025-09-29",
               "IsWillCall": false,
               "IsScheduled": false,
               "IsMultiSchedule": false
             },
             "estimatedInfo": {
-              "EstimatedDistance": 0.5,
-              "EstimatedTime": 3,
-              "EstimatedCost": 5.5,
-              "BillableAmount": 5.5,
+              "EstimatedDistance": 11.4,
+              "EstimatedTime": 36.8,
+              "EstimatedCost": 27,
+              "BillableAmount": 27,
               "AdditionalPassCost": 0,
               "BillableMiles": 0,
               "CoPay": 0,
@@ -197,7 +190,7 @@
           },
           {
             "StopType": "dropoff",
-            "Name": " ",
+            "Name": "",
             "WaitTime": 0,
             "tripInfo": {
               "AffiliateID": 21,
@@ -252,33 +245,30 @@
               "ServiceAnimalCount": "0",
               "PCACount": "0",
               "PCAWCCount": "0",
-              "Primary":{
-                 "index":0,
-                 "Name":"Primary"
+              "Primary": {
+                "index": 0,
+                "Name": "Primary"
               },
-              "PCA":[
-              ],
-              "Guests":[
-              ],
-              "Children":[
-              ],
-              "IsMobility":false
+              "PCA": [],
+              "Guests": [],
+              "Children": [],
+              "IsMobility": false
             },
             "addressDetails": {
-              "Address": "18150 Brooke Road",
-              "Latitude": 39.15449133686795,
-              "Longitude": -77.03412165865304,
-              "City": "Ashton-Sandy Spring",
-              "State": "MD",
-              "Zip": "20860",
-              "Zone": "",
+              "Address": "25311 Ridge Road",
+              "Latitude": 39.2854,
+              "Longitude": -77.2081,
+              "City": "Damascus",
+              "State": "MaryLand",
+              "Zip": "",
+              "Zone": "DAMAS",
               "FareZone": "",
               "Remarks": "",
               "Phone": "",
               "POIName": ""
             },
             "dateInfo": {
-              "PickupDate": "2025-04-21 04:52",
+              "PickupDate": "2025-09-29",
               "ApptTime": "01/01/1900 00:00:00",
               "WillCallDay": "2025-09-29",
               "IsWillCall": false,
@@ -286,10 +276,10 @@
               "IsMultiSchedule": false
             },
             "estimatedInfo": {
-              "EstimatedDistance": 0.5,
-              "EstimatedTime": 3,
-              "EstimatedCost": 5.5,
-              "BillableAmount": 5.5,
+              "EstimatedDistance": 11.4,
+              "EstimatedTime": 36.8,
+              "EstimatedCost": 27,
+              "BillableAmount": 27,
               "AdditionalPassCost": 0,
               "BillableMiles": 0,
               "CoPay": 0,

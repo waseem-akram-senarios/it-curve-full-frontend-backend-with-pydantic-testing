@@ -1988,6 +1988,7 @@ class Assistant(Agent):
             data['addressInfo']["Trips"][0]["Details"][1]["paymentInfo"]["iActualPaymentTypeID"] = copay_payment_type_id
 
             # Pickup Address Information
+            data['addressInfo']["Trips"][0]["Details"][0]["Name"] = rider_name
             data['addressInfo']["Trips"][0]["Details"][0]["addressDetails"]["Address"] = pickup_street_address
             data['addressInfo']["Trips"][0]["Details"][0]["addressDetails"]["City"] = pickup_city
             data['addressInfo']["Trips"][0]["Details"][0]["addressDetails"]["Latitude"] = pickup_lat
@@ -2006,6 +2007,7 @@ class Assistant(Agent):
             data['addressInfo']["Trips"][0]["Details"][0]["passengerInfo"]["TotalWheelChairs"] = total_wheelchairs
 
             # Drop off Address Information
+            data['addressInfo']["Trips"][0]["Details"][1]["Name"] = rider_name
             data['addressInfo']["Trips"][0]["Details"][1]["addressDetails"]["Address"] = dropoff_street_address
             data['addressInfo']["Trips"][0]["Details"][1]["addressDetails"]["City"] = dropoff_city
             data['addressInfo']["Trips"][0]["Details"][1]["addressDetails"]["Latitude"] = dropoff_lat
@@ -2019,6 +2021,8 @@ class Assistant(Agent):
             data['addressInfo']["Trips"][0]["Details"][1]["tripInfo"]["CallBackInfo"] = phone_number
             # data['addressInfo']["Trips"][0]["Details"][1]["tripInfo"]["WillCallDay"] = will_call_day
             # data['addressInfo']["Trips"][0]["Details"][1]["tripInfo"]["IsWillCall"] = is_will_call
+            data['addressInfo']["Trips"][0]["Details"][1]["dateInfo"]["WillCallDay"] = will_call_day
+            data['addressInfo']["Trips"][0]["Details"][1]["dateInfo"]["IsWillCall"] = is_will_call
             data['addressInfo']["Trips"][0]["Details"][1]["passengerInfo"]["TotalPassengers"] = total_passengers
             data['addressInfo']["Trips"][0]["Details"][1]["passengerInfo"]["TotalWheelChairs"] = total_wheelchairs
 
@@ -2279,6 +2283,7 @@ class Assistant(Agent):
             data['addressInfo']["Trips"][0]["Details"][1]["paymentInfo"]["iActualPaymentTypeID"] = copay_payment_type_id
 
             # Pickup Address Information
+            data['addressInfo']["Trips"][0]["Details"][0]["Name"] = rider_name
             data['addressInfo']["Trips"][0]["Details"][0]["addressDetails"]["Address"] = pickup_street_address
             data['addressInfo']["Trips"][0]["Details"][0]["addressDetails"]["City"] = pickup_city
             data['addressInfo']["Trips"][0]["Details"][0]["addressDetails"]["Latitude"] = pickup_lat
@@ -2297,6 +2302,7 @@ class Assistant(Agent):
             data['addressInfo']["Trips"][0]["Details"][0]["passengerInfo"]["TotalWheelChairs"] = total_wheelchairs
 
             # Drop off Address Information
+            data['addressInfo']["Trips"][0]["Details"][1]["Name"] = rider_name
             data['addressInfo']["Trips"][0]["Details"][1]["addressDetails"]["Address"] = dropoff_street_address
             data['addressInfo']["Trips"][0]["Details"][1]["addressDetails"]["City"] = dropoff_city
             data['addressInfo']["Trips"][0]["Details"][1]["addressDetails"]["Latitude"] = dropoff_lat
@@ -2310,6 +2316,8 @@ class Assistant(Agent):
             data['addressInfo']["Trips"][0]["Details"][1]["tripInfo"]["CallBackInfo"] = phone_number
             # data['addressInfo']["Trips"][0]["Details"][1]["tripInfo"]["WillCallDay"] = will_call_day
             # data['addressInfo']["Trips"][0]["Details"][1]["tripInfo"]["IsWillCall"] = is_will_call
+            data['addressInfo']["Trips"][0]["Details"][1]["dateInfo"]["WillCallDay"] = will_call_day
+            data['addressInfo']["Trips"][0]["Details"][1]["dateInfo"]["IsWillCall"] = is_will_call
             data['addressInfo']["Trips"][0]["Details"][1]["passengerInfo"]["TotalPassengers"] = total_passengers
             data['addressInfo']["Trips"][0]["Details"][1]["passengerInfo"]["TotalWheelChairs"] = total_wheelchairs
 
