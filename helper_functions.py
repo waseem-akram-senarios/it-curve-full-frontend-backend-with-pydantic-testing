@@ -45,7 +45,7 @@ openai_client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
 class Assistant(Agent):
-    def __init__(self, call_sid=None, context=None, room=None, affiliate_id=None, instructions=None, main_leg=None, return_leg=None, rider_phone=None):
+    def __init__(self, call_sid=None, context=None, room=None, affiliate_id=None, instructions=None, main_leg=None, return_leg=None, rider_phone=None, client_id=None):
         """Initialize the assistant with a call SID and LiveKit room."""
         self.call_sid = call_sid  # Store the call SID for music control
         self.room = room  # Store the LiveKit room instance
@@ -55,6 +55,14 @@ class Assistant(Agent):
         self.return_leg = return_leg
         self.rider_phone = rider_phone
         self.context = context
+        # Store the client ID from API lookup, handle string "-1" and None cases
+        if client_id and str(client_id) != "-1" and str(client_id).lower() != "none":
+            self.client_id = str(client_id)
+            print(f"[ASSISTANT INIT] Client ID set to: {self.client_id}")
+        else:
+            self.client_id = None
+            print(f"[ASSISTANT INIT] Client ID not available (received: {client_id})")
+        logger.info("instructions passed to agent: "+str(instructions))
         super().__init__(instructions=instructions)  # Initialize Agent with the instructions argument
 
     def update_rider_phone(self, rider_phone):
@@ -235,6 +243,8 @@ class Assistant(Agent):
                 for i, client in enumerate(client_list, 1):
                     name = (client['FirstName'] + ' ' + client['LastName']).strip()
                     client_id = client.get('Id', 0)
+                    print(f"*******************************Client ID*******************************: {client_id}")
+                    self.client_id = client_id
                     number_of_existing_trips, trips_data = await get_Existing_Trips_Number(client_id, self.affiliate_id)
 
                     medical_id_raw = client.get("MedicalId", "")
@@ -648,10 +658,7 @@ class Assistant(Agent):
     #         return "Trip has not been booked!"
 
     @function_tool()
-    async def get_ETA(
-        self,
-        client_id: Annotated[str, Field(description="Client Id in digits (string or convertible to string)")]
-    ) -> str:
+    async def get_ETA(self) -> str:
         """
         Function to get:
             - Last pickup/Last drop off Address
@@ -660,19 +667,35 @@ class Assistant(Agent):
             - Their current trip ETA
             - Where their ride/vehicle/trip is
             - Existing rides/trips status
-        Args:
-            client_id (str): Client Id in digits (string or convertible to string). Pydantic validated.
+        
+        Uses the client_id that was retrieved during initial phone number lookup,
+        eliminating the need for LLM to provide client_id (which can cause hallucinations).
+        
         Returns:
             str: JSON string with trip details or error message.
         """
         print(f"\n\nCalled get_ETA function\n\n")
+
+        # Use the stored client_id from initial phone lookup instead of LLM parameter
+        if not self.client_id:
+            print("&&&&&&&&&&&&&&&&&&&Client ID not available in get_ETA, attempting to retrieve it...")
+            # Try to get client info first
+            try:
+                await self.get_client_name()
+                if not self.client_id:
+                    return "I need to identify you first. Let me search for your profile using your phone number."
+            except Exception as e:
+                print(f"Error retrieving client info in get_ETA: {e}")
+                return "I'm having trouble accessing your profile. Please try again."
+        
+        client_id = str(self.client_id)
+        print(f"Using stored client_id: {client_id}")
 
         # Start background music task
         # _ = asyncio.create_task(self.Play_Music())
         # await asyncio.sleep(2)
 
         url = os.getenv("EXISTING_RIDES_API")
-        client_id = str(client_id)
 
         payload = {
             "searchCriteria": "CustomerID",
@@ -1394,18 +1417,32 @@ class Assistant(Agent):
                 return f"Rider is Verified! Verified Rider Name is {verified_rider_name}"
 
     @function_tool()
-    async def get_Trip_Stats(
-        self,
-        client_id: Annotated[int, Field(description="Client Id in digits", ge=1)]
-    ) -> str:
+    async def get_Trip_Stats(self) -> str:
         """Function to get Trip ETA or to know where is rider's current ride.
-        Args:
-            client_id: Client Id in digits
+        
+        Uses the client_id that was retrieved during initial phone number lookup,
+        eliminating the need for LLM to provide client_id (which can cause hallucinations).
+        
         Returns:
             JSON string if successful, or error string if failed
         """
 
         print(f"\n\nCalled get_Trip_Stats function\n\n")
+        
+        # Use the stored client_id from initial phone lookup instead of LLM parameter
+        if not self.client_id:
+            print("&&&&&&&&&&&&&&&&&&&Client ID not available in get_Trip_Stats, attempting to retrieve it...")
+            # Try to get client info first
+            try:
+                await self.get_client_name()
+                if not self.client_id:
+                    return "I need to identify you first. Let me search for your profile using your phone number."
+            except Exception as e:
+                print(f"Error retrieving client info in get_Trip_Stats: {e}")
+                return "I'm having trouble accessing your profile. Please try again."
+        
+        client_id = int(self.client_id)
+        print(f"Using stored client_id: {client_id}")
 
         # _ = asyncio.create_task(self.Play_Music())
         # await asyncio.sleep(2)
@@ -1453,10 +1490,7 @@ class Assistant(Agent):
             return "No data found!"
 
     @function_tool()
-    async def get_historic_rides(
-        self,
-        client_id: Annotated[int, Field(description="Client Id in digits", ge=1)]
-    ) -> str:
+    async def get_historic_rides(self) -> str:
         """Function to get
         - Performed trips
         - Latest/Last Historic trip
@@ -1465,13 +1499,30 @@ class Assistant(Agent):
         - Number of trips completed in last few days
         - Past trips
         - Historic trips
-        Args:
-            client_id: Client Id in digits
+        
+        Uses the client_id that was retrieved during initial phone number lookup,
+        eliminating the need for LLM to provide client_id (which can cause hallucinations).
+        
         Returns:
             String with JSON or error message
         """
 
         print(f"\n\nCalled get_historic_rides function\n\n")
+        
+        # Use the stored client_id from initial phone lookup instead of LLM parameter
+        if not self.client_id:
+            print("&&&&&&&&&&&&&&&&&&&Client ID not available in get_historic_rides, attempting to retrieve it...")
+            # Try to get client info first
+            try:
+                await self.get_client_name()
+                if not self.client_id:
+                    return "I need to identify you first. Let me search for your profile using your phone number."
+            except Exception as e:
+                print(f"Error retrieving client info in get_historic_rides: {e}")
+                return "I'm having trouble accessing your profile. Please try again."
+        
+        client_id = int(self.client_id)
+        print(f"Using stored client_id: {client_id}")
 
         # _ = asyncio.create_task(self.Play_Music())
         # await asyncio.sleep(2)
@@ -1534,18 +1585,32 @@ class Assistant(Agent):
         return historic_trips_data_result
 
     @function_tool()
-    async def get_frequnt_addresses(
-        self,
-        client_id: Annotated[int, Field(description="Client Id in digits", ge=1)]
-    ) -> str:
+    async def get_frequnt_addresses(self) -> str:
         """Function to get Rider Frequently Used Addresses
-        Args:
-            client_id: Client Id in digits
+        
+        Uses the client_id that was retrieved during initial phone number lookup,
+        eliminating the need for LLM to provide client_id (which can cause hallucinations).
+        
         Returns:
             String with addresses or error message
         """
 
         print(f"\n\nCalled get_frequnt_addresses function\n\n")
+        
+        # Use the stored client_id from initial phone lookup instead of LLM parameter
+        if not self.client_id:
+            print("&&&&&&&&&&&&&&&&&&&Client ID not available in get_frequnt_addresses, attempting to retrieve it...")
+            # Try to get client info first
+            try:
+                await self.get_client_name()
+                if not self.client_id:
+                    return "I need to identify you first. Let me search for your profile using your phone number."
+            except Exception as e:
+                print(f"Error retrieving client info in get_frequnt_addresses: {e}")
+                return "I'm having trouble accessing your profile. Please try again."
+        
+        client_id = int(self.client_id)
+        print(f"Using stored client_id: {client_id}")
 
         # _ = asyncio.create_task(self.Play_Music())
         # await asyncio.sleep(2)
@@ -1775,7 +1840,13 @@ class Assistant(Agent):
         dropoff_state = payload.dropoff_state
         extra_details = payload.extra_details
         phone_number = payload.phone_number
-        client_id = payload.client_id
+        # Use stored client_id instead of LLM-provided one to prevent hallucinations
+        if self.client_id:
+            client_id = str(self.client_id)
+            print(f"[MAIN TRIP] Using stored client_id: {client_id} (overriding LLM provided: {payload.client_id})")
+        else:
+            client_id = payload.client_id
+            print(f"[MAIN TRIP] Warning: Using LLM-provided client_id: {client_id} (stored client_id not available)")
         funding_source_id = payload.funding_source_id
         rider_name = payload.rider_name
         payment_type_id = payload.payment_type_id
@@ -1811,6 +1882,7 @@ class Assistant(Agent):
         # Start playing music asynchronously
         # _ = asyncio.create_task(self.Play_Music())
         # await asyncio.sleep(2)
+        phone_number = self.rider_phone
 
         # Check Pickup Address
         pickup_error = await check_address_validity(pickup_lat, pickup_lng, "Pick Up")
@@ -1986,6 +2058,7 @@ class Assistant(Agent):
             data['addressInfo']["Trips"][0]["Details"][1]["paymentInfo"]["iActualPaymentTypeID"] = copay_payment_type_id
 
             # Pickup Address Information
+            data['addressInfo']["Trips"][0]["Details"][0]["Name"] = rider_name
             data['addressInfo']["Trips"][0]["Details"][0]["addressDetails"]["Address"] = pickup_street_address
             data['addressInfo']["Trips"][0]["Details"][0]["addressDetails"]["City"] = pickup_city
             data['addressInfo']["Trips"][0]["Details"][0]["addressDetails"]["Latitude"] = pickup_lat
@@ -2004,6 +2077,7 @@ class Assistant(Agent):
             data['addressInfo']["Trips"][0]["Details"][0]["passengerInfo"]["TotalWheelChairs"] = total_wheelchairs
 
             # Drop off Address Information
+            data['addressInfo']["Trips"][0]["Details"][1]["Name"] = rider_name
             data['addressInfo']["Trips"][0]["Details"][1]["addressDetails"]["Address"] = dropoff_street_address
             data['addressInfo']["Trips"][0]["Details"][1]["addressDetails"]["City"] = dropoff_city
             data['addressInfo']["Trips"][0]["Details"][1]["addressDetails"]["Latitude"] = dropoff_lat
@@ -2015,8 +2089,10 @@ class Assistant(Agent):
             data['addressInfo']["Trips"][0]["Details"][1]["dateInfo"]["PickupDate"] = booking_time
             data['addressInfo']["Trips"][0]["Details"][1]["dateInfo"]["IsScheduled"] = is_schedule
             data['addressInfo']["Trips"][0]["Details"][1]["tripInfo"]["CallBackInfo"] = phone_number
-            data['addressInfo']["Trips"][0]["Details"][1]["tripInfo"]["WillCallDay"] = will_call_day
-            data['addressInfo']["Trips"][0]["Details"][1]["tripInfo"]["IsWillCall"] = is_will_call
+            # data['addressInfo']["Trips"][0]["Details"][1]["tripInfo"]["WillCallDay"] = will_call_day
+            # data['addressInfo']["Trips"][0]["Details"][1]["tripInfo"]["IsWillCall"] = is_will_call
+            data['addressInfo']["Trips"][0]["Details"][1]["dateInfo"]["WillCallDay"] = will_call_day
+            data['addressInfo']["Trips"][0]["Details"][1]["dateInfo"]["IsWillCall"] = is_will_call
             data['addressInfo']["Trips"][0]["Details"][1]["passengerInfo"]["TotalPassengers"] = total_passengers
             data['addressInfo']["Trips"][0]["Details"][1]["passengerInfo"]["TotalWheelChairs"] = total_wheelchairs
 
@@ -2060,7 +2136,13 @@ class Assistant(Agent):
         # Extract all payload fields to local variables for minimal refactor impact
         pickup_street_address = payload.pickup_street_address
         dropoff_street_address = payload.dropoff_street_address
-        pickup_city = payload.pickup_city
+        # Use stored client_id instead of LLM-provided one to prevent hallucinations
+        if self.client_id:
+            client_id = str(self.client_id)
+            print(f"[RETURN TRIP] Using stored client_id: {client_id} (overriding LLM provided: {payload.client_id})")
+        else:
+            client_id = payload.client_id
+            print(f"[RETURN TRIP] Warning: Using LLM-provided client_id: {client_id} (stored client_id not available)")
         dropoff_city = payload.dropoff_city
         pickup_state = payload.pickup_state
         dropoff_state = payload.dropoff_state
@@ -2277,6 +2359,7 @@ class Assistant(Agent):
             data['addressInfo']["Trips"][0]["Details"][1]["paymentInfo"]["iActualPaymentTypeID"] = copay_payment_type_id
 
             # Pickup Address Information
+            data['addressInfo']["Trips"][0]["Details"][0]["Name"] = rider_name
             data['addressInfo']["Trips"][0]["Details"][0]["addressDetails"]["Address"] = pickup_street_address
             data['addressInfo']["Trips"][0]["Details"][0]["addressDetails"]["City"] = pickup_city
             data['addressInfo']["Trips"][0]["Details"][0]["addressDetails"]["Latitude"] = pickup_lat
@@ -2295,6 +2378,7 @@ class Assistant(Agent):
             data['addressInfo']["Trips"][0]["Details"][0]["passengerInfo"]["TotalWheelChairs"] = total_wheelchairs
 
             # Drop off Address Information
+            data['addressInfo']["Trips"][0]["Details"][1]["Name"] = rider_name
             data['addressInfo']["Trips"][0]["Details"][1]["addressDetails"]["Address"] = dropoff_street_address
             data['addressInfo']["Trips"][0]["Details"][1]["addressDetails"]["City"] = dropoff_city
             data['addressInfo']["Trips"][0]["Details"][1]["addressDetails"]["Latitude"] = dropoff_lat
@@ -2306,8 +2390,10 @@ class Assistant(Agent):
             data['addressInfo']["Trips"][0]["Details"][1]["dateInfo"]["PickupDate"] = booking_time
             data['addressInfo']["Trips"][0]["Details"][1]["dateInfo"]["IsScheduled"] = is_schedule
             data['addressInfo']["Trips"][0]["Details"][1]["tripInfo"]["CallBackInfo"] = phone_number
-            data['addressInfo']["Trips"][0]["Details"][1]["tripInfo"]["WillCallDay"] = will_call_day
-            data['addressInfo']["Trips"][0]["Details"][1]["tripInfo"]["IsWillCall"] = is_will_call
+            # data['addressInfo']["Trips"][0]["Details"][1]["tripInfo"]["WillCallDay"] = will_call_day
+            # data['addressInfo']["Trips"][0]["Details"][1]["tripInfo"]["IsWillCall"] = is_will_call
+            data['addressInfo']["Trips"][0]["Details"][1]["dateInfo"]["WillCallDay"] = will_call_day
+            data['addressInfo']["Trips"][0]["Details"][1]["dateInfo"]["IsWillCall"] = is_will_call
             data['addressInfo']["Trips"][0]["Details"][1]["passengerInfo"]["TotalPassengers"] = total_passengers
             data['addressInfo']["Trips"][0]["Details"][1]["passengerInfo"]["TotalWheelChairs"] = total_wheelchairs
 
@@ -2535,4 +2621,19 @@ class Assistant(Agent):
             logger.info(e)
             return "Issue with call transfer"
 
+    @function_tool()
+    async def get_current_date_and_time(self) -> str:
+        """
+        Get the current date and time for immediate ride booking.
+
+        This should be called when the user says they need to book a ride right now.
+        It returns the exact current date and time so the ride can be booked for
+        the present moment.
+
+        Returns:
+            str: Current date and time in 'YYYY-MM-DD HH:MM' format 
+                (e.g., '2025-10-03 19:00').
+        """
+        print("get_current_date_and_time function called...")
+        return datetime.now().strftime('%Y-%m-%d %H:%M')
 

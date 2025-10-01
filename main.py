@@ -769,6 +769,16 @@ Remember: You are ONLY here to assist with transportation services for the agenc
         
         # Create a knowledge base update with key user details to inject into conversation
         user_context = """\n\nIMPORTANT RIDER INFORMATION: Please keep this information in mind for the entire conversation.\n"""
+        if phone_number:
+                user_context += f"""
+                ### Phone Number Verification Notice:
+                - You have received a call from the following phone number: +1{phone_number}.\n
+                - Please use this number for any future verification purposes: +1{phone_number}.\n
+                - Additionally, whenever the user requests to use of same phone number he/she called from you have to use this phone number (+1{phone_number}).\n
+                - If user ask to repeat or confirm the phone number, you have to say "The phone number is +1{phone_number}".\n
+                - when booking ride or providing any information related to the user, you have to use this phone number (+1{phone_number}).\n
+                - Don't forgot to the send phone number in the [book_ride] function when booking ride. Don't send country code in PhoneNo with number in payload\n
+                """
         
         # Add affiliate details if available
         if affiliate_name and affiliate_name != "Default":
@@ -789,8 +799,7 @@ Remember: You are ONLY here to assist with transportation services for the agenc
                 user_context += f"Number of Existing Trips: {rider['number_of_existing_trips']}\n"
             
             # Add phone number if available
-            if phone_number:
-                user_context += f"Phone Number: {phone_number}\n"
+            
         
         elif all_riders_info["number_of_riders"] > 1:
             user_context += f"Multiple riders ({all_riders_info['number_of_riders']}) associated with this phone number\n and here are details {all_riders_info}/n"
@@ -802,16 +811,34 @@ Remember: You are ONLY here to assist with transportation services for the agenc
         # Now create the final agent with the full context
         try:
             # Include user context in the final prompt to ensure the agent remembers it
-            final_prompt = prompt + "\n\n" + user_context
-            agent = Assistant(call_sid=call_sid, context=ctx, room=ctx.room, instructions=final_prompt, affiliate_id=int(affiliate_id), rider_phone=phone_number)
+            final_prompt = user_context + "\n\n" + prompt
+            # Pass the client_id from the rider info to eliminate LLM hallucinations
+            if all_riders_info["number_of_riders"] == 1:
+                rider_client_id = all_riders_info["rider_1"]["client_id"] if all_riders_info["rider_1"]["client_id"] else None
+            else:
+                rider_client_id = None
+            print(f"[MAIN] Passing client_id to Assistant: {rider_client_id} (type: {type(rider_client_id)})")
+            agent = Assistant(call_sid=call_sid, context=ctx, room=ctx.room, instructions=final_prompt, affiliate_id=int(affiliate_id), rider_phone=phone_number, client_id=rider_client_id)
+            with open("final_prompt.txt","w") as f:
+                f.write(final_prompt)
         except Exception as e:
             print(f"\n\n\nError in generating agent object: {e}\n\n")
-            agent = Assistant(call_sid=call_sid, context=ctx, room=ctx.room, instructions=prompt, affiliate_id=65, rider_phone=phone_number)
+            if all_riders_info["number_of_riders"] == 1:
+                rider_client_id = all_riders_info["rider_1"]["client_id"] if all_riders_info["rider_1"]["client_id"] else None
+            else:
+                rider_client_id = None
+            print(f"[MAIN EXCEPTION] Passing client_id to Assistant: {rider_client_id} (type: {type(rider_client_id)})")
+            agent = Assistant(call_sid=call_sid, context=ctx, room=ctx.room, instructions=prompt, affiliate_id=65, rider_phone=phone_number, client_id=rider_client_id)
         
     except Exception as e:
         print(f"Error building user context: {e}")
         # Create a basic agent if we failed to build the context
-        agent = Assistant(call_sid=call_sid, context=ctx, room=ctx.room, instructions=prompt, affiliate_id=int(affiliate_id), rider_phone=phone_number)
+        if all_riders_info.get("number_of_riders") == 1:
+            rider_client_id = all_riders_info["rider_1"]["client_id"] if all_riders_info["rider_1"]["client_id"] else None
+        else:
+            rider_client_id = None
+        print(f"[MAIN FINAL EXCEPTION] Passing client_id to Assistant: {rider_client_id} (type: {type(rider_client_id)})")
+        agent = Assistant(call_sid=call_sid, context=ctx, room=ctx.room, instructions=prompt, affiliate_id=int(affiliate_id), rider_phone=phone_number, client_id=rider_client_id)
     # Define the conversation history collection function before we have the session reference
     conversation_history = []
     def setup_conversation_listeners(current_session):
