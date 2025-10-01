@@ -812,17 +812,33 @@ Remember: You are ONLY here to assist with transportation services for the agenc
         try:
             # Include user context in the final prompt to ensure the agent remembers it
             final_prompt = user_context + "\n\n" + prompt
-            agent = Assistant(call_sid=call_sid, context=ctx, room=ctx.room, instructions=final_prompt, affiliate_id=int(affiliate_id), rider_phone=phone_number)
+            # Pass the client_id from the rider info to eliminate LLM hallucinations
+            if all_riders_info["number_of_riders"] == 1:
+                rider_client_id = all_riders_info["rider_1"]["client_id"] if all_riders_info["rider_1"]["client_id"] else None
+            else:
+                rider_client_id = None
+            print(f"[MAIN] Passing client_id to Assistant: {rider_client_id} (type: {type(rider_client_id)})")
+            agent = Assistant(call_sid=call_sid, context=ctx, room=ctx.room, instructions=final_prompt, affiliate_id=int(affiliate_id), rider_phone=phone_number, client_id=rider_client_id)
             with open("final_prompt.txt","w") as f:
                 f.write(final_prompt)
         except Exception as e:
             print(f"\n\n\nError in generating agent object: {e}\n\n")
-            agent = Assistant(call_sid=call_sid, context=ctx, room=ctx.room, instructions=prompt, affiliate_id=65, rider_phone=phone_number)
+            if all_riders_info["number_of_riders"] == 1:
+                rider_client_id = all_riders_info["rider_1"]["client_id"] if all_riders_info["rider_1"]["client_id"] else None
+            else:
+                rider_client_id = None
+            print(f"[MAIN EXCEPTION] Passing client_id to Assistant: {rider_client_id} (type: {type(rider_client_id)})")
+            agent = Assistant(call_sid=call_sid, context=ctx, room=ctx.room, instructions=prompt, affiliate_id=65, rider_phone=phone_number, client_id=rider_client_id)
         
     except Exception as e:
         print(f"Error building user context: {e}")
         # Create a basic agent if we failed to build the context
-        agent = Assistant(call_sid=call_sid, context=ctx, room=ctx.room, instructions=prompt, affiliate_id=int(affiliate_id), rider_phone=phone_number)
+        if all_riders_info.get("number_of_riders") == 1:
+            rider_client_id = all_riders_info["rider_1"]["client_id"] if all_riders_info["rider_1"]["client_id"] else None
+        else:
+            rider_client_id = None
+        print(f"[MAIN FINAL EXCEPTION] Passing client_id to Assistant: {rider_client_id} (type: {type(rider_client_id)})")
+        agent = Assistant(call_sid=call_sid, context=ctx, room=ctx.room, instructions=prompt, affiliate_id=int(affiliate_id), rider_phone=phone_number, client_id=rider_client_id)
     # Define the conversation history collection function before we have the session reference
     conversation_history = []
     def setup_conversation_listeners(current_session):
