@@ -523,7 +523,8 @@ Remember: You are ONLY here to assist with transportation services for the agenc
             # metadata = participant.metadata
             caller = participant.attributes['sip.phoneNumber']
             recipient = participant.attributes['sip.trunkPhoneNumber']
-            
+            print("***************Caller & Recipient from Asterisk: ", caller, recipient)
+            logger.info(f"***************Caller & Recipient from Asterisk: {caller} {recipient}")
             # Try to get affiliate from cache
             cached_affiliate = cache_manager.get_affiliate_from_cache(recipient)
             print("cached_affiliate ",cached_affiliate)

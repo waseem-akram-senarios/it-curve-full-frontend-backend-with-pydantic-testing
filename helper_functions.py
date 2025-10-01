@@ -660,13 +660,15 @@ class Assistant(Agent):
     @function_tool()
     async def get_ETA(self) -> str:
         """
-        Function to get:
-            - Last pickup/Last drop off Address
-            - Last trip details
-            - Latest/Recent trip that was booked
-            - Their current trip ETA
-            - Where their ride/vehicle/trip is
-            - Existing rides/trips status
+        Function to get CURRENT/ACTIVE/EXISTING rides and trips:
+            - Current active rides status
+            - Existing booked trips that are not yet completed
+            - Live trip ETA and location
+            - Where their current ride/vehicle is right now
+            - Active trip pickup/dropoff details
+            - Real-time trip information
+        
+        Use this for: "Where is my ride?", "What's my ETA?", "Do I have any current trips?"
         
         Uses the client_id that was retrieved during initial phone number lookup,
         eliminating the need for LLM to provide client_id (which can cause hallucinations).
@@ -1418,7 +1420,13 @@ class Assistant(Agent):
 
     @function_tool()
     async def get_Trip_Stats(self) -> str:
-        """Function to get Trip ETA or to know where is rider's current ride.
+        """Function to get detailed statistics and analytics about trips:
+        - Trip performance metrics
+        - Statistical data about ride patterns
+        - Analytics and reporting information
+        - Trip statistics and summaries
+        
+        Use this for analytical queries about trip data, not for current ride status.
         
         Uses the client_id that was retrieved during initial phone number lookup,
         eliminating the need for LLM to provide client_id (which can cause hallucinations).
@@ -1491,14 +1499,15 @@ class Assistant(Agent):
 
     @function_tool()
     async def get_historic_rides(self) -> str:
-        """Function to get
-        - Performed trips
-        - Latest/Last Historic trip
-        - Latest/Last Performed trip
-        - Latest/Last Past trip
-        - Number of trips completed in last few days
-        - Past trips
-        - Historic trips
+        """Function to get COMPLETED/PAST/HISTORICAL rides and trips:
+        - Previously completed trips
+        - Past ride history
+        - Historical trip records
+        - Finished/performed trips from previous days/weeks
+        - Trip history for reference
+        - Completed journey records
+        
+        Use this for: "Show my past trips", "What trips did I take last week?", "My ride history"
         
         Uses the client_id that was retrieved during initial phone number lookup,
         eliminating the need for LLM to provide client_id (which can cause hallucinations).
@@ -1882,6 +1891,10 @@ class Assistant(Agent):
         # Start playing music asynchronously
         # _ = asyncio.create_task(self.Play_Music())
         # await asyncio.sleep(2)
+        if rider_id == 0:
+                rider_id = -1
+        if client_id == 0:
+            client_id = -1
         phone_number = self.rider_phone
 
         # Check Pickup Address
@@ -2028,7 +2041,10 @@ class Assistant(Agent):
             payment_type_id = await safe_int(payment_type_id)
             copay_funding_source_id = await safe_int(copay_funding_source_id)
             copay_payment_type_id = await safe_int(copay_payment_type_id)
-
+            if rider_id == 0:
+                rider_id = -1
+            if client_id == 0:
+                client_id = -1
             # Rider and Affiliate Information
             data["riderInfo"]["ID"] = client_id
             data["riderInfo"]["PhoneNo"] = phone_number
@@ -2184,7 +2200,10 @@ class Assistant(Agent):
         # Start playing music asynchronously
         # _ = asyncio.create_task(self.Play_Music())
         # await asyncio.sleep(2)
-
+        if rider_id == 0:
+            rider_id = -1
+        if client_id == 0:
+            client_id = -1
         # Check Pickup Address
         pickup_error = await check_address_validity(pickup_lat, pickup_lng, "Pick Up")
         if pickup_error:
@@ -2329,7 +2348,10 @@ class Assistant(Agent):
             payment_type_id = await safe_int(payment_type_id)
             copay_funding_source_id = await safe_int(copay_funding_source_id)
             copay_payment_type_id = await safe_int(copay_payment_type_id)
-
+            if rider_id == 0:
+                rider_id = -1
+            if client_id == 0:
+                client_id = -1
             # Rider and Affiliate Information
             data["riderInfo"]["ID"] = client_id
             data["riderInfo"]["PhoneNo"] = phone_number
