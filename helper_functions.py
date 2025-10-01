@@ -77,6 +77,8 @@ class Assistant(Agent):
 
         if not bool(re.match(pattern, rider_phone)):
             print(f"Invalid phone number format: {rider_phone}")
+            self.session.say("The phone number is not correct. Let me transfer you to live agent.", allow_interruptions=False)
+            self.transfer_call()
 
     def update_affliate_id_and_family(self,affiliate_id,family_id):
         self.affiliate_id=affiliate_id
