@@ -2069,8 +2069,7 @@ class Assistant(Agent):
             data["riderInfo"]["ClientAddress"] = rider_home_address
             data["riderInfo"]["ClientCity"] = rider_home_city
             data["riderInfo"]["ClientState"] = rider_home_state
-            if self.medical_id != "unknown":
-                data["riderInfo"]["MedicalId"] = self.medical_id
+            data["riderInfo"]["MedicalId"] = rider_id
 
             data['addressInfo']["Trips"][0]["Details"][0]["tripInfo"]["AffiliateID"] = affiliate_id
             data['addressInfo']["Trips"][0]["Details"][1]["tripInfo"]["AffiliateID"] = affiliate_id
@@ -2142,8 +2141,7 @@ class Assistant(Agent):
             data['addressInfo']["Trips"][0]["Details"][1]["estimatedInfo"]["EstimatedCost"] = total_cost
             data['addressInfo']["Trips"][0]["Details"][1]["estimatedInfo"]["CoPay"] = copay_cost
 
-            if self.medical_id != "unknown":
-                data['insuranceInfo']['MedicalID'] = self.medical_id
+            data['insuranceInfo']['MedicalID'] = rider_id
 
             # adding payload to agent memory
 
@@ -2381,8 +2379,7 @@ class Assistant(Agent):
             data["riderInfo"]["ClientAddress"] = rider_home_address
             data["riderInfo"]["ClientCity"] = rider_home_city
             data["riderInfo"]["ClientState"] = rider_home_state
-            if self.medical_id != "unknown":
-                data["riderInfo"]["MedicalId"] = self.medical_id
+            data["riderInfo"]["MedicalId"] = rider_id
 
             data['addressInfo']["Trips"][0]["Details"][0]["tripInfo"]["AffiliateID"] = affiliate_id
             data['addressInfo']["Trips"][0]["Details"][1]["tripInfo"]["AffiliateID"] = affiliate_id
@@ -2454,8 +2451,7 @@ class Assistant(Agent):
             data['addressInfo']["Trips"][0]["Details"][1]["estimatedInfo"]["EstimatedCost"] = total_cost
             data['addressInfo']["Trips"][0]["Details"][1]["estimatedInfo"]["CoPay"] = copay_cost
 
-            if self.medical_id != "unknown":
-                data['insuranceInfo']['MedicalID'] = self.medical_id
+            data['insuranceInfo']['MedicalID'] = rider_id
 
             # adding payload to agent memory
 
