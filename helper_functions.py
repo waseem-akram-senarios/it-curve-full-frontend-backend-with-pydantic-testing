@@ -72,6 +72,9 @@ class Assistant(Agent):
         - 301-208-2222
         - 3012082222
         """
+        if rider_phone == None:
+            return
+
         pattern = r"^(?:\d{3}-\d{3}-\d{4}|\d{10})$"
         self.rider_phone = rider_phone
 
