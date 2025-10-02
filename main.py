@@ -989,7 +989,7 @@ Remember: You are ONLY here to assist with transportation services for the agenc
         formatted_history = []
         score_history = iter(supervisor.score_history)
         default_score = { "relevance": 'N/A', "completeness": 'N/A', "groundedness": 'N/A', "average": 'N/A' }
-        for i, entry in iter(conversation_history):
+        for i, entry in enumerate(conversation_history):
             if i == 0:
                 score = None
             elif entry.get('speaker', '') == 'Agent':
