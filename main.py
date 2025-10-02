@@ -988,7 +988,7 @@ Remember: You are ONLY here to assist with transportation services for the agenc
         # Format conversation history for MongoDB
         formatted_history = []
         score_history = iter(supervisor.score_history)
-        default_score = {{ "relevance": 'N/A', "completeness": 'N/A', "groundedness": 'N/A', "average": 'N/A' }}
+        default_score = { "relevance": 'N/A', "completeness": 'N/A', "groundedness": 'N/A', "average": 'N/A' }
         for i, entry in iter(conversation_history):
             if i == 0:
                 score = None
