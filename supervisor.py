@@ -104,10 +104,10 @@ If uncertain, choose the lower score."""
         print(f"[supervisor score] {score} = {avg_score}")
 
         self.score_history.append({
-            "relevance": float(score.relevance),
-            "completeness": float(score.completeness),
-            "groundedness": float(score.groundedness),
-            "average": float(avg_score)
+            "relevance": str(float(score.relevance)),
+            "completeness": str(float(score.completeness)),
+            "groundedness": str(float(score.groundedness)),
+            "average": str(float(avg_score))
         })
 
         if avg_score > 0.7:

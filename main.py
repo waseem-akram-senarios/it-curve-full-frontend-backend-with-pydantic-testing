@@ -1002,12 +1002,23 @@ Remember: You are ONLY here to assist with transportation services for the agenc
 
         # Format conversation history for MongoDB
         formatted_history = []
-        for entry in conversation_history:
+        score_history = iter(supervisor.score_history)
+        default_score = {{ "relevance": 'N/A', "completeness": 'N/A', "groundedness": 'N/A', "average": 'N/A' }}
+        for i, entry in iter(conversation_history):
+            if i == 0:
+                score = None
+            elif entry.get('speaker', '') == 'Agent':
+                score = next(score_history, default_score)
+            else:
+                score = None
+            i += 1
+
             # Keep the original speaker label from the conversation history
             formatted_history.append({
                 "speaker": entry.get('speaker', ''),
                 "transcription": entry.get('transcription', ''),
-                "timestamp": entry.get('timestamp', '')
+                "timestamp": entry.get('timestamp', ''),
+                "score": score
             })
         print('supervisor score history', supervisor.score_history, len(formatted_history))
 
