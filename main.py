@@ -1,6 +1,5 @@
 import os
 import pytz
-import logging
 import pymongo
 import uuid
 from bson.objectid import ObjectId
@@ -32,7 +31,7 @@ from datetime import datetime
 import copy
 from supervisor import Supervisor
 import cache_manager
-from logging_config import get_logger, set_session_id, create_call_logger, cleanup_call_logger
+from logging_config import get_logger, set_session_id
 
 
 load_dotenv()
@@ -56,7 +55,7 @@ TWILIO_CLIENT = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 Agent_Directory = Path(__file__).parent
 
 load_dotenv(dotenv_path=".env")
-logger = logging.getLogger("voice-agent")
+# Logger already initialized above as logger = get_logger('main')
 
 
 async def transfer_call_dtmf(participant, room, participant_identity: str = None, room_name: str = None) -> None:
@@ -283,8 +282,6 @@ async def entrypoint(ctx: agents.JobContext):
     
     # Set up per-call logging
     session_id = set_session_id(call_sid)
-    call_logger = create_call_logger(call_sid)
-    call_logger.info(f"=== New call started with SID: {call_sid} ===")
     
     # Set up the session and background audio early to prepare for immediate greeting
     background_audio = BackgroundAudioPlayer(thinking_sound=[
@@ -1064,8 +1061,6 @@ Remember: You are ONLY here to assist with transportation services for the agenc
     # At shutdown, generate and log the summary from the usage collector
     async def cleanup_and_log():
         await log_usage(starting_time, call_sid, conversation_history)
-        cleanup_call_logger(call_sid)
-        call_logger.info(f"=== Call {call_sid} ended ===")
     
     ctx.add_shutdown_callback(lambda: asyncio.create_task(cleanup_and_log()))
 

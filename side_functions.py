@@ -23,7 +23,6 @@ from logging_config import get_logger
 # Initialize logger
 logger = get_logger('side_functions')
 
-import logging
 
 # Load variables from .env file
 load_dotenv()
@@ -393,7 +392,6 @@ async def extract_phone_number(phone_number):
         '49': 2,  # Germany
         '61': 2,  # Australia
         '39': 2,  # Italy
-        '81': 2,  # Japan
         '34': 2,  # Spain
         '92': 2,  # Pakistan
     }
@@ -703,7 +701,7 @@ async def combine_payload(leg1: dict, leg2: dict):
     try:
         combined_leg = None
 
-        logging.info("combine_payload function called...")
+        logger.info("combine_payload function called...")
         if leg1 is not None:
             combined_leg = copy.deepcopy(leg1)
 
@@ -713,7 +711,7 @@ async def combine_payload(leg1: dict, leg2: dict):
             if trip_from_leg2:
                 combined_leg["addressInfo"]["Trips"].append(trip_from_leg2)
 
-            logging.info("combined_payload:",combined_leg)
+            # Removed duplicate logging - already logged below with logger.debug
             logger.debug(f"combined_payload: {combined_leg}")
 
             return combined_leg

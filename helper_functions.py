@@ -15,17 +15,14 @@ from aiohttp import BasicAuth
 from openai import AsyncOpenAI
 from dotenv import load_dotenv
 from livekit.agents import Agent, function_tool
-import logging
 from livekit.agents.voice import Agent, AgentSession, RunContext
 from livekit.protocol.sip import TransferSIPParticipantRequest
 from livekit import api
 from livekit.rtc import SipDTMF
 from side_functions import *
-import logging
-from typing import Annotated
 from pydantic import Field, BaseModel
 from models import ReturnTripPayload, MainTripPayload, RiderVerificationParams, ClientNameParams, DistanceFareParams, AccountParams
-from logging_config import get_logger, set_session_id, create_call_logger
+from logging_config import get_logger, set_session_id
 
 # Load variables from .env file
 load_dotenv()
@@ -177,7 +174,7 @@ class Assistant(Agent):
         # try:
         #     # Asterisk end call
         #     await self.asterisk_call_disconnect()
-        #     logging.info("asterisk call disconnected...")
+        #     logger.info("asterisk call disconnected...")
         #     # TWILIO_CLIENT.calls(self.call_sid).update(status="completed")
         #     call_closed_msg = f"Call has been ended successfully."
         # except Exception as e:
@@ -529,7 +526,7 @@ I have updated your profile information. You can now proceed with booking trips 
         logger.info("Called search_web function")
         # _ = asyncio.create_task(self.Play_Music())
         # await asyncio.sleep(2)
-        logging.info(f"web search payload: {prompt}")
+        logger.debug(f"web search payload: {prompt}")
 
         try:
             # Use the OpenAI API client to make the call
@@ -1427,7 +1424,7 @@ I have updated your profile information. You can now proceed with booking trips 
                 'AppType': 'FCSTService'
             }
 
-            logging.info(f"\n\n\nPayload Sent for distance and duration retrieval: {params}\n\n\n")
+            logger.debug(f"Payload Sent for distance and duration retrieval: {params}")
 
             # Define your Basic Authentication credentials
             auth = BasicAuth(os.getenv("GET_DIRECTION_USER"),
@@ -1446,7 +1443,7 @@ I have updated your profile information. You can now proceed with booking trips 
                 async with session.get(url, params=params, headers=headers, auth=auth) as response:
                     if response.status == 200:
                         data = await response.json()
-                        logging.info(f"\n\n\nResponse for distance and duration retrieval: {data}\n\n\n")
+                        logger.debug(f"Response for distance and duration retrieval: {data}")
                         distance = int(data["routes"][0]["legs"][0]["distance"]["value"])
                         duration = int(data["routes"][0]["legs"][0]["duration"]["value"])
                         logger.debug(f"Distance: {distance}")
@@ -1478,7 +1475,7 @@ I have updated your profile information. You can now proceed with booking trips 
                             "httpResponseCode": 100
                         }
 
-                        logging.info(f"\n\n\nPayload for fare estimation: {data}\n\n\n")
+                        logger.debug(f"Payload for fare estimation: {data}")
 
                         # Headers to be used in the request
                         headers = {
@@ -1492,7 +1489,7 @@ I have updated your profile information. You can now proceed with booking trips 
                                 if response.status == 200:
                                     # If successful, print the JSON response
                                     response_data = await response.json()
-                                    logging.info(f"\n\n\nResponse for fare estimation: {response_data}\n\n\n")
+                                    logger.debug(f"Response for fare estimation: {response_data}")
                                     total_cost = response_data["totalCost"]
                                     copay_cost = response_data["copay"]
                                     logger.debug(f"Total Cost: {total_cost}")
@@ -1504,7 +1501,7 @@ I have updated your profile information. You can now proceed with booking trips 
                         logger.error(f"Request failed with status code {response.status_code}")
 
         except Exception as e:
-            logging.ERROR(f"Error in getting distance and duration: {e}")
+            logger.error(f"Error in getting distance and duration: {e}")
 
         # await asyncio.sleep(2)
         # await self.Stop_Music()
@@ -1546,8 +1543,19 @@ I have updated your profile information. You can now proceed with booking trips 
             client_id = str(self.client_id)
             logger.info(f"[MAIN TRIP] Using stored client_id: {client_id} (overriding LLM provided: {payload.client_id})")
         else:
-            client_id = payload.client_id
-            logger.warning(f"[MAIN TRIP] Warning: Using LLM-provided client_id: {client_id} (stored client_id not available, self.client_id was: {self.client_id})")
+            logger.warning("Client ID not available in collect_main_trip_payload, attempting to retrieve it...")
+            client_id = -1
+            # Try to get client info first
+            # try:
+            #     await self.get_client_name()
+            #     if not self.client_id:
+            #         return "I need to identify you first. Let me search for your profile using your phone number."
+            # except Exception as e:
+            #     logger.error(f"Error retrieving client info in collect_main_trip_payload: {e}")
+            #     logger.warning(f"[MAIN TRIP] Warning: Using LLM-provided client_id: {client_id} (stored client_id not available, self.client_id was: {self.client_id})")
+            #     return "I'm having trouble accessing your profile. Please try again."
+        
+        logger.debug(f"Using stored client_id: {client_id}")
         funding_source_id = payload.funding_source_id
         rider_name = payload.rider_name
         payment_type_id = payload.payment_type_id
@@ -1578,7 +1586,7 @@ I have updated your profile information. You can now proceed with booking trips 
         dropoff_remarks = payload.dropoff_remarks
         dropoff_phone_number = payload.dropoff_phone_number
         # print(f"\n\n\nCalled collect_trip_payload function at: {datetime.now()}\n\n\n")
-        logging.info(f"\n\n\nCalled collect_trip_payload function at: {datetime.now()}\n\n\n")
+        logger.info(f"Called collect_trip_payload function at: {datetime.now()}")
         # Start playing music asynchronously
         # _ = asyncio.create_task(self.Play_Music())
         # await asyncio.sleep(2)
@@ -1618,7 +1626,7 @@ I have updated your profile information. You can now proceed with booking trips 
                 'AppType': 'FCSTService'
             }
 
-            logging.info(f"\n\n\nPayload Sent for distance and duration retrieval: {params}\n\n\n")
+            logger.debug(f"Payload Sent for distance and duration retrieval: {params}")
 
             # Define your Basic Authentication credentials
             auth = BasicAuth(os.getenv("GET_DIRECTION_USER"),
@@ -1637,7 +1645,7 @@ I have updated your profile information. You can now proceed with booking trips 
                 async with session.get(url, params=params, headers=headers, auth=auth) as response:
                     if response.status == 200:
                         data = await response.json()
-                        logging.info(f"\n\n\nResponse for distance and duration retrieval: {data}\n\n\n")
+                        logger.debug(f"Response for distance and duration retrieval: {data}")
                         distance = int(data["routes"][0]["legs"][0]["distance"]["value"])
                         duration = int(data["routes"][0]["legs"][0]["duration"]["value"])
                         logger.debug(f"Distance: {distance}")
@@ -1668,7 +1676,7 @@ I have updated your profile information. You can now proceed with booking trips 
                             "httpResponseCode": 100
                         }
 
-                        logging.info(f"\n\n\nPayload for fare estimation: {data}\n\n\n")
+                        logger.debug(f"Payload for fare estimation: {data}")
 
                         # Headers to be used in the request
                         headers = {
@@ -1682,7 +1690,7 @@ I have updated your profile information. You can now proceed with booking trips 
                                 if response.status == 200:
                                     # If successful, print the JSON response
                                     response_data = await response.json()
-                                    logging.info(f"\n\n\nResponse for fare estimation: {response_data}\n\n\n")
+                                    logger.debug(f"Response for fare estimation: {response_data}")
                                     total_cost = response_data["totalCost"]
                                     copay_cost = response_data["copay"]
                                     logger.debug(f"Total Cost: {total_cost}")
@@ -1838,7 +1846,7 @@ I have updated your profile information. You can now proceed with booking trips 
             #     self.return_leg = data
 
             # print(f"\n\n\nPayload collected: {data}\n\n\n")
-            logging.info(f"\n\n\nPayload collected: {data}\n\n\n")
+            logger.debug(f"Payload collected: {data}")
 
             return f"Payload for main trip has been collected! Ask the rider if they would like to book a return trip."
 
@@ -1858,6 +1866,10 @@ I have updated your profile information. You can now proceed with booking trips 
         # Extract all payload fields to local variables for minimal refactor impact
         pickup_street_address = payload.pickup_street_address
         dropoff_street_address = payload.dropoff_street_address
+        pickup_city = payload.pickup_city
+        dropoff_city = payload.dropoff_city
+        pickup_state = payload.pickup_state
+        dropoff_state = payload.dropoff_state
         # Use stored client_id instead of LLM-provided one to prevent hallucinations
         if self.client_id:
             client_id = str(self.client_id)
@@ -1865,9 +1877,6 @@ I have updated your profile information. You can now proceed with booking trips 
         else:
             client_id = payload.client_id
             logger.warning(f"[RETURN TRIP] Warning: Using LLM-provided client_id: {client_id} (stored client_id not available)")
-        dropoff_city = payload.dropoff_city
-        pickup_state = payload.pickup_state
-        dropoff_state = payload.dropoff_state
         extra_details = payload.extra_details
         phone_number = payload.phone_number
         client_id = payload.client_id
@@ -1902,7 +1911,7 @@ I have updated your profile information. You can now proceed with booking trips 
         dropoff_remarks = payload.dropoff_remarks
         dropoff_phone_number = payload.dropoff_phone_number
         # print(f"\n\n\nCalled collect_return_trip_payload function at: {datetime.now()}\n\n\n")
-        logging.info(f"\n\n\nCalled collect_return_trip_payload function at: {datetime.now()}\n\n\n")
+        logger.info(f"Called collect_return_trip_payload function at: {datetime.now()}")
         # Start playing music asynchronously
         # _ = asyncio.create_task(self.Play_Music())
         # await asyncio.sleep(2)
@@ -1939,7 +1948,7 @@ I have updated your profile information. You can now proceed with booking trips 
                 'AppType': 'FCSTService'
             }
 
-            logging.info(f"\n\n\nPayload Sent for distance and duration retrieval: {params}\n\n\n")
+            logger.debug(f"Payload Sent for distance and duration retrieval: {params}")
 
             # Define your Basic Authentication credentials
             auth = BasicAuth(os.getenv("GET_DIRECTION_USER"),
@@ -1958,7 +1967,7 @@ I have updated your profile information. You can now proceed with booking trips 
                 async with session.get(url, params=params, headers=headers, auth=auth) as response:
                     if response.status == 200:
                         data = await response.json()
-                        logging.info(f"\n\n\nResponse for distance and duration retrieval: {data}\n\n\n")
+                        logger.debug(f"Response for distance and duration retrieval: {data}")
                         distance = int(data["routes"][0]["legs"][0]["distance"]["value"])
                         duration = int(data["routes"][0]["legs"][0]["duration"]["value"])
                         logger.debug(f"Distance: {distance}")
@@ -1989,7 +1998,7 @@ I have updated your profile information. You can now proceed with booking trips 
                             "httpResponseCode": 100
                         }
 
-                        logging.info(f"\n\n\nPayload for fare estimation: {data}\n\n\n")
+                        logger.debug(f"Payload for fare estimation: {data}")
 
                         # Headers to be used in the request
                         headers = {
@@ -2003,7 +2012,7 @@ I have updated your profile information. You can now proceed with booking trips 
                                 if response.status == 200:
                                     # If successful, print the JSON response
                                     response_data = await response.json()
-                                    logging.info(f"\n\n\nResponse for fare estimation: {response_data}\n\n\n")
+                                    logger.debug(f"Response for fare estimation: {response_data}")
                                     total_cost = response_data["totalCost"]
                                     copay_cost = response_data["copay"]
                                     logger.debug(f"Total Cost: {total_cost}")
@@ -2159,7 +2168,7 @@ I have updated your profile information. You can now proceed with booking trips 
             self.return_leg = data
 
             # print(f"\n\n\n Return trip Payload collected: {data}\n\n\n")
-            logging.info(f"\n\n\n Return trip Payload collected:{data}\n\n\n")
+            logger.debug(f"Return trip Payload collected: {data}")
             logger.debug(f"return trip payload: {data}")
 
             return f"Payload for return trip has been collected!"
@@ -2176,15 +2185,15 @@ I have updated your profile information. You can now proceed with booking trips 
             str: Booking confirmation, error message, or API response summary.
         """
 
-        logging.info("book_trips function called...")
+        logger.info("book_trips function called...")
         try:
             # Check if function is called with empty arguments
             if not hasattr(self, 'main_leg') or not hasattr(self, 'return_leg'):
-                logging.warning("\n\nbook_trips called but no leg attributes exist\n\n")
+                logger.warning("book_trips called but no leg attributes exist")
                 return "Please provide trip details before booking. You need to specify at least pickup and dropoff locations."
             # Check if legs exist but are empty
             if not self.main_leg and not self.return_leg:
-                logging.warning("\n\nBoth legs are None or empty\n\n")
+                logger.warning("Both legs are None or empty")
                 return "No trip details found. Please provide pickup and dropoff information before booking."
 
             # Prepare the payload based on available legs
@@ -2195,31 +2204,31 @@ I have updated your profile information. You can now proceed with booking trips 
             elif self.return_leg:
                 payload = self.return_leg
             else:
-                logging.warning("\n\nNo legs provided for booking.\n\n")
+                logger.warning("No legs provided for booking.")
                 return "Error: No valid trip details found. Please provide pickup and dropoff information."
 
             # Step 2: Set the endpoint
             url = os.getenv("TRIP_BOOKING_API")
 
             # Properly log the payload
-            logging.info(f"\n\nPayload Sent for booking: {payload}")
+            logger.debug(f"Payload Sent for booking: {payload}")
 
             # Step 3: Send the data to the API with proper error handling
             async with aiohttp.ClientSession() as session:
                 async with session.post(url, json=payload, headers={"Content-Type": "application/json"}) as response:
                     # Check if response status is OK before trying to parse JSON
                     if response.status != 200:
-                        logging.info(f"\n\n**********\nBooking API HTTP Error: {response.status}\n**********\n\n")
+                        logger.error(f"Booking API HTTP Error: {response.status}")
                         return f"Trip booking failed with HTTP status {response.status}. Please try again later."
                     
                     # Try to parse the response as JSON with better error handling
                     try:
                         response_data = await response.json()
                     except Exception as e:
-                        logging.info(f"\n\n**********\nBooking API JSON Parsing Error: {e}\nContent-Type: {response.headers.get('Content-Type')}\n**********\n\n")
+                        logger.error(f"Booking API JSON Parsing Error: {e}, Content-Type: {response.headers.get('Content-Type')}")
                         # Try to get text response as fallback
                         text_response = await response.text()
-                        logging.info(f"Raw response: {text_response[:200]}...")
+                        logger.debug(f"Raw response: {text_response[:200]}...")
                         return f"Trip booking system returned an invalid response format. Please try again later."
 
                     # Continue processing if we successfully parsed JSON
@@ -2257,7 +2266,7 @@ I have updated your profile information. You can now proceed with booking trips 
                                 - Keep response to exactly two lines
                                 """
                             weather = await search_web_manual(prompt)
-                            logging.info(f"\n\nWeather: {weather}\n\n")
+                            logger.debug(f"Weather: {weather}")
 
                             try:
 
@@ -2267,22 +2276,22 @@ I have updated your profile information. You can now proceed with booking trips 
                                     response_text += f"Trip has been booked! Your Trip Number is {irefId}. It will take around {estimate_time} minutes and distance between your pick up and drop off is {estimate_distance} miles. Estimated cost is {estimate_cost}$ and cost related to copay is {copay_cost}$. Weather in drop off location is {weather}."
 
                             except Exception as e:
-                                logging.info(f"\n\nError occurred in book a trip function: {e}\n\n")
+                                logger.error(f"Error occurred in book a trip function: {e}")
 
                         self.main_leg = None
                         self.return_leg = None
 
-                        logging.info(f"Booking response:{response_text}")
+                        logger.info(f"Booking response: {response_text}")
                         return response_text
                     
                     else:
                         error_message = response_data.get("responseMessage", "Unknown error")
                         error_code = response_data.get("responseCode", "Unknown")
-                        logging.info(f"\n\n**********\nBooking API Payload ERROR: Code {error_code} - {error_message}\n**********\n\n")
+                        logger.error(f"Booking API Payload ERROR: Code {error_code} - {error_message}")
                         return f"Trip has not been booked. Error: {error_message}"
 
         except Exception as e:
-            logging.info(f"\n\n**********\nBooking API Server ERROR: {e}\n**********\n\n")
+            logger.error(f"Booking API Server ERROR: {e}")
             return f"error in booking:{e}"
 
     @function_tool()

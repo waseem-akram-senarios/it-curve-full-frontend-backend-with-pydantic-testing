@@ -1,6 +1,5 @@
 import os
 import pytz
-import logging
 import pymongo
 import uuid
 import asyncio
@@ -40,17 +39,7 @@ import copy
 
 load_dotenv()
 
-# Configure logging to suppress pymongo debug messages
-logging.getLogger('pymongo').setLevel(logging.WARNING)
-LOG_FILENAME = "application.log"
-
-logging.basicConfig(
-    level=logging.DEBUG,  # Capture all log levels
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    handlers=[
-        logging.FileHandler(LOG_FILENAME, mode='a')
-    ]
-)
+# Logging is now handled by the centralized logging_config module
 
 # MongoDB connection
 MONGODB_URI = os.getenv("MONGODB_URI")
@@ -71,7 +60,7 @@ TWILIO_CLIENT = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 Agent_Directory = Path(__file__).parent
 
 load_dotenv(dotenv_path=".env")
-logger = logging.getLogger("voice-agent")
+# Logger already initialized above as logger = get_logger('main_with_monitoring')
 
 
 async def transfer_call_dtmf(participant, room, participant_identity: str = None, room_name: str = None) -> None:
@@ -163,30 +152,29 @@ async def entrypoint(ctx: agents.JobContext):
     await ctx.connect()
 
     # Wait for the first participant to connect
-    participant = await ctx.wait_for_participant()
-
     # # Twilio code commented
     # call_sid = participant.attributes.get("sip.twilio.callSid", "Unknown")
     # if call_sid == "Unknown":
     call_sid = 'chat-' + str(uuid.uuid4())
-    print(f"\n\nCall SID: {call_sid}\n\n")
+    logger.info(f"Call SID: {call_sid}")
 
-    # Specify the US Eastern time zone
+    # Specify the US eastern time zone
     eastern = pytz.timezone('US/Eastern')
     date_time = datetime.now(pytz.utc).astimezone(eastern)
     today_date = date_time.strftime("%Y-%m-%d")
-    current_time = date_time.strftime("%I:%M %p")  # 12-hour format with AM/PM
 
     try:
         # metadata = eval(participant.metadata)
         meta_data = participant.metadata
         metadata = json.loads(meta_data)
-        print(f"\n\nMetadata: {metadata}\n\n")
-    except:
+        logger.debug(f"Metadata: {metadata}")
+    except Exception as e:
+        logger.error(f"Failed to parse metadata: {e}")
         pass
 
     starting_time = date_time.strftime("%Y-%m-%d %H:%M:%S")
 
+{{ ... }}
     # all_riders_info = {}
     all_riders_info = {"number_of_riders":0}
 
@@ -240,10 +228,10 @@ async def entrypoint(ctx: agents.JobContext):
             bounds, _, affiliate_details = await fetch_affiliate_details(affiliate_id)
             affiliate_name = affiliate_details.get("AffiliateName", "")
         except Exception as e:
-            print(f"Error in getting affiliate name: {e}")
+            logger.error(f"Error in getting affiliate name: {e}")
             affiliate_name = "Default"
     except Exception as e:
-        print(f"Error in getting affiliate details: {e}")
+        logger.error(f"Error in getting affiliate details: {e}")
         affiliate_name = "Default"
 
     allow_interruption_status = True
@@ -253,7 +241,7 @@ async def entrypoint(ctx: agents.JobContext):
         ivr = os.getenv("IVR_MODE", "FALSE")
         ivr = ivr.lower() == "true"
     except Exception as e:
-        print(f"Error in getting IVR mode: {e}")
+        logger.error(f"Error in getting IVR mode: {e}")
         ivr = False
 
     agent = None

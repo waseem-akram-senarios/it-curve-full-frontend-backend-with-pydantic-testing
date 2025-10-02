@@ -14,6 +14,9 @@ import threading
 # Thread-local storage for session context
 _local = threading.local()
 
+# Global variable to store current call logger
+_current_call_logger = None
+
 class SessionContextFilter(logging.Filter):
     """Filter to add session context to log records."""
     
@@ -22,6 +25,87 @@ class SessionContextFilter(logging.Filter):
         session_id = getattr(_local, 'session_id', 'no-session')
         record.session_id = session_id
         return True
+
+class CallSpecificHandler(logging.Handler):
+    """Handler that routes logs to call-specific files based on current call context."""
+    
+    def __init__(self, logs_dir):
+        super().__init__()
+        self.logs_dir = Path(logs_dir)
+        self.call_handlers = {}
+        self.setLevel(logging.DEBUG)
+        
+        # Create formatter for call logs
+        formatter = logging.Formatter(
+            '%(asctime)s - %(levelname)s - %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S'
+        )
+        self.setFormatter(formatter)
+    
+    def emit(self, record):
+        """Emit a record to the appropriate call-specific file."""
+        global _current_call_logger
+        
+        # Only log to call-specific file if there's a current call logger set
+        if _current_call_logger is None:
+            return
+            
+        # Get the call ID from the current call logger name
+        call_id = None
+        if hasattr(_current_call_logger, 'name'):
+            # Extract call_id from logger name like 'ivr_bot.call_chat-123'
+            parts = _current_call_logger.name.split('.')
+            if len(parts) > 1 and parts[1].startswith('call_'):
+                call_id = parts[1][5:]  # Remove 'call_' prefix
+        
+        if call_id is None:
+            return
+            
+        # Create or get handler for this call
+        if call_id not in self.call_handlers:
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            call_log_file = self.logs_dir / f'call_{call_id}_{timestamp}.log'
+            
+            handler = logging.FileHandler(call_log_file, mode='w')
+            handler.setLevel(logging.DEBUG)
+            handler.setFormatter(self.formatter)
+            
+            self.call_handlers[call_id] = handler
+            
+            # Log call start
+            start_record = logging.LogRecord(
+                name='call_logger',
+                level=logging.INFO,
+                pathname='',
+                lineno=0,
+                msg=f"=== Call {call_id} started at {datetime.now()} ===",
+                args=(),
+                exc_info=None
+            )
+            handler.emit(start_record)
+        
+        # Emit the record to the call-specific handler
+        self.call_handlers[call_id].emit(record)
+    
+    def cleanup_call(self, call_id):
+        """Clean up handler for a specific call."""
+        if call_id in self.call_handlers:
+            handler = self.call_handlers[call_id]
+            
+            # Log call end
+            end_record = logging.LogRecord(
+                name='call_logger',
+                level=logging.INFO,
+                pathname='',
+                lineno=0,
+                msg=f"=== Call {call_id} ended at {datetime.now()} ===",
+                args=(),
+                exc_info=None
+            )
+            handler.emit(end_record)
+            
+            handler.close()
+            del self.call_handlers[call_id]
 
 class IVRLogger:
     """Centralized logger for IVR Directory Bot with per-call logging support."""
@@ -72,10 +156,14 @@ class IVRLogger:
         console_handler.setFormatter(formatter)
         console_handler.addFilter(session_filter)
         
+        # Call-specific handler
+        self.call_handler = CallSpecificHandler(self.logs_dir)
+        
         # Add handlers to logger
         self.main_logger.addHandler(main_handler)
         self.main_logger.addHandler(error_handler)
         self.main_logger.addHandler(console_handler)
+        self.main_logger.addHandler(self.call_handler)
         
         # Suppress noisy third-party loggers
         logging.getLogger('pymongo').setLevel(logging.WARNING)
@@ -104,37 +192,24 @@ class IVRLogger:
         call_logger = logging.getLogger(f'ivr_bot.{logger_name}')
         call_logger.setLevel(logging.DEBUG)
         
-        # Clear any existing handlers
-        call_logger.handlers.clear()
-        
-        # Create formatter for call logs
-        formatter = logging.Formatter(
-            '%(asctime)s - %(levelname)s - %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S'
-        )
-        
-        # Create call-specific log file
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        call_log_file = self.logs_dir / f'call_{call_id}_{timestamp}.log'
-        
-        # Call-specific file handler
-        call_handler = logging.FileHandler(call_log_file, mode='w')
-        call_handler.setLevel(logging.DEBUG)
-        call_handler.setFormatter(formatter)
-        
-        call_logger.addHandler(call_handler)
-        
-        # Set parent to main logger so it also logs to main files
+        # Set parent to main logger so it inherits all handlers (including CallSpecificHandler)
         call_logger.parent = self.main_logger
         call_logger.propagate = True
         
         # Store logger reference
         self._loggers[logger_name] = call_logger
         
-        # Log call start
-        call_logger.info(f"=== Call {call_id} started at {datetime.now()} ===")
-        
         return call_logger
+    
+    def set_current_call_logger(self, call_logger: logging.Logger):
+        """Set the current call logger to be used by get_logger calls."""
+        global _current_call_logger
+        _current_call_logger = call_logger
+    
+    def get_current_call_logger(self) -> Optional[logging.Logger]:
+        """Get the current call logger if set."""
+        global _current_call_logger
+        return _current_call_logger
     
     def get_logger(self, name: str = 'ivr_bot') -> logging.Logger:
         """Get a logger instance."""
@@ -151,17 +226,22 @@ class IVRLogger:
         
         return logger
     
+    def set_current_call_logger(self, call_logger: logging.Logger):
+        """Set the current call logger to be used by get_logger calls."""
+        global _current_call_logger
+        _current_call_logger = call_logger
+    
+    def get_current_call_logger(self) -> Optional[logging.Logger]:
+        """Get the current call logger if set."""
+        global _current_call_logger
+        return _current_call_logger
+    
     def cleanup_call_logger(self, call_id: str):
         """Clean up resources for a call logger."""
         logger_name = f'call_{call_id}'
         if logger_name in self._loggers:
-            call_logger = self._loggers[logger_name]
-            call_logger.info(f"=== Call {call_id} ended at {datetime.now()} ===")
-            
-            # Close all handlers
-            for handler in call_logger.handlers[:]:
-                handler.close()
-                call_logger.removeHandler(handler)
+            # Clean up the call-specific handler
+            self.call_handler.cleanup_call(call_id)
             
             # Remove from cache
             del self._loggers[logger_name]
@@ -195,3 +275,11 @@ def create_call_logger(call_id: str) -> logging.Logger:
 def cleanup_call_logger(call_id: str):
     """Convenience function to cleanup a call logger."""
     get_logger_instance().cleanup_call_logger(call_id)
+
+def set_current_call_logger(call_logger: logging.Logger):
+    """Convenience function to set the current call logger."""
+    get_logger_instance().set_current_call_logger(call_logger)
+
+def get_current_call_logger() -> Optional[logging.Logger]:
+    """Convenience function to get the current call logger."""
+    return get_logger_instance().get_current_call_logger()

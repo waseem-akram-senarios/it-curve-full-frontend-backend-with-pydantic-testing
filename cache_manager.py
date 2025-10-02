@@ -1,11 +1,10 @@
 import time
-import logging
 import os
 import pickle
+from logging_config import get_logger
 
-# Configure basic logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("cache-manager")
+# Initialize logger
+logger = get_logger('cache_manager')
 
 # Define constants first - important to avoid NameError
 DEFAULT_CACHE_TTL = 3600  # 1 hour cache duration
