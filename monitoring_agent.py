@@ -6,20 +6,12 @@ import os
 from dotenv import load_dotenv
 from openai import AsyncOpenAI
 from pydantic import BaseModel, Field
+from logging_config import get_logger
 
 load_dotenv()
 
-# Configure logging
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[
-        logging.FileHandler("monitoring_agent.log"),
-        logging.StreamHandler()
-    ]
-)
-
-logger = logging.getLogger("monitoring-agent")
+# Initialize logger
+logger = get_logger('monitoring_agent')
 
 # Initialize OpenAI client
 openai_client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -222,10 +214,10 @@ async def main():
     
     # Register a callback for when confusion is detected
     async def on_confusion_detected(analysis):
-        print(f"ALERT: Agent confused! Score: {analysis.confidence_score}")
-        print(f"Reason: {analysis.reason}")
+        logger.warning(f"ALERT: Agent confused! Score: {analysis.confidence_score}")
+        logger.warning(f"Reason: {analysis.reason}")
         if analysis.recommended_action:
-            print(f"Recommended action: {analysis.recommended_action}")
+            logger.info(f"Recommended action: {analysis.recommended_action}")
     
     monitor.register_callback(on_confusion_detected)
     

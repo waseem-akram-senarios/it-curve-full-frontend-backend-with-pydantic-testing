@@ -17,7 +17,11 @@ import aiohttp
 # from aiohttp import BasicAuth
 from openai import AsyncOpenAI
 from dotenv import load_dotenv
+from logging_config import get_logger
 # from livekit.agents import Agent, function_tool
+
+# Initialize logger
+logger = get_logger('side_functions')
 
 import logging
 
@@ -130,7 +134,7 @@ async def recognize_affiliate_by_ids(family_id, affiliate_id):
                 if response.status == 200:
                     raw_text = await response.text()
                     data = json.loads(raw_text)  # manual parse
-                    print(data)
+                    logger.debug(f"Affiliate data: {data}")
                     for affiliate_data in data:
                         if str(affiliate_data["AffiliateFamilyID"]) == family_id and str(affiliate_data["AffiliateID"]) == affiliate_id:
                             recognized_affiliate = affiliate_data
@@ -162,7 +166,7 @@ async def seconds_to_minutes(seconds):
 
 async def search_web_manual(prompt: str):
 
-    print(f"\n\nCalled search_web_manual function with prompt: {prompt}\n\n")
+    logger.info(f"Called search_web_manual function with prompt: {prompt}")
 
     try:
         # Use the OpenAI API client to make the call
@@ -175,7 +179,7 @@ async def search_web_manual(prompt: str):
         return response.output_text
     
     except Exception as e:
-        print(f"Error in search web: {e}")
+        logger.error(f"Error in search web: {e}")
         return "Web search failed!"
 
 
@@ -197,13 +201,13 @@ async def get_frequnt_addresses_manual(client_id, affiliate_id):
     }
 
     frequent_addresses = ""
-    print(f"\n\nPayload sent to get frequent addresses: {payload}\n\n")
+    logger.debug(f"Payload sent to get frequent addresses: {payload}")
 
     async with aiohttp.ClientSession() as session:
         async with session.post(url, json=payload, headers=headers) as response:
             # print(f"Status Code: {response.status}")
             response_text = await response.text()
-            print(f"\n\nResponse from FrequentDataAPI: {response_text}\n\n")
+            logger.debug(f"Response from FrequentDataAPI: {response_text}")
             try:
                 response_json = json.loads(response_text)
                 address_data = response_json.get("responseJSON", "[]")
@@ -215,8 +219,7 @@ async def get_frequnt_addresses_manual(client_id, affiliate_id):
                     frequent_addresses += pickup_address + "\n" + dropoff_address + "\n"
             
             except json.JSONDecodeError:
-                print("Failed to parse response as JSON.")
-                print("Raw Response:", response_text)
+                logger.error(f"Failed to parse response as JSON. Raw Response: {response_text}")
 
     if frequent_addresses.strip() == "":
         frequent_addresses = "No Data Available"
@@ -247,7 +250,7 @@ async def get_match_source(prompt):
         )
         source = completion.choices[0].message.content.strip()
     except Exception as e:
-        print(f"OpenAI location error: {e}")
+        logger.error(f"OpenAI location error: {e}")
     
     return source
 
@@ -281,7 +284,7 @@ async def fetch_affiliate_details(affiliate_id):
         "iaffiliateid": int(affiliate_id)  # Example payload, adjust as needed
     }
 
-    print(f"\n\n\nPayload Sent for Affiliate Information: {data}\n\n\n")
+    logger.debug(f"Payload Sent for Affiliate Information: {data}")
 
     bounds = {
         "x1": 0,
@@ -334,7 +337,7 @@ async def fetch_affiliate_details(affiliate_id):
                     
                     return bounds, funding_sources, copay_fs_list
                 except Exception as e:
-                    print(f"Failed to decode JSON from string: {e}")
+                    logger.error(f"Failed to decode JSON from string: {e}")
             
     return bounds, funding_sources, copay_fs_list
 
@@ -427,7 +430,7 @@ async def get_client_name_voice(caller_number, affiliate_id, family_id):
             async with session.post(url, json=payload, headers=headers) as resp:
                 response = await resp.json()
 
-        print(f"[RIDER DETECTION] API Response Code: {response.get('responseCode')}")
+        logger.debug(f"[RIDER DETECTION] API Response Code: {response.get('responseCode')}")
         if response.get("responseCode") == 200:
             client_list = json.loads(response.get("responseJSON", "[]"))
             for i, client in enumerate(client_list, 1):
@@ -459,9 +462,9 @@ async def get_client_name_voice(caller_number, affiliate_id, family_id):
                 rider_count += 1
 
             result["number_of_riders"] = rider_count
-            print(f"[RIDER DETECTION] Successfully found {rider_count} riders for phone number")
+            logger.info(f"[RIDER DETECTION] Successfully found {rider_count} riders for phone number")
         else:
-            print("Request failed! Setting as new rider.")
+            logger.warning("Request failed! Setting as new rider.")
             result["number_of_riders"] = 1
             result["rider_1"] = {
                 "name": "new_rider",
@@ -476,7 +479,7 @@ async def get_client_name_voice(caller_number, affiliate_id, family_id):
             }
 
     except Exception as e:
-        print(f"Error occurred in getting client Name: {e}")
+        logger.error(f"Error occurred in getting client Name: {e}")
         result["number_of_riders"] = rider_count
 
     return result
@@ -562,7 +565,7 @@ async def get_location_from_openai_async(address):
         content = completion.choices[0].message.content.strip()
         location = json.loads(content)
     except Exception as e:
-        print(f"OpenAI location error: {e}")
+        logger.error(f"OpenAI location error: {e}")
     
     return location
 
@@ -602,17 +605,14 @@ async def summarize_address_results(address):
         result = completion.choices[0].message.content.strip()
 
     except Exception as e:
-        print(f"OpenAI summary error: {e}")
+        logger.error(f"OpenAI summary error: {e}")
     
     return result
 
 
 async def is_point_out_of_bounds(bounds, location):
 
-    print("\n\n\n")
-    print(f"Bounds: {bounds}")
-    print(f"Location: {location}")
-    print("\n\n\n")
+    logger.debug(f"Bounds: {bounds}, Location: {location}")
     # Convert bounds to float for accurate comparison
     x1, y1 = float(bounds['x1']), float(bounds['y1'])
     x2, y2 = float(bounds['x2']), float(bounds['y2'])
@@ -643,7 +643,7 @@ async def get_Existing_Trips_Number(client_id : str, affiliate_id: str):
         client_id: Client Id of rider
         affiliate_id: Affiliate Id
     """
-    print(f"\n\nCalled get_Existing_Trips_Number function\n\n")
+    logger.info("Called get_Existing_Trips_Number function")
 
     url = os.getenv("EXISTING_RIDES_API")
 
@@ -662,7 +662,7 @@ async def get_Existing_Trips_Number(client_id : str, affiliate_id: str):
     len_existing_trips = 0
     trips_data = None
 
-    print(f"\n\n\nPayload Sent for existing trips: {payload}\n\n\n")
+    logger.debug(f"Payload Sent for existing trips: {payload}")
 
     try:
         async with aiohttp.ClientSession() as session:
@@ -673,7 +673,7 @@ async def get_Existing_Trips_Number(client_id : str, affiliate_id: str):
                 try:
                     response = json.loads(text)
                 except json.JSONDecodeError:
-                    print(f"\n\nFailed to decode JSON. Raw response:\n{text}\n\n")
+                    logger.error(f"Failed to decode JSON. Raw response: {text}")
                     return len_existing_trips, trips_data
 
                 if response.get("responseCode") == 200:
@@ -684,15 +684,15 @@ async def get_Existing_Trips_Number(client_id : str, affiliate_id: str):
                         
                         return len_existing_trips,trips_data
                     except json.JSONDecodeError:
-                        print(f"\n\nFailed to decode nested responseJSON\n\n")
+                        logger.error("Failed to decode nested responseJSON")
                         return len_existing_trips, trips_data
                 else:
-                    print(f"\n\nNo trip ETA Found for the rider\n\n")
+                    logger.info("No trip ETA Found for the rider")
                     return len_existing_trips, trips_data
 
     except Exception as e:
 
-        print(f"\n\nError occurred in getting client ETA: {e}\n\n")
+        logger.error(f"Error occurred in getting client ETA: {e}")
         return len_existing_trips, trips_data
 
 
@@ -714,7 +714,7 @@ async def combine_payload(leg1: dict, leg2: dict):
                 combined_leg["addressInfo"]["Trips"].append(trip_from_leg2)
 
             logging.info("combined_payload:",combined_leg)
-            print("\n\n combined_paylaod:", combined_leg)
+            logger.debug(f"combined_payload: {combined_leg}")
 
             return combined_leg
     except Exception as e:

@@ -3,6 +3,10 @@ import json
 import asyncio
 
 from decimal import Decimal
+from logging_config import get_logger
+
+# Initialize logger
+logger = get_logger('supervisor')
 from pydantic import BaseModel, Field
 from livekit import api
 from livekit.protocol.sip import TransferSIPParticipantRequest
@@ -96,12 +100,12 @@ If uncertain, choose the lower score."""
         try:
             score = SupervisorScore.model_validate(json.loads(result))
         except Exception as e:
-            print(f"[supervisor llm response] {result}")
-            print(f"[supervisor score parse error] {e}")
+            logger.debug(f"[supervisor llm response] {result}")
+            logger.error(f"[supervisor score parse error] {e}")
             return
 
         avg_score = (score.relevance + score.completeness + score.groundedness) / 3
-        print(f"[supervisor score] {score} = {avg_score}")
+        logger.info(f"[supervisor score] {score} = {avg_score}")
 
         self.score_history.append({
             "relevance": str(float(score.relevance)),
@@ -122,7 +126,7 @@ If uncertain, choose the lower score."""
             await self.transfer_call_voice()
 
     async def transfer_call_voice(self):
-        print("transfer_call_voice function called...")
+        logger.info("transfer_call_voice function called...")
         try:
             async with api.LiveKitAPI() as livekit_api:
                 asterisk_ip = os.getenv("ASTERISK_SERVER_IP")
@@ -141,7 +145,7 @@ If uncertain, choose the lower score."""
                 # Transfer caller
                 await livekit_api.sip.transfer_sip_participant(transfer_request)
         except Exception as e:
-            print(f"Error during call transfer: {e}")
+            logger.error(f"Error during call transfer: {e}")
             return "Issue with call transfer"
 
 

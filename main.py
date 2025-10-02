@@ -32,21 +32,13 @@ from datetime import datetime
 import copy
 from supervisor import Supervisor
 import cache_manager
+from logging_config import get_logger, set_session_id, create_call_logger, cleanup_call_logger
 
 
 load_dotenv()
 
-# Configure logging to suppress pymongo debug messages
-logging.getLogger('pymongo').setLevel(logging.WARNING)
-LOG_FILENAME = "application.log"
-
-logging.basicConfig(
-    level=logging.DEBUG,  # Capture all log levels
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    handlers=[
-        logging.FileHandler(LOG_FILENAME, mode='a')
-    ]
-)
+# Initialize logger using our centralized logging system
+logger = get_logger('main')
 
 # MongoDB connection
 MONGODB_URI = os.getenv("MONGODB_URI")
@@ -287,7 +279,12 @@ async def entrypoint(ctx: agents.JobContext):
     # call_sid = participant.attributes.get("sip.twilio.callSid", "Unknown")
     # if call_sid == "Unknown":
     call_sid = 'chat-' + str(uuid.uuid4())
-    print(f"\n\nCall SID: {call_sid}\n\n")
+    logger.info(f"Call SID: {call_sid}")
+    
+    # Set up per-call logging
+    session_id = set_session_id(call_sid)
+    call_logger = create_call_logger(call_sid)
+    call_logger.info(f"=== New call started with SID: {call_sid} ===")
     
     # Set up the session and background audio early to prepare for immediate greeting
     background_audio = BackgroundAudioPlayer(thinking_sound=[
@@ -354,7 +351,7 @@ Remember: You are ONLY here to assist with transportation services for the agenc
     session.allow_interruptions = False
     
     # Use the existing background audio player created earlier
-    print("Using pre-configured background audio player for typing sounds")
+    logger.info("Using pre-configured background audio player for typing sounds")
     
     await session.start(
         room=ctx.room,
@@ -371,38 +368,26 @@ Remember: You are ONLY here to assist with transportation services for the agenc
     # Enable interruptions for the rest of the conversation after first greeting
     session.allow_interruptions = True
     interruptions_enabled = True
-    print("Interruptions ENABLED after first greeting - user can interrupt the bot now")
+    logger.info("Interruptions ENABLED after first greeting - user can interrupt the bot now")
     
     # COMPLETELY DISABLE AUDIO INPUT during API fetching
     # This is the key to preventing the agent from processing voice during API calls
     session.input.set_audio_enabled(False)
-    print("Audio input DISABLED - agent will not process any speech during API calls")
+    logger.info("Audio input DISABLED - agent will not process any speech during API calls")
     
     # Start the background audio player for continuous typing sounds
     await background_audio.start(room=ctx.room, agent_session=session)
-    print("Initialized background audio player")
+    logger.info("Initialized background audio player")
     
     # Start a single typing sound that will continue throughout all API calls
     typing_handle = None
     try:
         typing_handle = background_audio.play(BuiltinAudioClip.KEYBOARD_TYPING, loop=True)
-        print("Started typing sounds for API fetching phase")
+        logger.info("Started typing sounds for API fetching phase")
     except Exception as e:
-        print(f"Warning: Couldn't start typing sounds: {e}")
+        logger.warning(f"Warning: Couldn't start typing sounds: {e}")
     
-    # Create a helper function to log API calls without managing typing sounds
-    # async def with_typing_during_api(api_func, *args, **kwargs):
-    #     # Only log the API call
-    #     print(f"Calling API: {api_func.__name__}")
-        
-    #     try:
-    #         # Call the API function
-    #         result = await api_func(*args, **kwargs)
-    #         print(f"Completed API call: {api_func.__name__}")
-    #         return result
-    #     except Exception as e:
-    #         print(f"Error in API call {api_func.__name__}: {e}")
-    #         raise  # Re-raise the exception to be handled by the caller
+    
             
     # ==============================================================================
     # TYPING SOUNDS DURING CONVERSATION API CALLS
@@ -426,9 +411,9 @@ Remember: You are ONLY here to assist with transportation services for the agenc
         temp_typing_handle = None
         try:
             temp_typing_handle = background_audio.play(BuiltinAudioClip.KEYBOARD_TYPING, loop=True)
-            print(f"Started typing sounds for conversation API call: {api_func.__name__}")
+            logger.debug(f"Started typing sounds for conversation API call: {api_func.__name__}")
         except Exception as e:
-            print(f"Warning: Couldn't start typing sounds for conversation: {e}")
+            logger.warning(f"Warning: Couldn't start typing sounds for conversation: {e}")
             
         try:
             # Call the API function
@@ -439,9 +424,9 @@ Remember: You are ONLY here to assist with transportation services for the agenc
             if temp_typing_handle is not None:
                 try:
                     temp_typing_handle.stop()
-                    print(f"Stopped typing sounds for conversation API call: {api_func.__name__}")
+                    logger.debug(f"Stopped typing sounds for conversation API call: {api_func.__name__}")
                 except Exception as e:
-                    print(f"Error stopping conversation typing sounds: {e}")
+                    logger.error(f"Error stopping conversation typing sounds: {e}")
 
     
     # We'll re-enable audio input after APIs are fetched and personalized greeting is delivered
@@ -456,7 +441,7 @@ Remember: You are ONLY here to assist with transportation services for the agenc
         # metadata = eval(participant.metadata)
         meta_data = participant.metadata
         metadata = json.loads(meta_data)
-        print(f"\n\nMetadata: {metadata}\n\n")
+        logger.debug(f"Metadata: {metadata}")
     except:
         pass
 
@@ -492,7 +477,7 @@ Remember: You are ONLY here to assist with transportation services for the agenc
 
     room_name = ctx.room.name
     # room_name = "both-65-3-ARMON"
-    print(f"\n\n\nRoom Name: {room_name}\n\n\n")
+    logger.info(f"Room Name: {room_name}")
 
     chatbot = False
     ivr = False
@@ -523,11 +508,11 @@ Remember: You are ONLY here to assist with transportation services for the agenc
             # metadata = participant.metadata
             caller = participant.attributes['sip.phoneNumber']
             recipient = participant.attributes['sip.trunkPhoneNumber']
-            print("***************Caller & Recipient from Asterisk: ", caller, recipient)
+            logger.info(f"Caller & Recipient from Asterisk: {caller}, {recipient}")
             logger.info(f"***************Caller & Recipient from Asterisk: {caller} {recipient}")
             # Try to get affiliate from cache
             cached_affiliate = cache_manager.get_affiliate_from_cache(recipient)
-            print("cached_affiliate ",cached_affiliate)
+            logger.debug(f"cached_affiliate: {cached_affiliate}")
             if cached_affiliate:
                 affiliate = cached_affiliate
                 logger.info(f"Using cached affiliate for {recipient}")
@@ -544,7 +529,7 @@ Remember: You are ONLY here to assist with transportation services for the agenc
             initial_agent.update_affliate_id_and_family(affiliate_id,family_id)
 
             phone_number = await with_typing_during_api(extract_phone_number, caller)
-            print("\n\nPhone Number Extracted: ", phone_number, "\n\n")
+            logger.info(f"Phone Number Extracted: {phone_number}")
             initial_agent.update_rider_phone(phone_number)
             # print(f"\n\nPhone Number: {phone_number}")
             
@@ -556,13 +541,13 @@ Remember: You are ONLY here to assist with transportation services for the agenc
             # else:
                 # If not in cache, call the original function with logging
             all_riders_info = await with_typing_during_api(get_client_name_voice, phone_number, affiliate_id, family_id)
-            print("All Riders Info: ", all_riders_info)
-            print(f"[RIDER DETECTION] After API call - Number of riders: {all_riders_info.get('number_of_riders', 'MISSING')}")
+            logger.debug(f"All Riders Info: {all_riders_info}")
+            logger.info(f"[RIDER DETECTION] After API call - Number of riders: {all_riders_info.get('number_of_riders', 'MISSING')}")
                 # Store result in cache for future use
             # cache_manager.store_client_in_cache(phone_number, affiliate_id, family_id, all_riders_info)
 
         except Exception as e:
-            print(f"Error in recognizing affiliate from number: {e}")
+            logger.error(f"Error in recognizing affiliate from number: {e}")
 
         if not success:
             try:
@@ -572,7 +557,7 @@ Remember: You are ONLY here to assist with transportation services for the agenc
                 # Try to get affiliate from cache using IDs
                 cache_key = f"ids:{family_id}:{affiliate_id}"
                 cached_affiliate = cache_manager.get_affiliate_from_cache(cache_key)
-                print("cached_affiliate ",cached_affiliate)
+                logger.debug(f"cached_affiliate: {cached_affiliate}")
                 if cached_affiliate:
                     affiliate = cached_affiliate
                     logger.info(f"Using cached affiliate for IDs {family_id}:{affiliate_id}")
@@ -582,7 +567,7 @@ Remember: You are ONLY here to assist with transportation services for the agenc
                     # Store result in cache for future use
                     cache_manager.store_affiliate_in_cache(cache_key, affiliate)
                 
-                print("*************AFFILIATE*******:\n", affiliate)
+                logger.debug(f"AFFILIATE: {affiliate}")
                 phone_number = metadata['phoneNo']
                 if phone_number != "":
                     phone_number = await with_typing_during_api(extract_phone_number, phone_number)
@@ -596,7 +581,7 @@ Remember: You are ONLY here to assist with transportation services for the agenc
                     # else:
                         # If not in cache, call the original function with logging
                     all_riders_info = await with_typing_during_api(get_client_name_voice, phone_number, affiliate_id, family_id)
-                    print(f"[RIDER DETECTION] After API call - Number of riders: {all_riders_info.get('number_of_riders', 'MISSING')}")
+                    logger.info(f"[RIDER DETECTION] After API call - Number of riders: {all_riders_info.get('number_of_riders', 'MISSING')}")
                         # Store result in cache for future use
                         # cache_manager.store_client_in_cache(phone_number, affiliate_id, family_id, all_riders_info)
                 else:
@@ -605,55 +590,55 @@ Remember: You are ONLY here to assist with transportation services for the agenc
                 chatbot = True
 
             except Exception as e:
-                print(f"Error in recognizing affiliate from room matadata: {e}")
+                logger.error(f"Error in recognizing affiliate from room metadata: {e}")
 
         if all_riders_info["number_of_riders"] == 0:
-            print("[RIDER DETECTION] WARNING: Found 0 riders, setting to default new rider")
+            logger.warning("[RIDER DETECTION] WARNING: Found 0 riders, setting to default new rider")
             all_riders_info["number_of_riders"] = 1
             all_riders_info["rider_1"] = new_rider
             all_riders_info["rider_1"]["number_of_existing_trips"] = 0
 
-        print(f"\n\nRider: {all_riders_info}\n\n")
-        print(f"\n\nAffiliate: {affiliate}\n\n")
+        logger.debug(f"Rider: {all_riders_info}")
+        logger.debug(f"Affiliate: {affiliate}")
 
     except Exception as e:
-        print(f"Error occured in getting rider name and id: {e}")
+        logger.error(f"Error occurred in getting rider name and id: {e}")
         pass
 
     if all_riders_info["number_of_riders"] == 1 and chatbot is True:
 
         if all_riders_info["rider_1"]["name"] == "new_rider":
-            print("\n\n****************New Rider chatbot Flow Selected****************\n\n")
+            logger.info("New Rider chatbot Flow Selected")
             prompt_file = os.path.join(Agent_Directory, "prompts", "prompt_new_rider.txt")
 
         elif all_riders_info["rider_1"]["name"] == "Unknown":
-            print("\n\n****************Widget Flow chatbot Selected****************\n\n")
+            logger.info("Widget Flow chatbot Selected")
             prompt_file = os.path.join(Agent_Directory, "prompts", "prompt_widget.txt")
 
         else:
-            print("\n\n****************Old Rider chatbot Flow Selected****************\n\n")
+            logger.info("Old Rider chatbot Flow Selected")
             prompt_file = os.path.join(Agent_Directory, "prompts", "prompt_old_rider.txt")
 
     elif all_riders_info["number_of_riders"] == 1 and ivr is True:
 
         if all_riders_info["rider_1"]["name"] == "new_rider":
-            print("\n\n****************New Rider IVR Flow Selected****************\n\n")
+            logger.info("New Rider IVR Flow Selected")
             prompt_file = os.path.join(Agent_Directory, "prompts", "prompt_new_rider_ivr.txt")
 
         else:
-            print("\n\n****************Old Rider IVR Flow Selected****************\n\n")
+            logger.info("Old Rider IVR Flow Selected")
             prompt_file = os.path.join(Agent_Directory, "prompts", "prompt_old_rider_ivr.txt")
 
     elif all_riders_info["number_of_riders"] > 1 and chatbot is True:
-        print(f"\n\n****************Multiple Riders chatbot Flow Selected - {all_riders_info['number_of_riders']} riders found****************\n\n")
+        logger.info(f"Multiple Riders chatbot Flow Selected - {all_riders_info['number_of_riders']} riders found")
         prompt_file = os.path.join(Agent_Directory, "prompts", "prompt_multiple_riders.txt")
 
     elif all_riders_info["number_of_riders"] > 1 and ivr is True:
-        print(f"\n\n****************Multiple Riders IVR Flow Selected - {all_riders_info['number_of_riders']} riders found****************\n\n")
+        logger.info(f"Multiple Riders IVR Flow Selected - {all_riders_info['number_of_riders']} riders found")
         prompt_file = os.path.join(Agent_Directory, "prompts", "prompt_multiple_riders_ivr.txt")
 
     else:
-        print("\n\n****************Error in Selecting Flow****************\n\n")
+        logger.error("Error in Selecting Flow")
         prompt_file = os.path.join(Agent_Directory, "prompts", "prompt_new_rider.txt")
 
     with open(prompt_file) as file:
@@ -692,7 +677,7 @@ Remember: You are ONLY here to assist with transportation services for the agenc
             """
 
     except Exception as e:
-        print(f"Error occured in getting rider profile: {e}")
+        logger.error(f"Error occurred in getting rider profile: {e}")
         # Include today's date in the system prompt
 
         prompt = f"""{system_prompt}\n\n
@@ -712,7 +697,7 @@ Remember: You are ONLY here to assist with transportation services for the agenc
             pass
 
     except Exception as e:
-        print(f"Error occured in recognizing affiliate: {e}")
+        logger.error(f"Error occurred in recognizing affiliate: {e}")
         pass
 
     Servica_Area = ""
@@ -728,7 +713,7 @@ Remember: You are ONLY here to assist with transportation services for the agenc
         ``Agency Operate in the following counties: {Servica_Area}``\n\n
         """
     except Exception as e:
-        print(f"\n\nError in getting greetings: {e}\n\n")
+        logger.error(f"Error in getting greetings: {e}")
 
     if all_riders_info["number_of_riders"] == 1:
         rider_info = all_riders_info["rider_1"]
@@ -747,7 +732,7 @@ Remember: You are ONLY here to assist with transportation services for the agenc
                 2. Use [get_ETA] function to get latest/last trip, pickup and dropoff address: No Data Available``
                 """
         except Exception as e:
-            print(f"\n\nError in getting frequent trips: {e}\n\n")
+            logger.error(f"Error in getting frequent trips: {e}")
             prompt = f"""{prompt}\n\n
             ``Rider Historic/Past/Completed Trips are:
             1. Only use them for address completion
@@ -766,7 +751,7 @@ Remember: You are ONLY here to assist with transportation services for the agenc
         # Give a small pause to ensure initial greeting is complete
         await asyncio.sleep(1)
         
-        print("Building user context information")
+        logger.info("Building user context information")
         
         # Create a knowledge base update with key user details to inject into conversation
         user_context = """\n\nIMPORTANT RIDER INFORMATION: Please keep this information in mind for the entire conversation.\n"""
@@ -807,7 +792,7 @@ Remember: You are ONLY here to assist with transportation services for the agenc
             
         user_context += "\nPlease maintain this context throughout the conversation, even if the user asks unrelated questions.\n"
         
-        print("User context built successfully")
+        logger.info("User context built successfully")
         
         # Now create the final agent with the full context
         try:
@@ -818,34 +803,34 @@ Remember: You are ONLY here to assist with transportation services for the agenc
                 rider_client_id = all_riders_info["rider_1"]["client_id"] if all_riders_info["rider_1"]["client_id"] else None
             else:
                 rider_client_id = None
-            print(f"[MAIN] Passing client_id to Assistant: {rider_client_id} (type: {type(rider_client_id)})")
+            logger.debug(f"[MAIN] Passing client_id to Assistant: {rider_client_id} (type: {type(rider_client_id)})")
             agent = Assistant(call_sid=call_sid, context=ctx, room=ctx.room, instructions=final_prompt, affiliate_id=int(affiliate_id), rider_phone=phone_number, client_id=rider_client_id)
             with open("final_prompt.txt","w") as f:
                 f.write(final_prompt)
         except Exception as e:
-            print(f"\n\n\nError in generating agent object: {e}\n\n")
+            logger.error(f"Error in generating agent object: {e}")
             if all_riders_info["number_of_riders"] == 1:
                 rider_client_id = all_riders_info["rider_1"]["client_id"] if all_riders_info["rider_1"]["client_id"] else None
             else:
                 rider_client_id = None
-            print(f"[MAIN EXCEPTION] Passing client_id to Assistant: {rider_client_id} (type: {type(rider_client_id)})")
+            logger.debug(f"[MAIN EXCEPTION] Passing client_id to Assistant: {rider_client_id} (type: {type(rider_client_id)})")
             agent = Assistant(call_sid=call_sid, context=ctx, room=ctx.room, instructions=prompt, affiliate_id=65, rider_phone=phone_number, client_id=rider_client_id)
         
     except Exception as e:
-        print(f"Error building user context: {e}")
+        logger.error(f"Error building user context: {e}")
         # Create a basic agent if we failed to build the context
         if all_riders_info.get("number_of_riders") == 1:
             rider_client_id = all_riders_info["rider_1"]["client_id"] if all_riders_info["rider_1"]["client_id"] else None
         else:
             rider_client_id = None
-        print(f"[MAIN FINAL EXCEPTION] Passing client_id to Assistant: {rider_client_id} (type: {type(rider_client_id)})")
+        logger.debug(f"[MAIN FINAL EXCEPTION] Passing client_id to Assistant: {rider_client_id} (type: {type(rider_client_id)})")
         agent = Assistant(call_sid=call_sid, context=ctx, room=ctx.room, instructions=prompt, affiliate_id=int(affiliate_id), rider_phone=phone_number, client_id=rider_client_id)
     # Define the conversation history collection function before we have the session reference
     conversation_history = []
     def setup_conversation_listeners(current_session):
         @current_session.on("conversation_item_added")
         def on_conversation_item_added(event: ConversationItemAddedEvent):
-            print(f"Conversation item added from {event.item.role}: {event.item.text_content}. interrupted: {event.item.interrupted}")
+            logger.debug(f"Conversation item added from {event.item.role}: {event.item.text_content}. interrupted: {event.item.interrupted}")
             if event.item.text_content != '':
                 if event.item.role == 'assistant':
                     conversation_history.append({
@@ -896,22 +881,22 @@ Remember: You are ONLY here to assist with transportation services for the agenc
                     else:
                         personalized_message += f"I see that you are {rider['name']}. How can I help you today?"
                 except Exception as e:
-                    print(f"Error in personalizing message: {e}")
+                    logger.error(f"Error in personalizing message: {e}")
                     personalized_message += f"I see that you are {rider['name']}. How can I help you today?"
                     
         elif all_riders_info["number_of_riders"] > 1:
-            print(f"[RIDER DETECTION] Preparing multiple riders greeting for {all_riders_info['number_of_riders']} riders")
+            logger.info(f"[RIDER DETECTION] Preparing multiple riders greeting for {all_riders_info['number_of_riders']} riders")
             personalized_message += "I see that I have multiple profiles for your number. Can I confirm your name please?"
         
         # Stop the continuous typing sound before delivering the personalized message
         if typing_handle is not None:
             try:
                 typing_handle.stop()
-                print("Stopped typing sounds - API fetching complete")
+                logger.info("Stopped typing sounds - API fetching complete")
             except Exception as e:
-                print(f"Error stopping typing sounds: {e}")
+                logger.error(f"Error stopping typing sounds: {e}")
         
-        print("Preparing to deliver personalized follow-up message")
+        logger.info("Preparing to deliver personalized follow-up message")
         
         # Only send follow-up if we have something meaningful to say
         if personalized_message:
@@ -922,26 +907,26 @@ Remember: You are ONLY here to assist with transportation services for the agenc
         # This happens regardless of whether we had a personalized message or not
         session.input.set_audio_enabled(True)  # RE-ENABLE AUDIO INPUT
         # Interruptions were already enabled after the first greeting
-        print("APIs fetched and processing complete. Audio input RE-ENABLED.")
+        logger.info("APIs fetched and processing complete. Audio input RE-ENABLED.")
             
     except Exception as e:
-        print(f"Error in providing personalized follow-up: {e}")
+        logger.error(f"Error in providing personalized follow-up: {e}")
         # Make sure typing sounds are stopped even on errors
         if typing_handle is not None:
             try:
                 typing_handle.stop()
-                print("Stopped typing sounds due to error")
+                logger.info("Stopped typing sounds due to error")
             except Exception as e:
-                print(f"Error stopping typing sounds after error: {e}")
+                logger.error(f"Error stopping typing sounds after error: {e}")
         
-        print("Error occurred during API fetching")
+        logger.error("Error occurred during API fetching")
         
         # Don't send another message if we fail - the initial greeting is enough
         
         # Make sure audio input is enabled even if we fail
         # (Interruptions were already enabled after the first greeting)
         session.input.set_audio_enabled(True)  # RE-ENABLE AUDIO INPUT
-        print("Error occurred, but ensuring audio input is RE-ENABLED.")
+        logger.info("Error occurred, but ensuring audio input is RE-ENABLED.")
 
     # Use the usage collector to aggregate agent usage metrics
     usage_collector = metrics.UsageCollector()
@@ -1020,7 +1005,7 @@ Remember: You are ONLY here to assist with transportation services for the agenc
                 "timestamp": entry.get('timestamp', ''),
                 "score": score
             })
-        print('supervisor score history', supervisor.score_history, len(formatted_history))
+        logger.debug(f'supervisor score history: {supervisor.score_history}, length: {len(formatted_history)}')
 
         # Create MongoDB document
         mongo_doc = {
@@ -1047,9 +1032,9 @@ Remember: You are ONLY here to assist with transportation services for the agenc
         # Insert document to MongoDB
         try:
             result = costlogs_collection.insert_one(mongo_doc)
-            print(f"\n\nDatabase operation successful: {result}\n\n")
+            logger.info(f"Database operation successful: {result}")
         except Exception as e:
-            print(f"\n\n\n\nDatabase operation failed: {e}\n\n\n\n")
+            logger.error(f"Database operation failed: {e}")
 
         # Also send to existing API for backward compatibility
         data = {
@@ -1059,7 +1044,7 @@ Remember: You are ONLY here to assist with transportation services for the agenc
             "cost": cost['total_cost'] + supervisor_cost.get('total_cost', 0),
             "conversation_history": conversation_history
         }
-        print(f"\n\n\nPayload Sent: {data}\n\n\n")
+        logger.debug(f"Payload Sent: {data}")
 
         url = os.getenv("PYTHON_ANYWHERE_COST_LOGGING")
 
@@ -1069,15 +1054,20 @@ Remember: You are ONLY here to assist with transportation services for the agenc
                 async with session.post(url, json=data) as response:
                     if response.status == 201:
                         response_data = await response.json()
-                        print(f"Success: {response_data}")
+                        logger.info(f"Success: {response_data}")
                     else:
                         response_text = await response.text()
-                        print(f"Error: {response.status}, {response_text}")
+                        logger.error(f"Error: {response.status}, {response_text}")
         except Exception as e:
-            print(f"Error sending data to API: {e}")
+            logger.error(f"Error sending data to API: {e}")
 
     # At shutdown, generate and log the summary from the usage collector
-    ctx.add_shutdown_callback(lambda: asyncio.create_task(log_usage(starting_time, call_sid, conversation_history)))
+    async def cleanup_and_log():
+        await log_usage(starting_time, call_sid, conversation_history)
+        cleanup_call_logger(call_sid)
+        call_logger.info(f"=== Call {call_sid} ended ===")
+    
+    ctx.add_shutdown_callback(lambda: asyncio.create_task(cleanup_and_log()))
 
 if __name__ == "__main__":
     agents.cli.run_app(agents.WorkerOptions(entrypoint_fnc=entrypoint, port=int(os.getenv("PORT"))))

@@ -1,10 +1,14 @@
 import asyncio
 import json
 from monitoring_agent import MonitoringAgent, ConversationAnalysis
+from logging_config import get_logger
+
+# Initialize logger
+logger = get_logger('test_monitoring')
 
 async def test_monitoring_agent():
     """Test the monitoring agent functionality with sample conversation."""
-    print("Testing monitoring agent functionality...")
+    logger.info("Testing monitoring agent functionality...")
     
     # Load configuration
     with open('monitoring_config.json', 'r') as f:
@@ -15,21 +19,21 @@ async def test_monitoring_agent():
     
     # Register a callback for confusion detection
     async def on_confusion_detected(analysis: ConversationAnalysis):
-        print("\n========== CONFUSION DETECTED ==========")
-        print(f"Score: {analysis.confidence_score}")
-        print(f"Reason: {analysis.reason}")
+        logger.warning("\n========== CONFUSION DETECTED ==========")
+        logger.warning(f"Score: {analysis.confidence_score}")
+        logger.warning(f"Reason: {analysis.reason}")
         if analysis.recommended_action:
-            print(f"Recommended action: {analysis.recommended_action}")
-        print("=======================================\n")
+            logger.info(f"Recommended action: {analysis.recommended_action}")
+        logger.warning("=======================================\n")
     
     monitor.register_callback(on_confusion_detected)
     
     # Start monitoring
-    print("Starting monitoring agent...")
+    logger.info("Starting monitoring agent...")
     await monitor.start_monitoring(interval_seconds=config['monitoring_interval_seconds'])
     
     # Test normal conversation flow
-    print("\n>>> Testing normal conversation flow...")
+    logger.info("\n>>> Testing normal conversation flow...")
     monitor.add_conversation_item("User", "I'd like to book a ride for tomorrow at 3 PM")
     monitor.add_conversation_item("Agent", "I'd be happy to help you book a ride for tomorrow at 3 PM. Where would you like to be picked up from?")
     
@@ -38,11 +42,11 @@ async def test_monitoring_agent():
     monitor.add_conversation_item("User", "From my home at 123 Main Street")
     monitor.add_conversation_item("Agent", "Great, and what's your destination?")
     
-    print("Normal conversation items added. Waiting for analysis...")
+    logger.info("Normal conversation items added. Waiting for analysis...")
     await asyncio.sleep(15)  # Wait for analysis to run
     
     # Test confused conversation flow
-    print("\n>>> Testing confused conversation flow...")
+    logger.info("\n>>> Testing confused conversation flow...")
     monitor.add_conversation_item("User", "I need to go to the airport for my flight to Chicago")
     monitor.add_conversation_item("Agent", "I'm sorry, could you please tell me where you'd like to go?")
     
@@ -56,13 +60,13 @@ async def test_monitoring_agent():
     monitor.add_conversation_item("User", "JFK Airport!")
     monitor.add_conversation_item("Agent", "I'm still having trouble understanding your destination. Could you please clarify where you'd like to go?")
     
-    print("Confusion conversation items added. Waiting for analysis...")
+    logger.info("Confusion conversation items added. Waiting for analysis...")
     await asyncio.sleep(15)  # Wait for analysis to run
     
     # Stop monitoring
-    print("\nStopping monitoring agent...")
+    logger.info("\nStopping monitoring agent...")
     await monitor.stop_monitoring()
-    print("Monitoring agent stopped. Test complete.")
+    logger.info("Monitoring agent stopped. Test complete.")
 
 if __name__ == "__main__":
     asyncio.run(test_monitoring_agent())

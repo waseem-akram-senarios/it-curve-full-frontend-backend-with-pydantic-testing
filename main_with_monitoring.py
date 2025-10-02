@@ -7,7 +7,11 @@ import asyncio
 from bson.objectid import ObjectId
 from pathlib import Path
 from dotenv import load_dotenv
+from logging_config import get_logger
 from livekit import agents
+
+# Initialize logger
+logger = get_logger('main_with_monitoring')
 from livekit.agents import (
     AgentSession,
     RoomInputOptions,
