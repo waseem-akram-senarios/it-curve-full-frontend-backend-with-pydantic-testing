@@ -252,23 +252,21 @@ class Assistant(Agent):
         try:
             if response["responseCode"] == 200:
                 client_object = response["responseJSON"]
-                # print(type(client_object))
+                print(f"\n\n######Client Object: {client_object}######\n\n")
                 client_list = json.loads(client_object)
                 for i, client in enumerate(client_list, 1):
                     name = (client['FirstName'] + ' ' + client['LastName']).strip()
                     client_id = client.get('Id', 0)
-                    print(f"*******************************Client ID*******************************: {client_id}")
-                    self.client_id = client_id
+                    print(f"\n\n*******************************Client ID*******************************: {client_id}\n\n")
+                    # self.client_id = client_id  # Commented out - only set when single profile or via select_rider_profile
                     number_of_existing_trips, trips_data = await get_Existing_Trips_Number(client_id, self.affiliate_id)
 
                     medical_id_raw = client.get("MedicalId", "")
                     if medical_id_raw and str(medical_id_raw).isdigit():
                         rider_id = int(medical_id_raw)
-                        self.medical_id = int(medical_id_raw)
                         rider_id = rider_id if rider_id != 0 else "Unknown"
                     else:
                         rider_id = "Unknown"
-                        self.medical_id = "Unknown"
 
                     rider_data = {
                         "name": name,
@@ -306,7 +304,110 @@ class Assistant(Agent):
         # await asyncio.sleep(2)
         # await self.Stop_Music()
 
+
+        # Only set self.client_id if there is exactly one profile
+        if rider_count == 1 and "rider_1" in result:
+            self.client_id = result["rider_1"]["client_id"]
+            self.rider_id = result["rider_1"]["rider_id"]
+            print(f"[GET_CLIENT_NAME] Single profile found - set client_id: {self.client_id}, rider_id: {self.rider_id}")
+        elif rider_count > 1:
+            print(f"[GET_CLIENT_NAME] Multiple profiles found ({rider_count}). Use select_rider_profile() to choose one.")
+        else:
+            print(f"[GET_CLIENT_NAME] No profiles found or new rider.")
+
         return json.dumps(result, indent=2)
+
+    @function_tool()
+    async def select_rider_profile(self, profile_number: int) -> str:
+        """
+        Function to select a specific rider profile when multiple profiles are found.
+        This updates the self.client_id and self.rider_id with the selected profile's values.
+        
+        Args:
+            profile_number (int): The profile number to select (1, 2, 3, etc.)
+            
+        Returns:
+            str: Confirmation message with selected profile details
+        """
+        print(f"\n\nCalled select_rider_profile function with profile_number: {profile_number}\n\n")
+        
+        try:
+            # Call get_client_name to get all profiles again
+            caller_number = self.rider_phone
+            family_id = self.family_id
+            
+            # Define the API endpoint
+            url = os.getenv("SEARCH_CLIENT_DATA_API")
+            phone_number = await extract_phone_number(caller_number)
+            
+            # Create the payload (request body)
+            payload = {
+                "searchCriteria": "CustomerPhone",
+                "searchText": phone_number,
+                "bActiveRecords": True,
+                "iATSPID": int(self.affiliate_id),
+                "iDTSPID": int(family_id)
+            }
+            
+            # Define the headers
+            headers = {
+                'Content-Type': 'application/json'
+            }
+            
+            # Send the data to the API
+            async with aiohttp.ClientSession() as session:
+                async with session.post(url, json=payload, headers=headers) as response:
+                    response = await response.json()
+            
+            if response["responseCode"] == 200:
+                client_object = response["responseJSON"]
+                client_list = json.loads(client_object)
+                
+                # Check if the requested profile number exists
+                if profile_number < 1 or profile_number > len(client_list):
+                    return f"Invalid profile number. Please select a number between 1 and {len(client_list)}."
+                
+                # Get the selected profile (profile_number is 1-indexed)
+                selected_client = client_list[profile_number - 1]
+                
+                # Update self.client_id and self.rider_id with selected profile
+                selected_client_id = selected_client.get('Id', 0)
+                self.client_id = selected_client_id
+                
+                # Get rider_id from MedicalId
+                medical_id_raw = selected_client.get("MedicalId", "")
+                if medical_id_raw and str(medical_id_raw).isdigit():
+                    selected_rider_id = int(medical_id_raw)
+                    selected_rider_id = selected_rider_id if selected_rider_id != 0 else "0"
+                else:
+                    selected_rider_id = "0"
+                
+                self.rider_id = selected_rider_id
+                
+                # Get profile details for confirmation
+                name = (selected_client['FirstName'] + ' ' + selected_client['LastName']).strip()
+                city = selected_client.get("City", "Unknown")
+                state = selected_client.get("State", "Unknown")
+                address = selected_client.get("Address", "Unknown")
+                
+                print(f"[PROFILE SELECTION] Updated client_id to: {self.client_id}")
+                print(f"[PROFILE SELECTION] Updated rider_id to: {self.rider_id}")
+                
+                return f"""Profile selected successfully!
+Selected Profile: {name}
+Client ID: {self.client_id}
+Rider ID: {self.rider_id}
+Location: {city}, {state}
+Address: {address}
+
+I have updated your profile information. You can now proceed with booking trips or checking your ride information."""
+                
+            else:
+                return "Error: Could not retrieve profiles. Please try again."
+                
+        except Exception as e:
+            print(f"Error in select_rider_profile: {e}")
+            return f"Error selecting profile: {str(e)}. Please try again."
 
     # @function_tool()
     # async def Book_a_Trip(self,
@@ -1906,8 +2007,6 @@ class Assistant(Agent):
         # Start playing music asynchronously
         # _ = asyncio.create_task(self.Play_Music())
         # await asyncio.sleep(2)
-        if rider_id == 0:
-                rider_id = -1
         if client_id == 0:
             client_id = -1
         phone_number = self.rider_phone
@@ -2057,19 +2156,29 @@ class Assistant(Agent):
             payment_type_id = await safe_int(payment_type_id)
             copay_funding_source_id = await safe_int(copay_funding_source_id)
             copay_payment_type_id = await safe_int(copay_payment_type_id)
-            if rider_id == 0:
-                rider_id = -1
             if client_id == 0:
                 client_id = -1
-            # Rider and Affiliate Information
-            data["riderInfo"]["ID"] = client_id
+            
+            # Handle two scenarios for riderInfo based on whether rider is new or existing
+            # Scenario 1: First ride (no client_id) - New rider
+            if not self.client_id or str(self.client_id) == "-1" or str(self.client_id) == "0":
+                print("[MAIN TRIP] First ride scenario - New rider (no client_id)")
+                data["riderInfo"]["ID"] = -1
+                data["riderInfo"]["MedicalId"] = ""  # Empty string for new riders
+                data["riderInfo"]["RiderID"] = "0"   # String "0" for new riders
+            else:
+                # Scenario 2: Existing rider (has client_id)
+                print(f"[MAIN TRIP] Existing rider scenario - client_id: {self.client_id}")
+                data["riderInfo"]["ID"] = int(self.client_id)
+                data["riderInfo"]["MedicalId"] = "0"  # String "0" for existing riders
+                data["riderInfo"]["RiderID"] = rider_id    # String "0" for existing riders
+            
+            # Common riderInfo fields for both scenarios
             data["riderInfo"]["PhoneNo"] = phone_number
             data["riderInfo"]["PickupPerson"] = rider_name
-            data["riderInfo"]["RiderID"] = rider_id
             data["riderInfo"]["ClientAddress"] = rider_home_address
             data["riderInfo"]["ClientCity"] = rider_home_city
             data["riderInfo"]["ClientState"] = rider_home_state
-            data["riderInfo"]["MedicalId"] = rider_id
 
             data['addressInfo']["Trips"][0]["Details"][0]["tripInfo"]["AffiliateID"] = affiliate_id
             data['addressInfo']["Trips"][0]["Details"][1]["tripInfo"]["AffiliateID"] = affiliate_id
@@ -2219,8 +2328,6 @@ class Assistant(Agent):
         # Start playing music asynchronously
         # _ = asyncio.create_task(self.Play_Music())
         # await asyncio.sleep(2)
-        if rider_id == 0:
-            rider_id = -1
         if client_id == 0:
             client_id = -1
         # Check Pickup Address
@@ -2367,19 +2474,29 @@ class Assistant(Agent):
             payment_type_id = await safe_int(payment_type_id)
             copay_funding_source_id = await safe_int(copay_funding_source_id)
             copay_payment_type_id = await safe_int(copay_payment_type_id)
-            if rider_id == 0:
-                rider_id = -1
             if client_id == 0:
                 client_id = -1
-            # Rider and Affiliate Information
-            data["riderInfo"]["ID"] = client_id
+            
+            # Handle two scenarios for riderInfo based on whether rider is new or existing
+            # Scenario 1: First ride (no client_id) - New rider
+            if not self.client_id or str(self.client_id) == "-1" or str(self.client_id) == "0":
+                print("[RETURN TRIP] First ride scenario - New rider (no client_id)")
+                data["riderInfo"]["ID"] = -1
+                data["riderInfo"]["MedicalId"] = ""  # Empty string for new riders
+                data["riderInfo"]["RiderID"] = "0"   # String "0" for new riders
+            else:
+                # Scenario 2: Existing rider (has client_id)
+                print(f"[RETURN TRIP] Existing rider scenario - client_id: {self.client_id}")
+                data["riderInfo"]["ID"] = int(self.client_id)
+                data["riderInfo"]["MedicalId"] = "0"  # String "0" for existing riders
+                data["riderInfo"]["RiderID"] = rider_id    # String "0" for existing riders
+            
+            # Common riderInfo fields for both scenarios
             data["riderInfo"]["PhoneNo"] = phone_number
             data["riderInfo"]["PickupPerson"] = rider_name
-            data["riderInfo"]["RiderID"] = rider_id
             data["riderInfo"]["ClientAddress"] = rider_home_address
             data["riderInfo"]["ClientCity"] = rider_home_city
             data["riderInfo"]["ClientState"] = rider_home_state
-            data["riderInfo"]["MedicalId"] = rider_id
 
             data['addressInfo']["Trips"][0]["Details"][0]["tripInfo"]["AffiliateID"] = affiliate_id
             data['addressInfo']["Trips"][0]["Details"][1]["tripInfo"]["AffiliateID"] = affiliate_id
