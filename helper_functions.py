@@ -25,14 +25,15 @@ import logging
 from typing import Annotated
 from pydantic import Field, BaseModel
 from models import ReturnTripPayload, MainTripPayload, RiderVerificationParams, ClientNameParams, DistanceFareParams, AccountParams
+from logging_config import get_logger, set_session_id, create_call_logger
 
 # Load variables from .env file
 load_dotenv()
 
-App_Directory = Path(__file__).parent
+# Initialize logger
+logger = get_logger('helper_functions')
 
-logger = logging.getLogger("transfer-logger")
-logger.setLevel(logging.INFO)
+App_Directory = Path(__file__).parent
 
 # Twilio credentials (from environment)
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
@@ -55,14 +56,13 @@ class Assistant(Agent):
         self.return_leg = return_leg
         self.update_rider_phone(rider_phone)
         self.context = context
+        self.client_id = None
         # Store the client ID from API lookup, handle string "-1" and None cases
         if client_id and str(client_id) != "-1" and str(client_id).lower() != "none":
             self.client_id = str(client_id)
-            print(f"[ASSISTANT INIT] Client ID set to: {self.client_id}")
-        else:
-            self.client_id = None
-            print(f"[ASSISTANT INIT] Client ID not available (received: {client_id})")
-        logger.info("instructions passed to agent: "+str(instructions))
+            logger.info(f"[ASSISTANT INIT] Client ID set to: {self.client_id}")
+        else:            
+            logger.info(f"[ASSISTANT INIT] Client ID not available (received: {client_id})")
         super().__init__(instructions=instructions)  # Initialize Agent with the instructions argument
 
     def update_rider_phone(self, rider_phone):
@@ -79,7 +79,7 @@ class Assistant(Agent):
         self.rider_phone = rider_phone
 
         if not bool(re.match(pattern, rider_phone)):
-            print(f"Invalid phone number format: {rider_phone}")
+            logger.warning(f"Invalid phone number format: {rider_phone}")
             self.session.say("The phone number is not correct. Let me transfer you to live agent.", allow_interruptions=False)
             self.transfer_call()
 
@@ -93,7 +93,7 @@ class Assistant(Agent):
             return "No active room to play music."
 
         try:
-            print(f"🎵 Publishing music track in the LiveKit room...")
+            logger.info(f"🎵 Publishing music track in the LiveKit room...")
             self.stop_music = False  # Reset stop flag
 
             # Open the WAV file
@@ -131,7 +131,7 @@ class Assistant(Agent):
 
             return "Music is now playing in the room."
         except Exception as e:
-            print(f"\n\nError publishing music: {e}\n\n")
+            logger.error(f"Error publishing music: {e}")
             return "Failed to play music."
 
     async def Stop_Music(self) -> str:
@@ -140,26 +140,26 @@ class Assistant(Agent):
             return "No active room to stop music."
 
         try:
-            print("🛑 Stopping music track in the LiveKit room...")
+            logger.info("🛑 Stopping music track in the LiveKit room...")
             self.stop_music = True  # Set flag to stop music
 
             return "Music has been stopped."
         except Exception as e:
-            print(f"\n\nError stopping music: {e}\n\n")
+            logger.error(f"Error stopping music: {e}")
             return "Failed to stop music."
 
     @function_tool()
     async def Close_Call(self) -> str:
         """Function to end Twilio call and disconnect from the LiveKit room.
         Whenever conversation ends with a Bye or Thankyou, call this function."""
-        print(f"\n\n\ncalled close call function\n\n\n")
+        logger.info("Called close call function")
         await self.session.say('Thank you for reaching out. Have a great day!')
 
         # Step 1: End the Twilio call
         # call_closed_msg = "No active call found."
         # if self.call_sid:
         #     try:
-        #         print(f"Requested Call Ending for Call SID: {self.call_sid}")
+        #         logger.info(f"Requested Call Ending for Call SID: {self.call_sid}")
         #         TWILIO_CLIENT.calls(self.call_sid).update(status="completed")
         #         call_closed_msg = f"Call has been ended successfully."
         #     except Exception as e:
@@ -187,7 +187,7 @@ class Assistant(Agent):
         # room_closed_msg = "No active room found."
         # try:
         #     if self.room and hasattr(self.room, "disconnect"):
-        #         print(f"Disconnecting room: {self.room.name}")
+        #         logger.info(f"Disconnecting room: {self.room.name}")
         #         await self.room.disconnect()
         #         room_closed_msg = f"Room disconnected successfully."
         # except Exception as e:
@@ -206,13 +206,13 @@ class Assistant(Agent):
         caller_number = self.rider_phone
         family_id=self.family_id
 
-        print(f"\n\nCalled get_client_name function", str(caller_number), str(family_id), "\n\n")
+        logger.info(f"Called get_client_name function with caller_number: {caller_number}, family_id: {family_id}")
 
         # _ = asyncio.create_task(self.Play_Music())
         # await asyncio.sleep(2)
         
-        print(f"caller number: {caller_number}")
-        print(f"family_id: {family_id}")
+        logger.debug(f"caller number: {caller_number}")
+        logger.debug(f"family_id: {family_id}")
 
         try:
 
@@ -229,13 +229,13 @@ class Assistant(Agent):
                 "iATSPID": int(self.affiliate_id),
                 "iDTSPID": int(family_id)
             }
-            print(f"Payload before sending: {payload}")
+            logger.debug(f"Payload before sending: {payload}")
             # Define the headers
             headers = {
                 "Content-Type": "application/json",
             }
 
-            print(f"\n\nPayload sent by LLM: {payload}\n\n")
+            logger.debug(f"Payload sent by LLM: {payload}")
 
             # Step 3: Send the data to the API
             async with aiohttp.ClientSession() as session:
@@ -243,7 +243,7 @@ class Assistant(Agent):
                     response = await response.json()
 
         except Exception as e:
-            print(f"\n\nError occured in getting rider profile: {e}\n\n")
+            logger.error(f"Error occurred in getting rider profile: {e}")
             pass
 
         result = {}
@@ -252,13 +252,13 @@ class Assistant(Agent):
         try:
             if response["responseCode"] == 200:
                 client_object = response["responseJSON"]
-                print(f"\n\n######Client Object: {client_object}######\n\n")
+                logger.debug(f"Client Object: {client_object}")
                 client_list = json.loads(client_object)
                 for i, client in enumerate(client_list, 1):
                     name = (client['FirstName'] + ' ' + client['LastName']).strip()
                     client_id = client.get('Id', 0)
-                    print(f"\n\n*******************************Client ID*******************************: {client_id}\n\n")
-                    # self.client_id = client_id  # Commented out - only set when single profile or via select_rider_profile
+                    self.client_id = client_id
+                    logger.debug(f"Client ID: {client_id}")
                     number_of_existing_trips, trips_data = await get_Existing_Trips_Number(client_id, self.affiliate_id)
 
                     medical_id_raw = client.get("MedicalId", "")
@@ -283,7 +283,7 @@ class Assistant(Agent):
                     rider_count += 1
                 # result["number_of_riders"] = rider_count
             else:
-                print("Request failed!")
+                logger.warning("Request failed!")
                 result["number_of_riders"] = 1
                 result["rider_1"] = {
                     "name": "new_rider",
@@ -296,10 +296,10 @@ class Assistant(Agent):
                     "trips_data": ""
                 }
         except Exception as e:
-            print(f"Error occurred in getting client Name: {e}")
+            logger.error(f"Error occurred in getting client Name: {e}")
             result["number_of_riders"] = rider_count
 
-        print(f"\n\nResult: {result}\n\n")
+        logger.debug(f"Result: {result}")
 
         # await asyncio.sleep(2)
         # await self.Stop_Music()
@@ -309,11 +309,11 @@ class Assistant(Agent):
         if rider_count == 1 and "rider_1" in result:
             self.client_id = result["rider_1"]["client_id"]
             self.rider_id = result["rider_1"]["rider_id"]
-            print(f"[GET_CLIENT_NAME] Single profile found - set client_id: {self.client_id}, rider_id: {self.rider_id}")
+            logger.info(f"[GET_CLIENT_NAME] Single profile found - set client_id: {self.client_id}, rider_id: {self.rider_id}")
         elif rider_count > 1:
-            print(f"[GET_CLIENT_NAME] Multiple profiles found ({rider_count}). Use select_rider_profile() to choose one.")
+            logger.info(f"[GET_CLIENT_NAME] Multiple profiles found ({rider_count}). Use select_rider_profile() to choose one.")
         else:
-            print(f"[GET_CLIENT_NAME] No profiles found or new rider.")
+            logger.info(f"[GET_CLIENT_NAME] No profiles found or new rider.")
 
         return json.dumps(result, indent=2)
 
@@ -329,7 +329,7 @@ class Assistant(Agent):
         Returns:
             str: Confirmation message with selected profile details
         """
-        print(f"\n\nCalled select_rider_profile function with profile_number: {profile_number}\n\n")
+        logger.info(f"Called select_rider_profile function with profile_number: {profile_number}")
         
         try:
             # Call get_client_name to get all profiles again
@@ -390,8 +390,8 @@ class Assistant(Agent):
                 state = selected_client.get("State", "Unknown")
                 address = selected_client.get("Address", "Unknown")
                 
-                print(f"[PROFILE SELECTION] Updated client_id to: {self.client_id}")
-                print(f"[PROFILE SELECTION] Updated rider_id to: {self.rider_id}")
+                logger.info(f"[PROFILE SELECTION] Updated client_id to: {self.client_id}")
+                logger.info(f"[PROFILE SELECTION] Updated rider_id to: {self.rider_id}")
                 
                 return f"""Profile selected successfully!
 Selected Profile: {name}
@@ -406,373 +406,8 @@ I have updated your profile information. You can now proceed with booking trips 
                 return "Error: Could not retrieve profiles. Please try again."
                 
         except Exception as e:
-            print(f"Error in select_rider_profile: {e}")
+            logger.error(f"Error in select_rider_profile: {e}")
             return f"Error selecting profile: {str(e)}. Please try again."
-
-    # @function_tool()
-    # async def Book_a_Trip(self,
-    #     pickup_street_address: str,
-    #     dropoff_street_address: str,
-    #     pickup_city: str,
-    #     dropoff_city: str,
-    #     pickup_state: str,
-    #     dropoff_state: str,
-    #     extra_details: str,
-    #     phone_number: str,
-    #     client_id: str,
-    #     funding_source_id: str,
-    #     rider_name: str,
-    #     payment_type_id: str,
-    #     copay_funding_source_id: str,
-    #     copay_payment_type_id: str,
-    #     booking_time: str,
-    #     pickup_lat: str,
-    #     pickup_lng: str,
-    #     dropoff_lat: str,
-    #     dropoff_lng: str,
-    #     rider_id: str,
-    #     number_of_wheel_chairs: str,
-    #     number_of_passengers: str,
-    #     family_id: str,
-    #     is_schedule: str,
-    #     pickup_city_zip_code: str,
-    #     dropoff_city_zip_code: str,
-    #     rider_home_address: str,
-    #     rider_home_city: str,
-    #     rider_home_state: str,
-    #     home_phone: str,
-    #     office_phone: str,
-    #     total_passengers: int,
-    #     total_wheelchairs: int,
-    #     is_will_call: bool,
-    #     will_call_day: str,
-    #     pickup_remarks: str,
-    #     pickup_phone_number: str,
-    #     dropoff_remarks: str,
-    #     dropoff_phone_number: str,
-    #     ):
-    #     """"Function that is used to book a new trip.
-    #     Args:
-    #         pickup_street_address: Pickup Street Address confirmed by rider. Do not include city, state, country
-    #         dropoff_street_address: Dropoff Street Address confirmed by rider. Do not include city, state, country
-    #         pickup_city: Pickup city confirmed by rider else ''
-    #         dropoff_city: Dropoff city confirmed by rider else ''
-    #         pickup_state: Pickup State confirmed by rider else ''
-    #         dropoff_state: Dropoff State confirmed by rider else ''
-    #         pickup_city_zip_code: Pick Up City Zip Code else ''
-    #         dropoff_city_zip_code: Drop Off City Zip Code else ''
-    #         extra_details: Additional Notes if mentioned by rider for the driver else ''
-    #         phone_number: Phone number of rider else -1
-    #         client_id: Client Id else -1. I am applying  python int() so generate value accordingly
-    #         funding_source_id: Funding Source Id else -1. I am applying  python int() so generate value accordingly
-    #         affilaite_id: Affiliate Id else -1. I am applying  python int() so generate value accordingly
-    #         rider_name: Complete verified name of the rider if available. If you do not have verified name, use Complete Name of the rider used in conversation. If you do not have nane in your memory set it to ''
-    #         payment_type_id: Payment Type Id else -1. I am applying  python int() so generate value accordingly
-    #         copay_funding_source_id: Copay Funding Source Id else -1. I am applying  python int() so generate value accordingly
-    #         copay_payment_type_id: Copay Payment Type Id else -1. I am applying  python int() so generate value accordingly
-    #         booking_time: Booking Time if mentioned by rider in this format 'Year-Month-Date HH:MM' for the driver else ''. If the rider wants to book for now, get current time from memory. if is_will_call is true, set it to date today.
-    #         pickup_lat: Pickup address latitude else 0. I am applying  python float() so generate value accordingly
-    #         pickup_lng: Pickup address longitude else 0. I am applying  python float() so generate value accordingly
-    #         dropoff_lat: Drop off address latitude else 0. I am applying  python float() so generate value accordingly
-    #         dropoff_lng: Drop off address longitude else 0. I am applying  python float() so generate value accordingly
-    #         number_of_wheel_chairs: Number of wheelchairs if required by rider else 0. For example if rider is missing leg or specifically says, 'they require wheel chair'. I am applying  python int() so generate value accordingly
-    #         number_of_passengers: Number of passengers. If rider mentioned more than 1 passenger, set accordingly otherwise set it to 1. I am applying  python int() so generate value accordingly
-    #         family_id: Family Id else 0. I am applying  python int() so generate value accordingly
-    #         is_schedule: 1 if the trip is scheduled for 20+ minutes from current time,also 1 if is_will_call true , else 0 if the trip is scheduled for now. I am applying  python int() so generate value accordingly,or if
-    #         rider_id: Rider Id available in the memory either already in the memory or provided by the customer. If not available set it to -1. I am applying  python int() so generate value accordingly
-    #         rider_home_address: Home location of the rider present in the memory. If not available, set it to "".
-    #         rider_home_city: City of rider's home address. If not available, set it to "".
-    #         rider_home_state: State of rider's home address. If not available, set it to "".
-    #         home_phone: Rider's home phone no. If not available, set it to "".
-    #         office_phone: Rider's Office Phone no. if not available, set it to "".
-    #         total_passengers: total passenger count if not available, set it to 1.
-    #         total_wheelchairs: total wheelchair count if not available, set it to 0.
-    #         is_will_call: true if booking time is not provided or booking time is will call else fasle.
-    #         will_call_day:Booking Date if mentioned by rider in this format 'Year-Month-Date 00:00:00' for the driver else get current date from memory, applicable only if is_will_call is true.
-    #         pickup_remarks: any remarks given explicitly for pickup address else "".
-    #         pickup_phone_number: if pickup phone number is explicitly provided else "".
-    #         dropoff_remarks: any remarks given explicitly for drop off address else "".
-    #         dropoff_phone_number: if drop off  phone number is explicitly provided else "".
-    #
-    #     """
-    #     print(f"\n\n\nCalled Book a new trip function at: {datetime.now()}\n\n\n")
-    #     # Start playing music asynchronously
-    #     # _ = asyncio.create_task(self.Play_Music())
-    #     # await asyncio.sleep(2)
-    #
-    #     # Check Pickup Address
-    #     pickup_error = await check_address_validity(pickup_lat, pickup_lng, "Pick Up")
-    #     if pickup_error:
-    #         # await asyncio.sleep(2)
-    #         # await self.Stop_Music()
-    #         return pickup_error
-    #
-    #     # Check Dropoff Address
-    #     dropoff_error = await check_address_validity(dropoff_lat, dropoff_lng, "Drop Off")
-    #     if dropoff_error:
-    #         # await asyncio.sleep(2)
-    #         # await self.Stop_Music()
-    #         return dropoff_error
-    #
-    #     distance = 0
-    #     duration = 0
-    #     distance_miles = 0
-    #     duration_minutes = 0
-    #     total_cost = 0
-    #     copay_cost = 0
-    #
-    #     try:
-    #         # Define the API URL and parameters
-    #         url = os.getenv("GET_DIRECTION")
-    #
-    #         params = {
-    #             'origin': f'{pickup_lat},{pickup_lng}',  # Origin coordinates
-    #             'destination': f'{dropoff_lat},{dropoff_lng}',  # Destination coordinates
-    #             'AppType': 'FCSTService'
-    #         }
-    #
-    #         logging.info(f"\n\n\nPayload Sent for distance and duration retrieval: {params}\n\n\n")
-    #
-    #         # Define your Basic Authentication credentials
-    #         auth = BasicAuth(os.getenv("GET_DIRECTION_USER"), os.getenv("GET_DIRECTION_PASSWORD"))  # Replace with your actual password
-    #
-    #         # Add headers to mimic Postman headers if needed
-    #         headers = {
-    #             'User-Agent': 'PostmanRuntime/7.43.4',  # Use the User-Agent as seen in Postman
-    #             'Accept': '*/*',
-    #             'Accept-Encoding': 'gzip, deflate, br',
-    #             'Connection': 'keep-alive'
-    #         }
-    #
-    #         # Make the request
-    #         async with aiohttp.ClientSession() as session:
-    #             async with session.get(url, params=params, headers=headers, auth=auth) as response:
-    #                 if response.status == 200:
-    #                     data = await response.json()
-    #                     logging.info(f"\n\n\nResponse for distance and duration retrieval: {data}\n\n\n")
-    #                     distance = int(data["routes"][0]["legs"][0]["distance"]["value"])
-    #                     duration = int(data["routes"][0]["legs"][0]["duration"]["value"])
-    #                     print(f"Distance: {distance}")
-    #                     print(f"Duration: {duration}")
-    #                     url = os.getenv("GET_FARE_API")
-    #
-    #                     distance_miles = await meters_to_miles(distance)
-    #                     duration_minutes = await seconds_to_minutes(duration)
-    #
-    #                     # The JSON body data to be sent in the POST request
-    #                     data = {
-    #                         "distance": distance_miles,
-    #                         "travelTime": duration_minutes,
-    #                         "fundingSourceID": int(funding_source_id),
-    #                         "copy": 0,
-    #                         "numberOfWheelchairs": int(number_of_wheel_chairs),
-    #                         "numberOfPassengers": int(number_of_passengers),
-    #                         "classOfServiceID": 1,
-    #                         "affiliateID": int(self.affiliate_id),
-    #                         "pickupLatitude": float(pickup_lat),
-    #                         "pickupLongitude": float(pickup_lng),
-    #                         "copyFundingSourceID": int(copay_funding_source_id),
-    #                         "riderID": str(rider_id),
-    #                         "authorizedStaff": "string",
-    #                         "startFareZone": "string",
-    #                         "endFareZone": "string",
-    #                         "tspid": "string",
-    #                         "httpResponseCode": 100
-    #                     }
-    #
-    #                     logging.info(f"\n\n\nPayload for fare estimation: {data}\n\n\n")
-    #
-    #                     # Headers to be used in the request
-    #                     headers = {
-    #                         'Content-Type': 'application/json',  # Ensure that the body is sent as JSON
-    #                         'User-Agent': 'PostmanRuntime/7.43.4',  # Optional, can be omitted if not needed
-    #                     }
-    #
-    #                     # Making the POST request
-    #                     async with aiohttp.ClientSession() as session:
-    #                         async with session.post(url, json=data, headers=headers) as response:
-    #                             if response.status == 200:
-    #                                 # If successful, print the JSON response
-    #                                 response_data = await response.json()
-    #                                 logging.info(f"\n\n\nResponse for fare estimation: {response_data}\n\n\n")
-    #                                 total_cost = response_data["totalCost"]
-    #                                 copay_cost = response_data["copay"]
-    #                                 print(f"Total Cost: {total_cost}")
-    #                                 print(f"Copay Cost: {copay_cost}")
-    #                             else:
-    #                                 print(f"Request failed with status code: {response.status}")
-    #
-    #                 else:
-    #                     print(f"Request failed with status code: {response.status}")
-    #
-    #     except Exception as e:
-    #         print(f"Error in getting fare: {e}")
-    #         pass
-    #
-    #     pickup_lat = await safe_float(pickup_lat)
-    #     pickup_lng = await safe_float(pickup_lng)
-    #     dropoff_lat = await safe_float(dropoff_lat)
-    #     dropoff_lng = await safe_float(dropoff_lng)
-    #
-    #     try:
-    #         if str(is_schedule) == "1":
-    #             is_schedule = True
-    #         else:
-    #             is_schedule = False
-    #
-    #     except Exception as e:
-    #         print(f"Error in getting schedule status: {e}")
-    #         pass
-    #
-    #     try:
-    #
-    #         payload_path = os.path.join(App_Directory, "trip_book_payload.json")
-    #         # Step 1: Read the JSON file
-    #         with open(payload_path, 'r') as file:
-    #             data = json.load(file)
-    #
-    #         print(f"Phone number by LLM: {phone_number}")
-    #         phone_number = await format_phone_number(phone_number)
-    #         print(f"Phone number after formatting: {phone_number}")
-    #
-    #         client_id = await safe_int(client_id)
-    #         rider_id = await safe_int(rider_id)
-    #         affiliate_id = await safe_int(self.affiliate_id)
-    #         family_id = await safe_int(family_id)
-    #         funding_source_id = await safe_int(funding_source_id)
-    #         payment_type_id = await safe_int(payment_type_id)
-    #         copay_funding_source_id = await safe_int(copay_funding_source_id)
-    #         copay_payment_type_id = await safe_int(copay_payment_type_id)
-    #
-    #         # Rider and Affiliate Information
-    #         data["riderInfo"]["ID"] = client_id
-    #         data["riderInfo"]["PhoneNo"] = phone_number
-    #         data["riderInfo"]["PickupPerson"] = rider_name
-    #         data["riderInfo"]["RiderID"] = rider_id
-    #         data["riderInfo"]["ClientAddress"] = rider_home_address
-    #         data["riderInfo"]["ClientCity"] = rider_home_city
-    #         data["riderInfo"]["ClientState"] = rider_home_state
-    #
-    #         data['addressInfo']["Trips"][0]["Details"][0]["tripInfo"]["AffiliateID"] = affiliate_id
-    #         data['addressInfo']["Trips"][0]["Details"][1]["tripInfo"]["AffiliateID"] = affiliate_id
-    #         data['generalInfo']['RequestAffiliateID'] = affiliate_id
-    #         data['generalInfo']['FamilyID'] = family_id
-    #
-    #         # Pickup Payment Method Information
-    #         data['addressInfo']["Trips"][0]["Details"][0]["paymentInfo"]["FundingSourceID"] = funding_source_id
-    #         data['addressInfo']["Trips"][0]["Details"][0]["paymentInfo"]["PaymentTypeID"] = payment_type_id
-    #         data['addressInfo']["Trips"][0]["Details"][0]["paymentInfo"]["iCopayFundingSourceID"] = copay_funding_source_id
-    #         data['addressInfo']["Trips"][0]["Details"][0]["paymentInfo"]["iActualPaymentTypeID"] = copay_payment_type_id
-    #
-    #         # Drop off Payment Method Information
-    #         data['addressInfo']["Trips"][0]["Details"][1]["paymentInfo"]["FundingSourceID"] = funding_source_id
-    #         data['addressInfo']["Trips"][0]["Details"][1]["paymentInfo"]["PaymentTypeID"] = payment_type_id
-    #         data['addressInfo']["Trips"][0]["Details"][1]["paymentInfo"]["iCopayFundingSourceID"] = copay_funding_source_id
-    #         data['addressInfo']["Trips"][0]["Details"][1]["paymentInfo"]["iActualPaymentTypeID"] = copay_payment_type_id
-    #
-    #         # Pickup Address Information
-    #         data['addressInfo']["Trips"][0]["Details"][0]["addressDetails"]["Address"] = pickup_street_address
-    #         data['addressInfo']["Trips"][0]["Details"][0]["addressDetails"]["City"] = pickup_city
-    #         data['addressInfo']["Trips"][0]["Details"][0]["addressDetails"]["Latitude"] = pickup_lat
-    #         data['addressInfo']["Trips"][0]["Details"][0]["addressDetails"]["Longitude"] = pickup_lng
-    #         data['addressInfo']["Trips"][0]["Details"][0]["addressDetails"]["State"] = pickup_state
-    #         data['addressInfo']["Trips"][0]["Details"][0]["addressDetails"]["Zip"] = pickup_city_zip_code
-    #         data['addressInfo']["Trips"][0]["Details"][0]["addressDetails"]["Phone"] = pickup_phone_number
-    #         data['addressInfo']["Trips"][0]["Details"][0]["addressDetails"]["Remarks"] = pickup_remarks
-    #         data['addressInfo']["Trips"][0]["Details"][0]["tripInfo"]["ExtraInfo"] = extra_details
-    #         data['addressInfo']["Trips"][0]["Details"][0]["tripInfo"]["CallBackInfo"] = phone_number
-    #         data['addressInfo']["Trips"][0]["Details"][0]["dateInfo"]["PickupDate"] = booking_time
-    #         data['addressInfo']["Trips"][0]["Details"][0]["dateInfo"]["IsScheduled"] = is_schedule
-    #         data['addressInfo']["Trips"][0]["Details"][0]["dateInfo"]["WillCallDay"] = will_call_day
-    #         data['addressInfo']["Trips"][0]["Details"][0]["dateInfo"]["IsWillCall"] = is_will_call
-    #         data['addressInfo']["Trips"][0]["Details"][0]["passengerInfo"]["TotalPassengers"] = total_passengers
-    #         data['addressInfo']["Trips"][0]["Details"][0]["passengerInfo"]["TotalWheelChairs"] = total_wheelchairs
-    #
-    #         # Drop off Address Information
-    #         data['addressInfo']["Trips"][0]["Details"][1]["addressDetails"]["Address"] = dropoff_street_address
-    #         data['addressInfo']["Trips"][0]["Details"][1]["addressDetails"]["City"] = dropoff_city
-    #         data['addressInfo']["Trips"][0]["Details"][1]["addressDetails"]["Latitude"] = dropoff_lat
-    #         data['addressInfo']["Trips"][0]["Details"][1]["addressDetails"]["Longitude"] = dropoff_lng
-    #         data['addressInfo']["Trips"][0]["Details"][1]["addressDetails"]["State"] = dropoff_state
-    #         data['addressInfo']["Trips"][0]["Details"][1]["addressDetails"]["Zip"] = dropoff_city_zip_code
-    #         data['addressInfo']["Trips"][0]["Details"][1]["addressDetails"]["Phone"] = dropoff_phone_number
-    #         data['addressInfo']["Trips"][0]["Details"][1]["addressDetails"]["Remarks"] = dropoff_remarks
-    #         data['addressInfo']["Trips"][0]["Details"][1]["dateInfo"]["PickupDate"] = booking_time
-    #         data['addressInfo']["Trips"][0]["Details"][1]["dateInfo"]["IsScheduled"] = is_schedule
-    #         data['addressInfo']["Trips"][0]["Details"][1]["tripInfo"]["CallBackInfo"] = phone_number
-    #         data['addressInfo']["Trips"][0]["Details"][1]["tripInfo"]["WillCallDay"] = will_call_day
-    #         data['addressInfo']["Trips"][0]["Details"][1]["tripInfo"]["IsWillCall"] = is_will_call
-    #         data['addressInfo']["Trips"][0]["Details"][1]["passengerInfo"]["TotalPassengers"] = total_passengers
-    #         data['addressInfo']["Trips"][0]["Details"][1]["passengerInfo"]["TotalWheelChairs"] = total_wheelchairs
-    #
-    #         # Pickup Cost Information
-    #         data['addressInfo']["Trips"][0]["Details"][0]["estimatedInfo"]["EstimatedDistance"] = distance_miles
-    #         data['addressInfo']["Trips"][0]["Details"][0]["estimatedInfo"]["EstimatedTime"] = duration_minutes
-    #         data['addressInfo']["Trips"][0]["Details"][0]["estimatedInfo"]["EstimatedCost"] = total_cost
-    #         data['addressInfo']["Trips"][0]["Details"][0]["estimatedInfo"]["CoPay"] = copay_cost
-    #
-    #         # Drop off Cost Information
-    #         data['addressInfo']["Trips"][0]["Details"][1]["estimatedInfo"]["EstimatedDistance"] = distance
-    #         data['addressInfo']["Trips"][0]["Details"][1]["estimatedInfo"]["EstimatedTime"] = duration
-    #         data['addressInfo']["Trips"][0]["Details"][1]["estimatedInfo"]["EstimatedCost"] = total_cost
-    #         data['addressInfo']["Trips"][0]["Details"][1]["estimatedInfo"]["CoPay"] = copay_cost
-    #
-    #         # Step 2: Set the endpoint
-    #         url = os.getenv("TRIP_BOOKING_API")
-    #
-    #         print(f"\n\n\nPayload Sent for booking: {data}\n\n\n")
-    #         logging.info(f"\n\n\nPayload Sent for booking: {data}\n\n\n")
-    #
-    #         # Step 3: Send the data to the API
-    #         async with aiohttp.ClientSession() as session:
-    #             async with session.post(url, json=data) as response:
-    #                 response = await response.json()
-    #
-    #     except Exception as e:
-    #         print(f"\n\nError occured in booking trip: {e}\n\n")
-    #         pass
-    #
-    #     dropoff_complete_address = dropoff_street_address + ' ' + dropoff_city + ' ' + dropoff_state + ' ' + dropoff_city_zip_code
-    #     prompt = f"""What is the current weather in {dropoff_complete_address}? Provide a concise response with exactly two lines:
-    #
-    #     Line 1: State the temperature in Fahrenheit (numbers only, no unit) and current sky conditions.
-    #     Line 2: Give relevant weather-appropriate advice.
-    #
-    #     Format example:
-    #     "The temperature is 72 and the sky is clear. It's a perfect day for a ride."
-    #
-    #     Requirements:
-    #     - Temperature in Fahrenheit without the °F unit
-    #     - Current sky conditions (clear, cloudy, rainy, etc.)
-    #     - Practical advice based on the weather conditions
-    #     - Keep response to exactly two lines
-    #     """
-    #     weather = await search_web_manual(prompt)
-    #     print(f"\n\nWeather: {weather}\n\n")
-    #
-    #     # await asyncio.sleep(2)
-    #     # await self.Stop_Music()
-    #
-    #     try:
-    #
-    #         # Step 4: Process the response
-    #         if response["responseCode"] == 200:
-    #             print(f"\n\nResponse: {response}\n\n\n")
-    #             irefId = response['iRefID']
-    #             if irefId == 0:
-    #                 return "Your trip could not be booked!"
-    #
-    #             if str(copay_cost) == "0":
-    #                 return f"Trip has been booked! Your Trip Number is {irefId}. It will take around {duration_minutes} minutes and distance between your pick up and drop off is {distance_miles} miles. Total Cost is {total_cost}$. Weather in drop off location is {weather}."
-    #             else:
-    #                 return f"Trip has been booked! Your Trip Number is {irefId}. It will take around {duration_minutes} minutes and distance between your pick up and drop off is {distance_miles} miles. Total Cost is {total_cost}$ and cost related to copay is {copay_cost}$. Weather in drop off location is {weather}."
-    #
-    #         else:
-    #             return "Trip has not been booked!"
-    #
-    #     except Exception as e:
-    #         print(f"\n\nError occured in book a trip function: {e}\n\n")
-    #         return "Trip has not been booked!"
 
     @function_tool()
     async def get_ETA(self) -> str:
@@ -793,22 +428,22 @@ I have updated your profile information. You can now proceed with booking trips 
         Returns:
             str: JSON string with trip details or error message.
         """
-        print(f"\n\nCalled get_ETA function\n\n")
+        logger.info("Called get_ETA function")
 
         # Use the stored client_id from initial phone lookup instead of LLM parameter
         if not self.client_id:
-            print("&&&&&&&&&&&&&&&&&&&Client ID not available in get_ETA, attempting to retrieve it...")
+            logger.warning("Client ID not available in get_ETA, attempting to retrieve it...")
             # Try to get client info first
             try:
                 await self.get_client_name()
                 if not self.client_id:
                     return "I need to identify you first. Let me search for your profile using your phone number."
             except Exception as e:
-                print(f"Error retrieving client info in get_ETA: {e}")
+                logger.error(f"Error retrieving client info in get_ETA: {e}")
                 return "I'm having trouble accessing your profile. Please try again."
         
         client_id = str(self.client_id)
-        print(f"Using stored client_id: {client_id}")
+        logger.debug(f"Using stored client_id: {client_id}")
 
         # Start background music task
         # _ = asyncio.create_task(self.Play_Music())
@@ -829,7 +464,7 @@ I have updated your profile information. You can now proceed with booking trips 
             "Content-Type": "application/json"
         }
 
-        print(f"\n\n\nPayload Sent for Existing Trips: {payload}\n\n\n")
+        logger.debug(f"Payload Sent for Existing Trips: {payload}")
 
         try:
             async with aiohttp.ClientSession() as session:
@@ -841,13 +476,13 @@ I have updated your profile information. You can now proceed with booking trips 
                     try:
                         response = json.loads(text)
                     except json.JSONDecodeError:
-                        print(f"\n\nFailed to decode JSON. Raw response:\n{text}\n\n")
+                        logger.error(f"Failed to decode JSON. Raw response: {text}")
                         return "No data found for ETA!"
 
                     if response.get("responseCode") == 200:
                         try:
                             data = json.loads(response.get("responseJSON", "{}"))
-                            print(f"\n\nResponse: {data}\n\n")
+                            logger.debug(f"Response: {data}")
                             existing_trips_data = json.dumps(data, indent=4)
                             if data:
                                 latest_trip = max(data, key=lambda x: x['iRefId'])
@@ -863,20 +498,20 @@ I have updated your profile information. You can now proceed with booking trips 
 
                                 existing_trips_data = json.dumps(result, indent=4)
 
-                            print(f"\n\nETA Reponse: {existing_trips_data}\n\n")
+                            logger.debug(f"ETA Response: {existing_trips_data}")
                             return existing_trips_data
                         except json.JSONDecodeError:
-                            print(f"\n\nFailed to decode nested responseJSON\n\n")
+                            logger.error("Failed to decode nested responseJSON")
                             return "No data found for ETA!"
                     else:
-                        print(f"\n\nNo trip ETA Found for the rider\n\n")
+                        logger.info("No trip ETA Found for the rider")
                         return "No data found for ETA!"
 
         except Exception as e:
             # await asyncio.sleep(2)
             # await self.Stop_Music()
 
-            print(f"\n\nError occurred in getting client ETA: {e}\n\n")
+            logger.error(f"Error occurred in getting client ETA: {e}")
             return "No data found for ETA!"
 
     @function_tool()
@@ -891,7 +526,7 @@ I have updated your profile information. You can now proceed with booking trips 
         Returns:
             str: Output text from web search or error message.
         """
-        print("\n\nCalled search_web function\n\n")
+        logger.info("Called search_web function")
         # _ = asyncio.create_task(self.Play_Music())
         # await asyncio.sleep(2)
         logging.info(f"web search payload: {prompt}")
@@ -920,67 +555,8 @@ I have updated your profile information. You can now proceed with booking trips 
         except Exception as e:
             # await asyncio.sleep(2)
             # await self.Stop_Music()
-            print(f"Error in search web: {e}")
+            logger.error(f"Error in search web: {e}")
             return "Web search failed!"
-
-    # @function_tool()
-    # async def get_address(self,
-    #                       prompt: str,
-    #                       country: str,
-    #                       city: str,
-    #                       state: str
-    #                       ):
-    #     """Function to search the web for an address based on location details.
-    #     Args:
-    #         prompt: Prompt to search addresses and latitude and longitude of a location. Include the name of the location. e.g. To find nearest cinema to 20 pitts court prompt will be, 'Nearest cinema to 20 pitts court'
-    #         country: Country of the rider in ISO 3166-1 code For example for United States of America it is 'US'
-    #         city: City of the rider.
-    #         state: State of the rider.
-    #     """
-    #     print("\n\nCalled search_address function\n\n")
-    #     # _ = asyncio.create_task(self.Play_Music())
-    #     # await asyncio.sleep(2)
-
-    #     prompt = f"""{prompt}.\n\nKeep your response as small and precise as possible."""
-    #     logging.info(f"\n\nPrompt for Address Search: {prompt}")
-    #     print(f"\n\nPrompt for Address Search: {prompt}")
-    #     print(f"\n\nCity: {city}")
-    #     print(f"\n\nRegion: {state}")
-    #     print(f"\n\nCountry: {country}")
-
-    #     try:
-    #         # Use the OpenAI API client to search for the address
-    #         completion = await openai_client.chat.completions.create(
-    #             model="gpt-4o-search-preview",
-    #             web_search_options={
-    #                 "user_location": {
-    #                     "type": "approximate",
-    #                     "approximate": {
-    #                         "country": country,
-    #                         "city": city,
-    #                         "region": state
-    #                     }
-    #                 }
-    #             },
-    #             messages=[{"role": "user", "content": prompt}]
-    #         )
-
-    #         web_result = completion.choices[0].message.content
-    #         print(f"\n\nResult from Address Search: {web_result}\n\n")
-
-    #         # Summarize the result
-    #         result = await summarize_address_results(web_result)
-    #         print(f"\n\nResult after summarization: {result}\n\n")
-
-    #         # await asyncio.sleep(2)
-    #         # await self.Stop_Music()
-    #         return result
-
-    #     except Exception as e:
-    #         # await asyncio.sleep(2)
-    #         # await self.Stop_Music()
-    #         print(f"Error in address search: {e}")
-    #         return "Address retrieval failed!"
 
     @function_tool()
     async def get_valid_addresses(
@@ -994,7 +570,7 @@ I have updated your profile information. You can now proceed with booking trips 
         Returns:
             str: JSON string with valid address information or error message.
         """
-        print(f"\n\nCalled get_valid_address function with address: {address}\n\n")
+        logger.info(f"Called get_valid_address function with address: {address}")
         # await self.session.say('Let me verify if that address is valid. Please wait a moment.')
         # _ = asyncio.create_task(self.Play_Music())
         # await asyncio.sleep(2)
@@ -1003,7 +579,7 @@ I have updated your profile information. You can now proceed with booking trips 
 
         try:
             result = await verify_address(address)
-            print(f"\n\nValid Addresses Result from Web Search: {result}\n\n")
+            logger.debug(f"Valid Addresses Result from Web Search: {result}")
             if result["valid"]:
                 # Extract latitude and longitude
                 lat = result["latitude"]
@@ -1015,7 +591,7 @@ I have updated your profile information. You can now proceed with booking trips 
                 # await self.Stop_Music()
                 return result_str
         except Exception as e:
-            print(f"Error in getting valid address status")
+            logger.error("Error in getting valid address status")
 
         url = os.getenv("ITC_GEOCODE_API")
         headers = {
@@ -1048,13 +624,13 @@ I have updated your profile information. You can now proceed with booking trips 
                             result[f"Location_{i + 1}"]["isWithinServiceArea"] = is_within_service_area
 
                     else:
-                        print(f"ITC location error: status {resp.status}")
+                        logger.error(f"ITC location error: status {resp.status}")
         except Exception as e:
-            print(f"ITC location exception: {e}")
+            logger.error(f"ITC location exception: {e}")
 
         # await asyncio.sleep(2)
         # await self.Stop_Music()
-        print(f"\n\nValid Addresses from ITC MAP API: {result}\n\n")
+        logger.debug(f"Valid Addresses from ITC MAP API: {result}")
         return str(result)
 
     @function_tool()
@@ -1071,15 +647,13 @@ I have updated your profile information. You can now proceed with booking trips 
         Returns:
             bool: True if within bounds, False otherwise.
         """
-        print(f"\n\nCalled check_bounds function\n\n")
+        logger.info("Called check_bounds function")
         # _ = asyncio.create_task(self.Play_Music())
         # await asyncio.sleep(2)
 
         bounds, _, _ = await fetch_affiliate_details(self.affiliate_id)
 
-        print("\n\n\n")
-        print(f"Bounds: {bounds}")
-        print("\n\n\n")
+        logger.debug(f"Bounds: {bounds}")
 
         try:
             # Convert bounds to float for accurate comparison
@@ -1128,7 +702,7 @@ I have updated your profile information. You can now proceed with booking trips 
         """
         # _ = asyncio.create_task(self.Play_Music())
         # await asyncio.sleep(2)
-        print("\n\n\nCalled get_IDs function\n\n\n")
+        logger.info("Called get_IDs function")
         
         # Extract parameters from the model
         account_ = params.account_
@@ -1140,7 +714,7 @@ I have updated your profile information. You can now proceed with booking trips 
             account = 'self'
         else:
             account = account_
-        print(f"Confirmed Account Name: {account}")
+        logger.debug(f"Confirmed Account Name: {account}")
 
         funding_id, program_id, paymenttype_id, copay_status = 1, -1, 1, False
         _, funding_sources, _ = await fetch_affiliate_details(self.affiliate_id)
@@ -1174,10 +748,10 @@ I have updated your profile information. You can now proceed with booking trips 
             ## Take care of spelling mistakes by STT as well. For example 'Vomata' refers to 'WMATA'.
             ## Do not add backticks or 'json'. I am parsing the response with json.loads(). Make it compatible.
             """
-            print(f"Prompt sent for matching funding sources: {prompt}")
+            logger.debug(f"Prompt sent for matching funding sources: {prompt}")
 
             response = await get_match_source(prompt)
-            print(f"Matching Response: {response}")
+            logger.debug(f"Matching Response: {response}")
 
             _, _, copay_fs_list = await fetch_affiliate_details(self.affiliate_id)
 
@@ -1194,10 +768,10 @@ I have updated your profile information. You can now proceed with booking trips 
                     # await self.Stop_Music()
                     return "The account you provided is not valid!"
 
-                print(f"Got Program Id: {program_id}")
-                print(f"Got Funding Source Id: {funding_id}")
-                print(f"Funding Source List: {copay_fs_list}")
-                print(f"Selected Account Name: {account_name}")
+                logger.debug(f"Got Program Id: {program_id}")
+                logger.debug(f"Got Funding Source Id: {funding_id}")
+                logger.debug(f"Funding Source List: {copay_fs_list}")
+                logger.debug(f"Selected Account Name: {account_name}")
 
                 try:
                     funding_id_str = str(funding_id)
@@ -1208,10 +782,10 @@ I have updated your profile information. You can now proceed with booking trips 
                     elif funding_id_str in copay_fs_list:
                         copay_status = True
 
-                    print(f"Got Copay Status: {copay_status}")
+                    logger.debug(f"Got Copay Status: {copay_status}")
 
                 except Exception as e:
-                    print(f"Error in getting copay status: {e}")
+                    logger.error(f"Error in getting copay status: {e}")
 
                 try:
                     url = os.getenv("GET_PAYMENT_TPYE_AFFILIATE_API")
@@ -1221,7 +795,7 @@ I have updated your profile information. You can now proceed with booking trips 
                         "iaffiliateid": str(self.affiliate_id)
                     }
 
-                    print(f"\n\n\nPayload Sent for Payment Type Selection: {data}\n\n\n")
+                    logger.debug(f"Payload Sent for Payment Type Selection: {data}")
 
                     async with aiohttp.ClientSession() as session:
                         async with session.post(url, json=data) as response:
@@ -1261,28 +835,28 @@ I have updated your profile information. You can now proceed with booking trips 
                                     ## Take care of spelling mistakes by STT as well. For example 'Vomata' refers to 'WMATA'.
                                     ## Do not add backticks or 'json'. I am parsing the response with json.loads(). Make it compatible.
                                     """
-                                    print(f"Prompt sent for matching funding sources: {paymenttype_prompt}")
+                                    logger.debug(f"Prompt sent for matching funding sources: {paymenttype_prompt}")
 
                                     paymenttype_response = await get_match_source(paymenttype_prompt)
-                                    print(f"Matching Response: {paymenttype_response}")
+                                    logger.debug(f"Matching Response: {paymenttype_response}")
 
                                     paymenttype_response = json.loads(paymenttype_response)
 
                                     paymenttype_id = paymenttype_response.get("PaymentType ID", None)
 
                                 except Exception as e:
-                                    print(f"Failed to decode JSON from string: {e}")
+                                    logger.error(f"Failed to decode JSON from string: {e}")
 
                 except Exception as e:
-                    print(f"Error in getting payment type id: {e}")
+                    logger.error(f"Error in getting payment type id: {e}")
                     pass
 
             except Exception as e:
-                print(f"Error parsing JSON: {e}")
+                logger.error(f"Error parsing JSON: {e}")
                 pass
 
         except Exception as e:
-            print(f"Error in getting FID and require verification status: {e}")
+            logger.error(f"Error in getting FID and require verification status: {e}")
             pass
 
         if program_id == -1:
@@ -1293,11 +867,9 @@ I have updated your profile information. You can now proceed with booking trips 
         # await asyncio.sleep(2)
         # await self.Stop_Music()
 
-        print("\n\n")
-        print(f"Verified Account Name is: {account_name}, Funding Source Id is: {funding_id},"
-              f" Requires Rider Verification Status: {rider_verification}, Payment Type Id is: {paymenttype_id},"
-              f" Require Copay Status is: {copay_status}, Program Id is {program_id}")
-        print("\n\n")
+        logger.info(f"Verified Account Name is: {account_name}, Funding Source Id is: {funding_id}, "
+              f"Requires Rider Verification Status: {rider_verification}, Payment Type Id is: {paymenttype_id}, "
+              f"Require Copay Status is: {copay_status}, Program Id is {program_id}")
         return (f"Verified Account Name is: {account_name}, Funding Source Id is: {funding_id},"
                 f" Requires Rider Verification Status: {rider_verification}, Payment Type Id is: {paymenttype_id},"
                 f" Require Copay Status is: {copay_status}, Program Id is {program_id}")
@@ -1316,7 +888,7 @@ I have updated your profile information. You can now proceed with booking trips 
         """
         # _ = asyncio.create_task(self.Play_Music())
         # await asyncio.sleep(2)
-        print("\n\n\nCalled get_copay_payment_type_id function\n\n\n")
+        logger.info("Called get_copay_payment_type_id function")
 
         copay_funding_source_id, payment_type_id = -1, -1
         _, funding_sources, _ = await fetch_affiliate_details(self.affiliate_id)
@@ -1350,10 +922,10 @@ I have updated your profile information. You can now proceed with booking trips 
         ## Take care of spelling mistakes by STT as well. For example 'Vomata' refers to 'WMATA'.
         ## Do not add backticks or 'json'. I am parsing the response with json.loads(). Make it compatible.
         """
-        print(f"Prompt sent for matching funding sources: {prompt}")
+        logger.debug(f"Prompt sent for matching funding sources: {prompt}")
 
         response = await get_match_source(prompt)
-        print(f"Matching Response: {response}")
+        logger.debug(f"Matching Response: {response}")
 
         try:
             parsed_response = json.loads(response)
@@ -1363,8 +935,8 @@ I have updated your profile information. You can now proceed with booking trips 
             copay_program_id = int(copay_program_id)
             verified_copay_account_name = parsed_response.get("FundingSource", None)
 
-            print(f"Got Copay Program Id: {copay_program_id}")
-            print(f"Got Copay Funding Source Id: {copay_funding_source_id}")
+            logger.debug(f"Got Copay Program Id: {copay_program_id}")
+            logger.debug(f"Got Copay Funding Source Id: {copay_funding_source_id}")
 
             if str(verified_copay_account_name.lower()) == "None":
                 # await asyncio.sleep(2)
@@ -1389,9 +961,9 @@ I have updated your profile information. You can now proceed with booking trips 
                     try:
                         # Try to convert the string to a dictionary
                         response_dict = json.loads(response_text)
-                        print(response_dict)
+                        logger.debug(f"Response dict: {response_dict}")
                     except Exception as e:
-                        print(f"Failed to decode JSON from string: {e}")
+                        logger.error(f"Failed to decode JSON from string: {e}")
 
         prompt = f"""
         You are given a list of dictionaries enclosed in triple backticks: ```{response_dict}```
@@ -1421,22 +993,22 @@ I have updated your profile information. You can now proceed with booking trips 
         Do not add backticks or 'json'. I am parsing the response with json.loads(). Make it compatible.
         In case of multiple matching accounts, return the first one.
         """
-        print(f"Prompt sent for matching funding sources: {prompt}")
+        logger.debug(f"Prompt sent for matching funding sources: {prompt}")
 
         response = await get_match_source(prompt)
-        print(f"Matching Response: {response}")
+        logger.debug(f"Matching Response: {response}")
 
         try:
             parsed_response = json.loads(response)
             payment_type_id = int(parsed_response["PaymentType ID"])
         except Exception as e:
-            print(f"Error parsing JSON: {e}")
+            logger.error(f"Error parsing JSON: {e}")
             pass
 
         # await asyncio.sleep(2)
         # await self.Stop_Music()
-        print(f"\n\n\nCopay Funding Source Id: {copay_funding_source_id}\n\n\n")
-        print(f"\n\n\nCopay Payment Type Id: {payment_type_id}\n\n\n")
+        logger.debug(f"Copay Funding Source Id: {copay_funding_source_id}")
+        logger.debug(f"Copay Payment Type Id: {payment_type_id}")
 
         return (
             f"Verified Copay Account Name is: {verified_copay_account_name}, Copay Funding Source Id is: {copay_funding_source_id} and"
@@ -1458,7 +1030,7 @@ I have updated your profile information. You can now proceed with booking trips 
         """
         # _ = asyncio.create_task(self.Play_Music())
         # await asyncio.sleep(2)
-        print("\n\n\nCalled verify_rider function\n\n\n")
+        logger.info("Called verify_rider function")
         
         rider_id = params.rider_id
         program_id = params.program_id
@@ -1492,7 +1064,7 @@ I have updated your profile information. You can now proceed with booking trips 
                             response_dict = json.loads(response_text)
                             rider_status = response_dict["VerificationSuccess"]
                         except Exception as e:
-                            print(f"Failed to decode JSON from string: {e}")
+                            logger.error(f"Failed to decode JSON from string: {e}")
 
             verified_rider_name = ""
 
@@ -1509,7 +1081,7 @@ I have updated your profile information. You can now proceed with booking trips 
                             # If it's not JSON, handle it as plain text
                             response_text = await response.text()
 
-                            print(f"\n\nRider Name Retrieval Result: {response_text}\n\n")
+                            logger.debug(f"Rider Name Retrieval Result: {response_text}")
 
                             try:
                                 # Try to convert the string to a dictionary
@@ -1518,12 +1090,12 @@ I have updated your profile information. You can now proceed with booking trips 
                                 verified_rider_name += str(response_dict["LastName"])
 
                             except Exception as e:
-                                print(f"Failed to decode JSON from string: {e}")
+                                logger.error(f"Failed to decode JSON from string: {e}")
 
-            print(f"Rider Verification Status: {rider_status}")
-            print(f"Verified Rider Name: {verified_rider_name}")
+            logger.debug(f"Rider Verification Status: {rider_status}")
+            logger.debug(f"Verified Rider Name: {verified_rider_name}")
         except Exception as e:
-            print(f"\n\nError in verifying_rider_id: {e}\n\n")
+            logger.error(f"Error in verifying_rider_id: {e}")
         # await asyncio.sleep(2)
         # await self.Stop_Music()
 
@@ -1552,22 +1124,22 @@ I have updated your profile information. You can now proceed with booking trips 
             JSON string if successful, or error string if failed
         """
 
-        print(f"\n\nCalled get_Trip_Stats function\n\n")
+        logger.info("Called get_Trip_Stats function")
         
         # Use the stored client_id from initial phone lookup instead of LLM parameter
         if not self.client_id:
-            print("&&&&&&&&&&&&&&&&&&&Client ID not available in get_Trip_Stats, attempting to retrieve it...")
+            logger.warning("Client ID not available in get_Trip_Stats, attempting to retrieve it...")
             # Try to get client info first
             try:
                 await self.get_client_name()
                 if not self.client_id:
                     return "I need to identify you first. Let me search for your profile using your phone number."
             except Exception as e:
-                print(f"Error retrieving client info in get_Trip_Stats: {e}")
+                logger.error(f"Error retrieving client info in get_Trip_Stats: {e}")
                 return "I'm having trouble accessing your profile. Please try again."
         
         client_id = int(self.client_id)
-        print(f"Using stored client_id: {client_id}")
+        logger.debug(f"Using stored client_id: {client_id}")
 
         # _ = asyncio.create_task(self.Play_Music())
         # await asyncio.sleep(2)
@@ -1585,33 +1157,33 @@ I have updated your profile information. You can now proceed with booking trips 
             "Content-Type": "application/json"
         }
 
-        print(f"\n\n\nPayload Sent for trip stats: {payload}\n\n\n")
+        logger.debug(f"Payload Sent for trip stats: {payload}")
 
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.post(url, json=payload, headers=headers) as resp:
-                    print(f"\n\nStatus: {resp.status}")
-                    print(f"Headers: {resp.headers}\n\n")
+                    logger.debug(f"Status: {resp.status}")
+                    logger.debug(f"Headers: {resp.headers}")
 
                     # Read text response and try to parse as JSON manually
                     text = await resp.text()
 
                     try:
                         data = json.loads(text)
-                        print(f"\n\nResponse: {data}\n\n")
+                        logger.debug(f"Response: {data}")
                         # await asyncio.sleep(2)
                         # await self.Stop_Music()
                         return json.dumps(data, indent=4)
                     except json.JSONDecodeError:
                         # await asyncio.sleep(2)
                         # await self.Stop_Music()
-                        print("\n\nFailed to decode JSON. Raw response:\n", text)
+                        logger.error(f"Failed to decode JSON. Raw response: {text}")
                         return "No valid JSON data found!"
 
         except Exception as e:
             # await asyncio.sleep(2)
             # await self.Stop_Music()
-            print(f"\n\nError occurred in getting trip stats: {e}\n\n")
+            logger.error(f"Error occurred in getting trip stats: {e}")
             return "No data found!"
 
     @function_tool()
@@ -1633,22 +1205,22 @@ I have updated your profile information. You can now proceed with booking trips 
             String with JSON or error message
         """
 
-        print(f"\n\nCalled get_historic_rides function\n\n")
+        logger.info("Called get_historic_rides function")
         
         # Use the stored client_id from initial phone lookup instead of LLM parameter
         if not self.client_id:
-            print("&&&&&&&&&&&&&&&&&&&Client ID not available in get_historic_rides, attempting to retrieve it...")
+            logger.warning("Client ID not available in get_historic_rides, attempting to retrieve it...")
             # Try to get client info first
             try:
                 await self.get_client_name()
                 if not self.client_id:
                     return "I need to identify you first. Let me search for your profile using your phone number."
             except Exception as e:
-                print(f"Error retrieving client info in get_historic_rides: {e}")
+                logger.error(f"Error retrieving client info in get_historic_rides: {e}")
                 return "I'm having trouble accessing your profile. Please try again."
         
         client_id = int(self.client_id)
-        print(f"Using stored client_id: {client_id}")
+        logger.debug(f"Using stored client_id: {client_id}")
 
         # _ = asyncio.create_task(self.Play_Music())
         # await asyncio.sleep(2)
@@ -1667,14 +1239,14 @@ I have updated your profile information. You can now proceed with booking trips 
         }
 
         historic_trips_data = ""
-        print(f"\n\nPayload sent to get frequent addresses: {payload}\n\n")
+        logger.debug(f"Payload sent to get frequent addresses: {payload}")
 
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.post(url, json=payload, headers=headers) as response:
                     # print(f"Status Code: {response.status}")
                     response_text = await response.text()
-                    print(f"\n\nResponse from FrequentDataAPI: {response_text}\n\n")
+                    logger.debug(f"Response from FrequentDataAPI: {response_text}")
                     try:
                         response_json = json.loads(response_text)
                         historic_trips = json.loads(response_json["responseJSON"])  # this is the list
@@ -1695,17 +1267,17 @@ I have updated your profile information. You can now proceed with booking trips 
                             historic_trips_data = json.dumps(historic_trips, indent=4)
 
                     except json.JSONDecodeError:
-                        print("Failed to parse response as JSON.")
-                        print("Raw Response:", response_text)
+                        logger.error("Failed to parse response as JSON.")
+                        logger.error(f"Raw Response: {response_text}")
         except Exception as e:
-            print(f"\n\nError occurred in getting historic rides: {e}\n\n")
+            logger.error(f"Error occurred in getting historic rides: {e}")
 
         if historic_trips_data.strip() == "":
             historic_trips_data = "No Data Available"
 
         historic_trips_data_result = f"""Rider Historic/Past/Completed Trips are: ``{historic_trips_data}``\n
         """
-        print(f"\n\nHistoric Rides: {historic_trips_data}\n\n")
+        logger.debug(f"Historic Rides: {historic_trips_data}")
         # await asyncio.sleep(2)
         # await self.Stop_Music()
         return historic_trips_data_result
@@ -1721,22 +1293,22 @@ I have updated your profile information. You can now proceed with booking trips 
             String with addresses or error message
         """
 
-        print(f"\n\nCalled get_frequnt_addresses function\n\n")
+        logger.info("Called get_frequnt_addresses function")
         
         # Use the stored client_id from initial phone lookup instead of LLM parameter
         if not self.client_id:
-            print("&&&&&&&&&&&&&&&&&&&Client ID not available in get_frequnt_addresses, attempting to retrieve it...")
+            logger.warning("Client ID not available in get_frequnt_addresses, attempting to retrieve it...")
             # Try to get client info first
             try:
                 await self.get_client_name()
                 if not self.client_id:
                     return "I need to identify you first. Let me search for your profile using your phone number."
             except Exception as e:
-                print(f"Error retrieving client info in get_frequnt_addresses: {e}")
+                logger.error(f"Error retrieving client info in get_frequnt_addresses: {e}")
                 return "I'm having trouble accessing your profile. Please try again."
         
         client_id = int(self.client_id)
-        print(f"Using stored client_id: {client_id}")
+        logger.debug(f"Using stored client_id: {client_id}")
 
         # _ = asyncio.create_task(self.Play_Music())
         # await asyncio.sleep(2)
@@ -1758,14 +1330,14 @@ I have updated your profile information. You can now proceed with booking trips 
         }
 
         frequent_addresses = ""
-        print(f"\n\nPayload sent to get frequent addresses: {payload}\n\n")
+        logger.debug(f"Payload sent to get frequent addresses: {payload}")
 
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.post(url, json=payload, headers=headers) as response:
                     # print(f"Status Code: {response.status}")
                     response_text = await response.text()
-                    print(f"\n\nResponse from FrequentDataAPI: {response_text}\n\n")
+                    logger.debug(f"Response from FrequentDataAPI: {response_text}")
                     try:
                         response_json = json.loads(response_text)
                         if response_json.get("responseCode") == 200:
@@ -1780,10 +1352,10 @@ I have updated your profile information. You can now proceed with booking trips 
                             frequent_addresses = ""
 
                     except json.JSONDecodeError:
-                        print("Failed to parse response as JSON.")
-                        print("Raw Response:", response_text)
+                        logger.error("Failed to parse response as JSON.")
+                        logger.error(f"Raw Response: {response_text}")
         except Exception as e:
-            print(f"\n\nError occurred in getting frequent addresses: {e}\n\n")
+            logger.error(f"Error occurred in getting frequent addresses: {e}")
 
         if frequent_addresses.strip() == "":
             frequent_addresses = "No Data Available"
@@ -1815,7 +1387,7 @@ I have updated your profile information. You can now proceed with booking trips 
             str: Distance, duration, and fare information.
         """
 
-        print(f"\n\nCalled get_distance_duration_fare function\n\n")
+        logger.info("Called get_distance_duration_fare function")
 
         # _ = asyncio.create_task(self.Play_Music())
         # await asyncio.sleep(2)
@@ -1877,8 +1449,8 @@ I have updated your profile information. You can now proceed with booking trips 
                         logging.info(f"\n\n\nResponse for distance and duration retrieval: {data}\n\n\n")
                         distance = int(data["routes"][0]["legs"][0]["distance"]["value"])
                         duration = int(data["routes"][0]["legs"][0]["duration"]["value"])
-                        print(f"Distance: {distance}")
-                        print(f"Duration: {duration}")
+                        logger.debug(f"Distance: {distance}")
+                        logger.debug(f"Duration: {duration}")
 
                         url = os.getenv("GET_FARE_API")
 
@@ -1923,13 +1495,13 @@ I have updated your profile information. You can now proceed with booking trips 
                                     logging.info(f"\n\n\nResponse for fare estimation: {response_data}\n\n\n")
                                     total_cost = response_data["totalCost"]
                                     copay_cost = response_data["copay"]
-                                    print(f"Total Cost: {total_cost}")
-                                    print(f"Copay Cost: {copay_cost}")
+                                    logger.debug(f"Total Cost: {total_cost}")
+                                    logger.debug(f"Copay Cost: {copay_cost}")
                                 else:
-                                    print(f"Request failed with status code: {response.status}")
+                                    logger.error(f"Request failed with status code: {response.status}")
 
                     else:
-                        print(f"Request failed with status code {response.status_code}")
+                        logger.error(f"Request failed with status code {response.status_code}")
 
         except Exception as e:
             logging.ERROR(f"Error in getting distance and duration: {e}")
@@ -1967,12 +1539,15 @@ I have updated your profile information. You can now proceed with booking trips 
         extra_details = payload.extra_details
 
         # Use stored client_id instead of LLM-provided one to prevent hallucinations
-        if self.client_id:
+        logger.debug(f"[MAIN TRIP DEBUG] self.client_id = {self.client_id} (type: {type(self.client_id)})")
+        logger.debug(f"[MAIN TRIP DEBUG] payload.client_id = {payload.client_id} (type: {type(payload.client_id)})")
+        
+        if self.client_id and str(self.client_id) not in ["-1", "0", "None", "none"]:
             client_id = str(self.client_id)
-            print(f"[MAIN TRIP] Using stored client_id: {client_id} (overriding LLM provided: {payload.client_id})")
+            logger.info(f"[MAIN TRIP] Using stored client_id: {client_id} (overriding LLM provided: {payload.client_id})")
         else:
             client_id = payload.client_id
-            print(f"[MAIN TRIP] Warning: Using LLM-provided client_id: {client_id} (stored client_id not available)")
+            logger.warning(f"[MAIN TRIP] Warning: Using LLM-provided client_id: {client_id} (stored client_id not available, self.client_id was: {self.client_id})")
         funding_source_id = payload.funding_source_id
         rider_name = payload.rider_name
         payment_type_id = payload.payment_type_id
@@ -2065,8 +1640,8 @@ I have updated your profile information. You can now proceed with booking trips 
                         logging.info(f"\n\n\nResponse for distance and duration retrieval: {data}\n\n\n")
                         distance = int(data["routes"][0]["legs"][0]["distance"]["value"])
                         duration = int(data["routes"][0]["legs"][0]["duration"]["value"])
-                        print(f"Distance: {distance}")
-                        print(f"Duration: {duration}")
+                        logger.debug(f"Distance: {distance}")
+                        logger.debug(f"Duration: {duration}")
                         url = os.getenv("GET_FARE_API")
 
                         distance_miles = await meters_to_miles(distance)
@@ -2110,16 +1685,16 @@ I have updated your profile information. You can now proceed with booking trips 
                                     logging.info(f"\n\n\nResponse for fare estimation: {response_data}\n\n\n")
                                     total_cost = response_data["totalCost"]
                                     copay_cost = response_data["copay"]
-                                    print(f"Total Cost: {total_cost}")
-                                    print(f"Copay Cost: {copay_cost}")
+                                    logger.debug(f"Total Cost: {total_cost}")
+                                    logger.debug(f"Copay Cost: {copay_cost}")
                                 else:
-                                    print(f"Request failed with status code: {response.status}")
+                                    logger.error(f"Request failed with status code: {response.status}")
 
                     else:
-                        print(f"Request failed with status code: {response.status}")
+                        logger.error(f"Request failed with status code: {response.status}")
 
         except Exception as e:
-            print(f"Error in getting fare: {e}")
+            logger.error(f"Error in getting fare: {e}")
             pass
 
         pickup_lat = await safe_float(pickup_lat)
@@ -2134,7 +1709,7 @@ I have updated your profile information. You can now proceed with booking trips 
                 is_schedule = False
 
         except Exception as e:
-            print(f"Error in getting schedule status: {e}")
+            logger.error(f"Error in getting schedule status: {e}")
             pass
 
         try:
@@ -2144,9 +1719,9 @@ I have updated your profile information. You can now proceed with booking trips 
             with open(payload_path, 'r') as file:
                 data = json.load(file)
 
-            print(f"Phone number by LLM: {phone_number}")
+            logger.debug(f"Phone number by LLM: {phone_number}")
             phone_number = await format_phone_number(phone_number)
-            print(f"Phone number after formatting: {phone_number}")
+            logger.debug(f"Phone number after formatting: {phone_number}")
 
             client_id = await safe_int(client_id)
             rider_id = await safe_int(rider_id)
@@ -2162,16 +1737,19 @@ I have updated your profile information. You can now proceed with booking trips 
             # Handle two scenarios for riderInfo based on whether rider is new or existing
             # Scenario 1: First ride (no client_id) - New rider
             if not self.client_id or str(self.client_id) == "-1" or str(self.client_id) == "0":
-                print("[MAIN TRIP] First ride scenario - New rider (no client_id)")
+                logger.info("[MAIN TRIP] First ride scenario - New rider (no client_id)")
                 data["riderInfo"]["ID"] = -1
                 data["riderInfo"]["MedicalId"] = ""  # Empty string for new riders
                 data["riderInfo"]["RiderID"] = "0"   # String "0" for new riders
             else:
                 # Scenario 2: Existing rider (has client_id)
-                print(f"[MAIN TRIP] Existing rider scenario - client_id: {self.client_id}")
+                logger.info(f"[MAIN TRIP] Existing rider scenario - client_id: {self.client_id}")
                 data["riderInfo"]["ID"] = int(self.client_id)
                 data["riderInfo"]["MedicalId"] = "0"  # String "0" for existing riders
-                data["riderInfo"]["RiderID"] = rider_id    # String "0" for existing riders
+                data["riderInfo"]["RiderID"] = "0"    # String "0" for existing riders
+
+            if is_will_call:
+                is_schedule = True
             
             # Common riderInfo fields for both scenarios
             data["riderInfo"]["PhoneNo"] = phone_number
@@ -2265,7 +1843,7 @@ I have updated your profile information. You can now proceed with booking trips 
             return f"Payload for main trip has been collected! Ask the rider if they would like to book a return trip."
 
         except Exception as e:
-            print(f"\n\nError occurred in collecting trip payload: {e}\n\n")
+            logger.error(f"Error occurred in collecting trip payload: {e}")
             return f"error: {e}"
 
     @function_tool()
@@ -2283,10 +1861,10 @@ I have updated your profile information. You can now proceed with booking trips 
         # Use stored client_id instead of LLM-provided one to prevent hallucinations
         if self.client_id:
             client_id = str(self.client_id)
-            print(f"[RETURN TRIP] Using stored client_id: {client_id} (overriding LLM provided: {payload.client_id})")
+            logger.info(f"[RETURN TRIP] Using stored client_id: {client_id} (overriding LLM provided: {payload.client_id})")
         else:
             client_id = payload.client_id
-            print(f"[RETURN TRIP] Warning: Using LLM-provided client_id: {client_id} (stored client_id not available)")
+            logger.warning(f"[RETURN TRIP] Warning: Using LLM-provided client_id: {client_id} (stored client_id not available)")
         dropoff_city = payload.dropoff_city
         pickup_state = payload.pickup_state
         dropoff_state = payload.dropoff_state
@@ -2383,8 +1961,8 @@ I have updated your profile information. You can now proceed with booking trips 
                         logging.info(f"\n\n\nResponse for distance and duration retrieval: {data}\n\n\n")
                         distance = int(data["routes"][0]["legs"][0]["distance"]["value"])
                         duration = int(data["routes"][0]["legs"][0]["duration"]["value"])
-                        print(f"Distance: {distance}")
-                        print(f"Duration: {duration}")
+                        logger.debug(f"Distance: {distance}")
+                        logger.debug(f"Duration: {duration}")
                         url = os.getenv("GET_FARE_API")
 
                         distance_miles = await meters_to_miles(distance)
@@ -2428,16 +2006,16 @@ I have updated your profile information. You can now proceed with booking trips 
                                     logging.info(f"\n\n\nResponse for fare estimation: {response_data}\n\n\n")
                                     total_cost = response_data["totalCost"]
                                     copay_cost = response_data["copay"]
-                                    print(f"Total Cost: {total_cost}")
-                                    print(f"Copay Cost: {copay_cost}")
+                                    logger.debug(f"Total Cost: {total_cost}")
+                                    logger.debug(f"Copay Cost: {copay_cost}")
                                 else:
-                                    print(f"Request failed with status code: {response.status}")
+                                    logger.error(f"Request failed with status code: {response.status}")
 
                     else:
-                        print(f"Request failed with status code: {response.status}")
+                        logger.error(f"Request failed with status code: {response.status}")
 
         except Exception as e:
-            print(f"Error in getting fare: {e}")
+            logger.error(f"Error in getting fare: {e}")
             pass
 
         pickup_lat = await safe_float(pickup_lat)
@@ -2452,7 +2030,7 @@ I have updated your profile information. You can now proceed with booking trips 
                 is_schedule = False
 
         except Exception as e:
-            print(f"Error in getting schedule status: {e}")
+            logger.error(f"Error in getting schedule status: {e}")
             pass
 
         try:
@@ -2462,9 +2040,9 @@ I have updated your profile information. You can now proceed with booking trips 
             with open(payload_path, 'r') as file:
                 data = json.load(file)
 
-            print(f"Phone number by LLM: {phone_number}")
+            logger.debug(f"Phone number by LLM: {phone_number}")
             phone_number = await format_phone_number(phone_number)
-            print(f"Phone number after formatting: {phone_number}")
+            logger.debug(f"Phone number after formatting: {phone_number}")
 
             client_id = await safe_int(client_id)
             rider_id = await safe_int(rider_id)
@@ -2480,16 +2058,19 @@ I have updated your profile information. You can now proceed with booking trips 
             # Handle two scenarios for riderInfo based on whether rider is new or existing
             # Scenario 1: First ride (no client_id) - New rider
             if not self.client_id or str(self.client_id) == "-1" or str(self.client_id) == "0":
-                print("[RETURN TRIP] First ride scenario - New rider (no client_id)")
+                logger.info("[RETURN TRIP] First ride scenario - New rider (no client_id)")
                 data["riderInfo"]["ID"] = -1
                 data["riderInfo"]["MedicalId"] = ""  # Empty string for new riders
                 data["riderInfo"]["RiderID"] = "0"   # String "0" for new riders
             else:
                 # Scenario 2: Existing rider (has client_id)
-                print(f"[RETURN TRIP] Existing rider scenario - client_id: {self.client_id}")
+                logger.info(f"[RETURN TRIP] Existing rider scenario - client_id: {self.client_id}")
                 data["riderInfo"]["ID"] = int(self.client_id)
                 data["riderInfo"]["MedicalId"] = "0"  # String "0" for existing riders
-                data["riderInfo"]["RiderID"] = rider_id    # String "0" for existing riders
+                data["riderInfo"]["RiderID"] = "0"    # String "0" for existing riders
+
+            if is_will_call:
+                is_schedule = True
             
             # Common riderInfo fields for both scenarios
             data["riderInfo"]["PhoneNo"] = phone_number
@@ -2579,12 +2160,12 @@ I have updated your profile information. You can now proceed with booking trips 
 
             # print(f"\n\n\n Return trip Payload collected: {data}\n\n\n")
             logging.info(f"\n\n\n Return trip Payload collected:{data}\n\n\n")
-            print("return trip paylaod:", data)
+            logger.debug(f"return trip payload: {data}")
 
             return f"Payload for return trip has been collected!"
 
         except Exception as e:
-            print(f"\n\nError occurred in collecting trip payload: {e}\n\n")
+            logger.error(f"Error occurred in collecting trip payload: {e}")
             return f"error: {e}"
 
     @function_tool()
@@ -2795,6 +2376,6 @@ I have updated your profile information. You can now proceed with booking trips 
             str: Current date and time in 'YYYY-MM-DD HH:MM' format 
                 (e.g., '2025-10-03 19:00').
         """
-        print("get_current_date_and_time function called...")
+        logger.info("get_current_date_and_time function called...")
         return datetime.now().strftime('%Y-%m-%d %H:%M')
 
