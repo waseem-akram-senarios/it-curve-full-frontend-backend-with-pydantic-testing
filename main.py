@@ -999,7 +999,6 @@ Remember: You are ONLY here to assist with transportation services for the agenc
         supervisor_llm_output_tokens = summary.llm_completion_tokens
         supervisor_cost = calculate_supervisor_cost(supervisor_llm_input_tokens, supervisor_llm_output_tokens)
 
-        print('supervisor score history', supervisor.score_history)
 
         # Format conversation history for MongoDB
         formatted_history = []
@@ -1010,6 +1009,7 @@ Remember: You are ONLY here to assist with transportation services for the agenc
                 "transcription": entry.get('transcription', ''),
                 "timestamp": entry.get('timestamp', '')
             })
+        print('supervisor score history', supervisor.score_history, len(formatted_history))
 
         # Create MongoDB document
         mongo_doc = {
