@@ -36,6 +36,7 @@ class Supervisor:
         self.first_greeting_done = False
         self.escalated_to_live_agent = False
         self.nth_issue = 0
+        self.score_history = []
 
     async def start(self):
         # Create a synchronous wrapper for the close event since it's async
@@ -101,6 +102,13 @@ If uncertain, choose the lower score."""
 
         avg_score = (score.relevance + score.completeness + score.groundedness) / 3
         print(f"[supervisor score] {score} = {avg_score}")
+
+        self.score_history.append({
+            "relevance": float(score.relevance),
+            "completeness": float(score.completeness),
+            "groundedness": float(score.groundedness),
+            "average": float(avg_score)
+        })
 
         if avg_score > 0.7:
             self.nth_issue = 0
