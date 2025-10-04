@@ -44,6 +44,9 @@ openai_client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 class Assistant(Agent):
     def __init__(self, call_sid=None, context=None, room=None, affiliate_id=None, instructions=None, main_leg=None, return_leg=None, rider_phone=None, client_id=None):
+        self.function_call_count = 0
+        self.max_function_calls = 50
+        self.failed_function_calls = {}
         """Initialize the assistant with a call SID and LiveKit room."""
         self.call_sid = call_sid  # Store the call SID for music control
         self.room = room  # Store the LiveKit room instance
@@ -52,15 +55,20 @@ class Assistant(Agent):
         self.main_leg = main_leg
         self.return_leg = return_leg
         self.update_rider_phone(rider_phone)
+        self.update_client_id(client_id)
         self.context = context
-        self.client_id = None
-        # Store the client ID from API lookup, handle string "-1" and None cases
-        if client_id and str(client_id) != "-1" and str(client_id).lower() != "none":
-            self.client_id = str(client_id)
-            logger.info(f"[ASSISTANT INIT] Client ID set to: {self.client_id}")
-        else:            
-            logger.info(f"[ASSISTANT INIT] Client ID not available (received: {client_id})")
-        super().__init__(instructions=instructions)  # Initialize Agent with the instructions argument
+        
+        # Try to initialize Agent with increased function call limits if supported
+        try:
+            super().__init__(
+                instructions=instructions,
+                max_function_calls=100,
+                function_call_timeout=300
+            )
+        except TypeError:
+            logger.warning("Failed to initialize Agent with increased function call limits")
+            # If the parameters aren't supported, fall back to basic initialization
+            super().__init__(instructions=instructions)
 
     def update_rider_phone(self, rider_phone):
         """
@@ -80,10 +88,18 @@ class Assistant(Agent):
             self.session.say("The phone number is not correct. Let me transfer you to live agent.", allow_interruptions=False)
             self.transfer_call()
 
+    def update_client_id(self, client_id):
+        self.client_id = str(client_id)
+        logger.info(f"Client ID {self.client_id}")
+        if self.client_id and str(self.client_id) not in ["-1", "0", "None", "none"]:
+            logger.info(f"✅ Client ID set to: {self.client_id}")
+        else:            
+            logger.warning(f"❌ Client ID not available (received: {client_id}) - self.client_id will be None")
+    
     def update_affliate_id_and_family(self,affiliate_id,family_id):
         self.affiliate_id=affiliate_id
         self.family_id=family_id
-        
+    
     async def Play_Music(self) -> str:
         """Function to publish an audio track in the LiveKit room with stoppable music."""
         if not self.room:
@@ -254,7 +270,6 @@ class Assistant(Agent):
                 for i, client in enumerate(client_list, 1):
                     name = (client['FirstName'] + ' ' + client['LastName']).strip()
                     client_id = client.get('Id', 0)
-                    self.client_id = client_id
                     logger.debug(f"Client ID: {client_id}")
                     number_of_existing_trips, trips_data = await get_Existing_Trips_Number(client_id, self.affiliate_id)
 
@@ -301,32 +316,35 @@ class Assistant(Agent):
         # await asyncio.sleep(2)
         # await self.Stop_Music()
 
-
+        logger.info(f"✅ [GET_CLIENT_NAME] rider_count: {rider_count}")
+        data = json.dumps(result, indent=2)
+        
         # Only set self.client_id if there is exactly one profile
-        if rider_count == 1 and "rider_1" in result:
-            self.client_id = result["rider_1"]["client_id"]
-            self.rider_id = result["rider_1"]["rider_id"]
-            logger.info(f"[GET_CLIENT_NAME] Single profile found - set client_id: {self.client_id}, rider_id: {self.rider_id}")
-        elif rider_count > 1:
-            logger.info(f"[GET_CLIENT_NAME] Multiple profiles found ({rider_count}). Use select_rider_profile() to choose one.")
+        if rider_count > 1:
+            logger.info(f"✅ [GET_CLIENT_NAME] Multiple profiles found ({rider_count}). Use select_rider_profile() to choose one.")
+            # return f"Multiple profiles found. count is {rider_count}. detail {data}. When user select profile, call select_rider_profile() function."
+        elif rider_count == 1:
+            logger.info(f"✅ [GET_CLIENT_NAME] Only one profile found. Setting self.client_id to {result['rider_1']['client_id']}")
+            self.client_id = str(result['rider_1']['client_id'])
         else:
-            logger.info(f"[GET_CLIENT_NAME] No profiles found or new rider.")
+            logger.info(f"❌ [GET_CLIENT_NAME] No profiles found or new rider.")
 
-        return json.dumps(result, indent=2)
+        return data
 
     @function_tool()
-    async def select_rider_profile(self, profile_number: int) -> str:
+    async def select_rider_profile(self, profile_name: str, profile_number: int = 0) -> str:
         """
-        Function to select a specific rider profile when multiple profiles are found.
+        Function to select a specific rider profile when multiple profiles are found and user provides profile name or profile number.
         This updates the self.client_id and self.rider_id with the selected profile's values.
+        The profile_name is the primary way to select - profile_number is optional.
         
         Args:
-            profile_number (int): The profile number to select (1, 2, 3, etc.)
-            
+            profile_name (str): The name of the profile to select (REQUIRED)
+            profile_number (int): Optional profile number (1, 2, 3, etc.) - will be auto-determined from name if not provided
         Returns:
-            str: Confirmation message with selected profile details
+            str: Confirmation message with selected profile details or error message
         """
-        logger.info(f"Called select_rider_profile function with profile_number: {profile_number}")
+        logger.info(f"🔍 [SELECT_RIDER_PROFILE] Called with profile_name: '{profile_name}', profile_number: {profile_number}")
         
         try:
             # Call get_client_name to get all profiles again
@@ -360,6 +378,22 @@ class Assistant(Agent):
                 client_object = response["responseJSON"]
                 client_list = json.loads(client_object)
                 
+                # Check if profile_name matches any existing profile
+                if profile_name:
+                    provided_name_lower = profile_name.strip().lower()
+                
+                    # Check if this name exists in any of the profiles
+                    name_exists = False
+                    for client in client_list:
+                        existing_name = (client['FirstName'] + ' ' + client['LastName']).strip().lower()
+                        
+                        if provided_name_lower == existing_name:
+                            name_exists = True
+                            break
+                    # If profile name doesn't match any existing profile, return error only
+                    if not name_exists:
+                        return """That profile does not exist in our system. However, if you want to create a new profile you have to book a trip with us first."""
+                
                 # Check if the requested profile number exists
                 if profile_number < 1 or profile_number > len(client_list):
                     return f"Invalid profile number. Please select a number between 1 and {len(client_list)}."
@@ -369,7 +403,6 @@ class Assistant(Agent):
                 
                 # Update self.client_id and self.rider_id with selected profile
                 selected_client_id = selected_client.get('Id', 0)
-                self.client_id = selected_client_id
                 
                 # Get rider_id from MedicalId
                 medical_id_raw = selected_client.get("MedicalId", "")
@@ -390,14 +423,18 @@ class Assistant(Agent):
                 logger.info(f"[PROFILE SELECTION] Updated client_id to: {self.client_id}")
                 logger.info(f"[PROFILE SELECTION] Updated rider_id to: {self.rider_id}")
                 
+                # Also call the existing update_client_id method to ensure consistency
+                self.update_client_id(str(selected_client_id))
+                
+                logger.info(f"🎯 [SELECT_RIDER_PROFILE] Successfully selected profile for {name} - client_id: {self.client_id}, rider_id: {self.rider_id}")
+                
                 return f"""Profile selected successfully!
-Selected Profile: {name}
-Client ID: {self.client_id}
-Rider ID: {self.rider_id}
-Location: {city}, {state}
-Address: {address}
-
-I have updated your profile information. You can now proceed with booking trips or checking your ride information."""
+                    Selected Profile: {name}
+                    Client ID: {self.client_id}
+                    Rider ID: {self.rider_id}
+                    Location: {city}, {state}
+                    Address: {address}
+                    I have updated your profile information. You can now proceed with booking trips or checking your ride information."""
                 
             else:
                 return "Error: Could not retrieve profiles. Please try again."
@@ -434,13 +471,13 @@ I have updated your profile information. You can now proceed with booking trips 
             try:
                 await self.get_client_name()
                 if not self.client_id:
+                    logger.warning("❌ Client ID not available after retrieving client info in get_ETA")
                     return "I need to identify you first. Let me search for your profile using your phone number."
             except Exception as e:
-                logger.error(f"Error retrieving client info in get_ETA: {e}")
+                logger.error(f"❌ Error retrieving client info in get_ETA: {e}")
                 return "I'm having trouble accessing your profile. Please try again."
         
-        client_id = str(self.client_id)
-        logger.debug(f"Using stored client_id: {client_id}")
+        logger.debug(f"✅ Using stored client_id get_ETA: {self.client_id}")
 
         # Start background music task
         # _ = asyncio.create_task(self.Play_Music())
@@ -450,7 +487,7 @@ I have updated your profile information. You can now proceed with booking trips 
 
         payload = {
             "searchCriteria": "CustomerID",
-            "searchText": client_id,
+            "searchText": self.client_id,
             "bActiveRecords": True,
             "iATSPID": int(self.affiliate_id),
             "responseJSON": "string",
@@ -531,7 +568,7 @@ I have updated your profile information. You can now proceed with booking trips 
         try:
             # Use the OpenAI API client to make the call
             response = await openai_client.responses.create(
-                model="gpt-4.1", # do not change this model, this is must for web address search
+                model="gpt-4o", # do not change this model, this is must for web address search
                 tools=[{
                         "type": "web_search_preview",
                         "search_context_size": "low",
@@ -1130,13 +1167,13 @@ I have updated your profile information. You can now proceed with booking trips 
             try:
                 await self.get_client_name()
                 if not self.client_id:
+                    logger.warning("❌ Client ID not available after retrieving client info in get_Trip_Stats")
                     return "I need to identify you first. Let me search for your profile using your phone number."
             except Exception as e:
-                logger.error(f"Error retrieving client info in get_Trip_Stats: {e}")
+                logger.error(f"❌ Error retrieving client info in get_Trip_Stats: {e}")
                 return "I'm having trouble accessing your profile. Please try again."
         
-        client_id = int(self.client_id)
-        logger.debug(f"Using stored client_id: {client_id}")
+        logger.debug(f"✅ Using stored client_id get_Trip_Stats: {self.client_id}")
 
         # _ = asyncio.create_task(self.Play_Music())
         # await asyncio.sleep(2)
@@ -1146,7 +1183,7 @@ I have updated your profile information. You can now proceed with booking trips 
 
         # Create the payload (request body)
         payload = {
-            "iclientid": client_id
+            "iclientid": self.client_id
         }
 
         # Define the headers
@@ -1211,13 +1248,13 @@ I have updated your profile information. You can now proceed with booking trips 
             try:
                 await self.get_client_name()
                 if not self.client_id:
+                    logger.warning("❌ Client ID not available after retrieving client info in get_historic_rides")
                     return "I need to identify you first. Let me search for your profile using your phone number."
             except Exception as e:
-                logger.error(f"Error retrieving client info in get_historic_rides: {e}")
+                logger.error(f"❌ Error retrieving client info in get_historic_rides: {e}")
                 return "I'm having trouble accessing your profile. Please try again."
         
-        client_id = int(self.client_id)
-        logger.debug(f"Using stored client_id: {client_id}")
+        logger.debug(f"✅ Using stored client_id get_historic_rides: {self.client_id}")
 
         # _ = asyncio.create_task(self.Play_Music())
         # await asyncio.sleep(2)
@@ -1225,7 +1262,7 @@ I have updated your profile information. You can now proceed with booking trips 
         url = os.getenv("GET_HISTORIC_RIDES_API")
 
         payload = {
-            "clientID": str(client_id),
+            "clientID": str(self.client_id),
             "affiliateID": str(self.affiliate_id),
             "bGetAddressDataOnly": "false",
             "responseCode": 100
@@ -1241,7 +1278,6 @@ I have updated your profile information. You can now proceed with booking trips 
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.post(url, json=payload, headers=headers) as response:
-                    # print(f"Status Code: {response.status}")
                     response_text = await response.text()
                     logger.debug(f"Response from FrequentDataAPI: {response_text}")
                     try:
@@ -1299,13 +1335,13 @@ I have updated your profile information. You can now proceed with booking trips 
             try:
                 await self.get_client_name()
                 if not self.client_id:
+                    logger.warning("❌ Client ID not available after retrieving client info in get_frequnt_addresses")
                     return "I need to identify you first. Let me search for your profile using your phone number."
             except Exception as e:
-                logger.error(f"Error retrieving client info in get_frequnt_addresses: {e}")
+                logger.error(f"❌ Error retrieving client info in get_frequnt_addresses: {e}")
                 return "I'm having trouble accessing your profile. Please try again."
         
-        client_id = int(self.client_id)
-        logger.debug(f"Using stored client_id: {client_id}")
+        logger.debug(f"✅ Using stored client_id get_frequnt_addresses: {self.client_id}")
 
         # _ = asyncio.create_task(self.Play_Music())
         # await asyncio.sleep(2)
@@ -1313,7 +1349,7 @@ I have updated your profile information. You can now proceed with booking trips 
         url = os.getenv("GET_HISTORIC_RIDES_API")
 
         payload = {
-            "clientID": str(client_id),
+            "clientID": str(self.client_id),
             "affiliateID": str(self.affiliate_id),
             "bIncludeClientAddress": "",
             "bGetAddressDataOnly": "",
@@ -1332,7 +1368,6 @@ I have updated your profile information. You can now proceed with booking trips 
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.post(url, json=payload, headers=headers) as response:
-                    # print(f"Status Code: {response.status}")
                     response_text = await response.text()
                     logger.debug(f"Response from FrequentDataAPI: {response_text}")
                     try:
@@ -1397,6 +1432,12 @@ I have updated your profile information. You can now proceed with booking trips 
         number_of_wheel_chairs = params.number_of_wheel_chairs
         number_of_passengers = params.number_of_passengers
         rider_id = params.rider_id
+        
+        # Set default values for fare calculation (since this function doesn't have payment info)
+        funding_source_id = "1"  # Default cash payment
+        copay_funding_source_id = "-1"  # No copay by default
+        pickup_lat = pickup_latitude
+        pickup_lng = pickup_longitude
 
         if pickup_latitude == "0" or pickup_longitude == "0":
             # await asyncio.sleep(2)
@@ -1487,7 +1528,6 @@ I have updated your profile information. You can now proceed with booking trips 
                         async with aiohttp.ClientSession() as session:
                             async with session.post(url, json=data, headers=headers) as response:
                                 if response.status == 200:
-                                    # If successful, print the JSON response
                                     response_data = await response.json()
                                     logger.debug(f"Response for fare estimation: {response_data}")
                                     total_cost = response_data["totalCost"]
@@ -1518,6 +1558,24 @@ I have updated your profile information. You can now proceed with booking trips 
     #     return "Paused for a while"
 
     @function_tool()
+    async def get_client_id(self):
+        """
+        Function that is used to get the client id.
+        Returns:
+            str: Client id.
+        """
+        return self.client_id
+
+    @function_tool()
+    async def get_customer_phone_number(self):
+        """
+        Function that is used to get the customer phone number.
+        Returns:
+            str: Customer phone number.
+        """
+        return self.rider_phone
+
+    @function_tool()
     async def collect_main_trip_payload(self, payload: MainTripPayload) -> str:
         """
         Function that is used to collect the payload for the main trip.
@@ -1536,26 +1594,17 @@ I have updated your profile information. You can now proceed with booking trips 
         extra_details = payload.extra_details
 
         # Use stored client_id instead of LLM-provided one to prevent hallucinations
-        logger.debug(f"[MAIN TRIP DEBUG] self.client_id = {self.client_id} (type: {type(self.client_id)})")
-        logger.debug(f"[MAIN TRIP DEBUG] payload.client_id = {payload.client_id} (type: {type(payload.client_id)})")
-        
-        if self.client_id and str(self.client_id) not in ["-1", "0", "None", "none"]:
+        logger.debug(f"✅ [MAIN TRIP DEBUG] self.client_id = {self.client_id} (type: {type(self.client_id)})")
+        logger.debug(f"✅ [MAIN TRIP DEBUG] payload.client_id = {payload.client_id} (type: {type(payload.client_id)})")
+
+        if (self.client_id and str(self.client_id) not in ["-1", "0", "None", "none"]):
             client_id = str(self.client_id)
-            logger.info(f"[MAIN TRIP] Using stored client_id: {client_id} (overriding LLM provided: {payload.client_id})")
+            logger.info(f"✅ [MAIN TRIP] Using stored client_id: {client_id} (overriding LLM provided: {payload.client_id})")
         else:
-            logger.warning("Client ID not available in collect_main_trip_payload, attempting to retrieve it...")
+            logger.warning("❌ Client ID not available in collect_main_trip_payload, attempting to retrieve it...")
             client_id = -1
-            # Try to get client info first
-            # try:
-            #     await self.get_client_name()
-            #     if not self.client_id:
-            #         return "I need to identify you first. Let me search for your profile using your phone number."
-            # except Exception as e:
-            #     logger.error(f"Error retrieving client info in collect_main_trip_payload: {e}")
-            #     logger.warning(f"[MAIN TRIP] Warning: Using LLM-provided client_id: {client_id} (stored client_id not available, self.client_id was: {self.client_id})")
-            #     return "I'm having trouble accessing your profile. Please try again."
-        
-        logger.debug(f"Using stored client_id: {client_id}")
+                    
+        logger.debug(f"✅ Using stored client_id collect_main_trip_payload: {client_id}")
         funding_source_id = payload.funding_source_id
         rider_name = payload.rider_name
         payment_type_id = payload.payment_type_id
@@ -1585,13 +1634,7 @@ I have updated your profile information. You can now proceed with booking trips 
         pickup_phone_number = payload.pickup_phone_number
         dropoff_remarks = payload.dropoff_remarks
         dropoff_phone_number = payload.dropoff_phone_number
-        # print(f"\n\n\nCalled collect_trip_payload function at: {datetime.now()}\n\n\n")
         logger.info(f"Called collect_trip_payload function at: {datetime.now()}")
-        # Start playing music asynchronously
-        # _ = asyncio.create_task(self.Play_Music())
-        # await asyncio.sleep(2)
-        if client_id == 0:
-            client_id = -1
         phone_number = self.rider_phone
         family_id = self.family_id
 
@@ -1659,16 +1702,16 @@ I have updated your profile information. You can now proceed with booking trips 
                         data = {
                             "distance": distance_miles,
                             "travelTime": duration_minutes,
-                            "fundingSourceID": int(funding_source_id),
+                            "fundingSourceID": int(funding_source_id) if funding_source_id and funding_source_id.strip() else 1,
                             "copy": 0,
-                            "numberOfWheelchairs": int(number_of_wheel_chairs),
-                            "numberOfPassengers": int(number_of_passengers),
+                            "numberOfWheelchairs": int(number_of_wheel_chairs) if number_of_wheel_chairs and number_of_wheel_chairs.strip() else 0,
+                            "numberOfPassengers": int(number_of_passengers) if number_of_passengers and number_of_passengers.strip() else 1,
                             "classOfServiceID": 1,
                             "affiliateID": int(self.affiliate_id),
                             "pickupLatitude": float(pickup_lat),
                             "pickupLongitude": float(pickup_lng),
-                            "copyFundingSourceID": int(copay_funding_source_id),
-                            "riderID": str(rider_id),
+                            "copyFundingSourceID": int(copay_funding_source_id) if copay_funding_source_id and copay_funding_source_id.strip() else -1,
+                            "riderID": str(rider_id) if rider_id else "0",
                             "authorizedStaff": "string",
                             "startFareZone": "string",
                             "endFareZone": "string",
@@ -1688,7 +1731,6 @@ I have updated your profile information. You can now proceed with booking trips 
                         async with aiohttp.ClientSession() as session:
                             async with session.post(url, json=data, headers=headers) as response:
                                 if response.status == 200:
-                                    # If successful, print the JSON response
                                     response_data = await response.json()
                                     logger.debug(f"Response for fare estimation: {response_data}")
                                     total_cost = response_data["totalCost"]
@@ -1731,7 +1773,6 @@ I have updated your profile information. You can now proceed with booking trips 
             phone_number = await format_phone_number(phone_number)
             logger.debug(f"Phone number after formatting: {phone_number}")
 
-            client_id = await safe_int(client_id)
             rider_id = await safe_int(rider_id)
             affiliate_id = await safe_int(self.affiliate_id)
             family_id = await safe_int(family_id)
@@ -1740,22 +1781,23 @@ I have updated your profile information. You can now proceed with booking trips 
             copay_funding_source_id = await safe_int(copay_funding_source_id)
             copay_payment_type_id = await safe_int(copay_payment_type_id)
             if client_id == 0:
+                logger.warning(f"✅ [MAIN TRIP] 🚨 Converting client_id from 0 to -1 at line 1748")
                 client_id = -1
             
             # Handle two scenarios for riderInfo based on whether rider is new or existing
             # Scenario 1: First ride (no client_id) - New rider
-            if not self.client_id or str(self.client_id) == "-1" or str(self.client_id) == "0":
-                logger.info("[MAIN TRIP] First ride scenario - New rider (no client_id)")
+            if self.client_id and str(self.client_id) not in ["-1", "0", "None", "none"]: 
+                # Scenario 2: Existing rider (has client_id)
+                logger.info(f"🚨 [MAIN TRIP] Existing rider scenario - client_id: {self.client_id}")
+                data["riderInfo"]["ID"] = int(self.client_id)
+                data["riderInfo"]["MedicalId"] = "0"  # String "0" for existing riders
+                data["riderInfo"]["RiderID"] = "0"    # String "0" for existing riders               
+            else:
+                logger.info("✅[MAIN TRIP] First ride scenario - New rider (no client_id)")
                 data["riderInfo"]["ID"] = -1
                 data["riderInfo"]["MedicalId"] = ""  # Empty string for new riders
                 data["riderInfo"]["RiderID"] = "0"   # String "0" for new riders
-            else:
-                # Scenario 2: Existing rider (has client_id)
-                logger.info(f"[MAIN TRIP] Existing rider scenario - client_id: {self.client_id}")
-                data["riderInfo"]["ID"] = int(self.client_id)
-                data["riderInfo"]["MedicalId"] = "0"  # String "0" for existing riders
-                data["riderInfo"]["RiderID"] = "0"    # String "0" for existing riders
-
+            
             if is_will_call:
                 is_schedule = True
             
@@ -1845,7 +1887,6 @@ I have updated your profile information. You can now proceed with booking trips 
             # elif self.return_leg is None:
             #     self.return_leg = data
 
-            # print(f"\n\n\nPayload collected: {data}\n\n\n")
             logger.debug(f"Payload collected: {data}")
 
             return f"Payload for main trip has been collected! Ask the rider if they would like to book a return trip."
@@ -1873,13 +1914,12 @@ I have updated your profile information. You can now proceed with booking trips 
         # Use stored client_id instead of LLM-provided one to prevent hallucinations
         if self.client_id:
             client_id = str(self.client_id)
-            logger.info(f"[RETURN TRIP] Using stored client_id: {client_id} (overriding LLM provided: {payload.client_id})")
+            logger.info(f"[RETURN TRIP] ✅ Using stored client_id: {client_id} (overriding LLM provided: {payload.client_id})")
         else:
             client_id = payload.client_id
-            logger.warning(f"[RETURN TRIP] Warning: Using LLM-provided client_id: {client_id} (stored client_id not available)")
+            logger.warning(f"[RETURN TRIP] ⚠️ Warning: Using LLM-provided client_id: {client_id} (stored client_id not available)")
         extra_details = payload.extra_details
         phone_number = payload.phone_number
-        client_id = payload.client_id
         funding_source_id = payload.funding_source_id
         rider_name = payload.rider_name
         payment_type_id = payload.payment_type_id
@@ -1910,12 +1950,12 @@ I have updated your profile information. You can now proceed with booking trips 
         pickup_phone_number = payload.pickup_phone_number
         dropoff_remarks = payload.dropoff_remarks
         dropoff_phone_number = payload.dropoff_phone_number
-        # print(f"\n\n\nCalled collect_return_trip_payload function at: {datetime.now()}\n\n\n")
         logger.info(f"Called collect_return_trip_payload function at: {datetime.now()}")
         # Start playing music asynchronously
         # _ = asyncio.create_task(self.Play_Music())
         # await asyncio.sleep(2)
         if client_id == 0:
+            logger.warning(f"[RETURN TRIP] 🚨 Converting client_id from 0 to -1 at line 1924")
             client_id = -1
         # Check Pickup Address
         pickup_error = await check_address_validity(pickup_lat, pickup_lng, "Pick Up")
@@ -2010,7 +2050,6 @@ I have updated your profile information. You can now proceed with booking trips 
                         async with aiohttp.ClientSession() as session:
                             async with session.post(url, json=data, headers=headers) as response:
                                 if response.status == 200:
-                                    # If successful, print the JSON response
                                     response_data = await response.json()
                                     logger.debug(f"Response for fare estimation: {response_data}")
                                     total_cost = response_data["totalCost"]
@@ -2053,7 +2092,6 @@ I have updated your profile information. You can now proceed with booking trips 
             phone_number = await format_phone_number(phone_number)
             logger.debug(f"Phone number after formatting: {phone_number}")
 
-            client_id = await safe_int(client_id)
             rider_id = await safe_int(rider_id)
             affiliate_id = await safe_int(self.affiliate_id)
             family_id = await safe_int(family_id)
@@ -2062,6 +2100,7 @@ I have updated your profile information. You can now proceed with booking trips 
             copay_funding_source_id = await safe_int(copay_funding_source_id)
             copay_payment_type_id = await safe_int(copay_payment_type_id)
             if client_id == 0:
+                logger.warning(f"[RETURN TRIP] 🚨 Converting client_id from 0 to -1 at line 2072")
                 client_id = -1
             
             # Handle two scenarios for riderInfo based on whether rider is new or existing
@@ -2167,7 +2206,6 @@ I have updated your profile information. You can now proceed with booking trips 
             # if self.return_leg is None:
             self.return_leg = data
 
-            # print(f"\n\n\n Return trip Payload collected: {data}\n\n\n")
             logger.debug(f"Return trip Payload collected: {data}")
             logger.debug(f"return trip payload: {data}")
 
@@ -2212,6 +2250,9 @@ I have updated your profile information. You can now proceed with booking trips 
 
             # Properly log the payload
             logger.debug(f"Payload Sent for booking: {payload}")
+            payload_call_id = self.call_sid
+            with open(f"logs/trip_book_payload/final_payload_{payload_call_id}.txt","w") as f:
+                f.write(json.dumps(payload, indent=4))
 
             # Step 3: Send the data to the API with proper error handling
             async with aiohttp.ClientSession() as session:

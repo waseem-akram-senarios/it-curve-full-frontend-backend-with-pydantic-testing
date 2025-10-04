@@ -170,7 +170,7 @@ async def search_web_manual(prompt: str):
     try:
         # Use the OpenAI API client to make the call
         response = await openai_client.responses.create(
-            model="gpt-4.1",
+            model="gpt-4o",
             tools=[{"type": "web_search_preview"}],
             input=prompt
         )
@@ -204,7 +204,6 @@ async def get_frequnt_addresses_manual(client_id, affiliate_id):
 
     async with aiohttp.ClientSession() as session:
         async with session.post(url, json=payload, headers=headers) as response:
-            # print(f"Status Code: {response.status}")
             response_text = await response.text()
             logger.debug(f"Response from FrequentDataAPI: {response_text}")
             try:
@@ -434,7 +433,7 @@ async def get_client_name_voice(caller_number, affiliate_id, family_id):
             for i, client in enumerate(client_list, 1):
                 name = (client.get('FirstName', '') + ' ' + client.get('LastName', '')).strip()
                 client_id = client.get('Id', 0)
-                number_of_existing_trips = await get_Existing_Trips_Number(client_id, affiliate_id)
+                number_of_existing_trips, trips_data = await get_Existing_Trips_Number(client_id, affiliate_id)
                 medical_id_raw = client.get("MedicalId", "")
                 client_home_phone = client.get("HomePhone", "")
                 client_office_phone = client.get("OfficePhone", "")
@@ -666,7 +665,6 @@ async def get_Existing_Trips_Number(client_id : str, affiliate_id: str):
         async with aiohttp.ClientSession() as session:
             async with session.post(url, json=payload, headers=headers) as resp:
                 text = await resp.text()
-                # print(f"\n\nResponse: {text}\n\n")
 
                 try:
                     response = json.loads(text)

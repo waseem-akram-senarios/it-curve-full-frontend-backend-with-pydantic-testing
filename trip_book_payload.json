@@ -16,10 +16,10 @@
       "RiderID": "0",
       "RiderPassword": "",
       "MedicalID": "",
-      "ClientAddress": "8201 Snouffer School Rd",
-      "ClientCity": "Gaithersburg",
-      "ClientState": "MD",
-      "ClientZip": "20879"
+      "ClientAddress": "",
+      "ClientCity": "",
+      "ClientState": "",
+      "ClientZip": ""
   },
   "insuranceInfo": {
       "AgencyID": 0,

@@ -51,7 +51,6 @@ DEFAULT_USER_ID = os.getenv("DEFAULT_USER_ID")
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 TWILIO_CLIENT = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
-# print(os.getenv('LIVEKIT_API_SECRET'))
 Agent_Directory = Path(__file__).parent
 
 load_dotenv(dotenv_path=".env")
@@ -240,35 +239,6 @@ async def entrypoint(ctx: agents.JobContext):
     # Store active tasks to prevent garbage collection
     _active_tasks = set()
 
-    # async def async_handle_text_stream(reader, participant_identity):
-    #     info = reader.info
-    #
-    #     print(
-    #         f'Text stream received from {participant_identity}\n'
-    #         f'  Topic: {info.topic}\n'
-    #         f'  Timestamp: {info.timestamp}\n'
-    #         f'  ID: {info.id}\n'
-    #         f'  Size: {info.size}'  # Optional, only available if the stream was sent with `send_text`
-    #     )
-    #
-    #     # Option 1: Process the stream incrementally using an async for loop.
-    #     async for chunk in reader:
-    #         print(f"Next chunk: {chunk}")
-    #
-    #     # Option 2: Get the entire text after the stream completes.
-    #     text = await reader.read_all()
-    #     print(f"Received text: {text}")
-
-    # def handle_text_stream(reader, participant_identity):
-    #     task = asyncio.create_task(async_handle_text_stream(reader, participant_identity))
-    #     _active_tasks.add(task)
-    #     task.add_done_callback(lambda t: _active_tasks.remove(t))
-    #
-    # ctx.room.register_text_stream_handler(
-    #     "my-topic",
-    #     handle_text_stream
-    # )
-
     await ctx.connect()
 
     # Wait for the first participant to connect
@@ -289,14 +259,15 @@ async def entrypoint(ctx: agents.JobContext):
         AudioConfig(BuiltinAudioClip.KEYBOARD_TYPING, volume=0.6)
     ])
     
-    # Start with interruptions disabled for the initial greeting only
-    interruptions_enabled = False
-    allow_interruption_status=False
-    
     session = AgentSession(
-        stt=deepgram.STT(model="nova-2-phonecall", language="en"),
-        allow_interruptions=allow_interruption_status,
-        llm=openai.LLM(model="gpt-4.1-mini", temperature=0.5),
+        stt=deepgram.STT(
+            model="nova-3", 
+            language="en",
+            interim_results=True,  # Enable interim results for faster interruption
+            smart_format=True
+        ),
+        allow_interruptions=True,
+        llm=openai.LLM(model="gpt-4.1-mini", temperature=0.1),
         tts=deepgram.TTS(model="aura-asteria-en"),
         vad=silero.VAD.load(min_silence_duration=0.75),
         turn_detection=EnglishModel(),
@@ -304,48 +275,16 @@ async def entrypoint(ctx: agents.JobContext):
     
     # Simple default prompt to start with - will be updated later
     default_prompt = """You are a Caring, Sympathetic voice assistant helping riders with their queries. Your primary goal is to provide efficient and clear assistance while maintaining casual tone. Keep your responses concise, direct, less talktive and clear since this is a voice interface.
-Your name is Alina and you are an AI assistant for agency whose name is mentioned in the greetings. Keep your tone casual like a human and not extremely professional.
-Service Area in which the company/agency operates are also included in the greetings.
-
-## STRICT GUARDRAILS - FOLLOW THESE AT ALL TIMES:
-
-1. ONLY provide information and assistance related to:
-   - Booking rides
-   - Checking ride status
-   - Managing existing bookings
-   - Transportation schedules
-   - Agency service areas
-   - Pickup/dropoff locations
-   - Payment methods for rides
-   - Rider information stored with the agency
-
-2. NEVER provide information about:
-   - Other businesses or services not related to transportation
-   - Personal opinions on politics, religion, or controversial topics
-   - Advice on medical, legal, or financial matters
-   - Information about celebrities, entertainment, or news events
-   - Instructions for activities unrelated to transportation
-   - General knowledge questions not related to transportation services
-
-3. If asked about ANY topic outside of transportation services:
-   - Politely redirect the conversation back to ride services
-   - Say something like: "I'm here to help you with your transportation needs. Would you like to book a ride, check a ride status, or get information about our services?"
-   - DO NOT engage with the off-topic question at all
-   
-4. For ambiguous requests:
-   - Always interpret them in the context of transportation services
-   - Ask clarifying questions to understand the rider's transportation needs
-
-Remember: You are ONLY here to assist with transportation services for the agency mentioned in the greetings. Stay focused on providing helpful, efficient, and friendly ride assistance."""
+        Your name is Alina and you are an AI assistant for agency whose name is mentioned in the greetings. Keep your tone casual like a human and not extremely professional.
+        Service Area in which the company/agency operates are also included in the greetings.
+        Remember: You are ONLY here to assist with transportation services for the agency mentioned in the greetings. Stay focused on providing helpful, efficient, and friendly ride assistance."""
 
     # Create agent with default prompt initially
     initial_agent = Assistant(call_sid=call_sid, context=ctx, room=ctx.room, instructions=default_prompt, affiliate_id=65)
     
-    # Set a simple flag we can use to track interruption state
-    interruptions_enabled = False
     
     # Ensure interruptions are disabled for the initial greeting
-    session.allow_interruptions = False
+    # session.allow_interruptions = False
     
     # Use the existing background audio player created earlier
     logger.info("Using pre-configured background audio player for typing sounds")
@@ -363,8 +302,7 @@ Remember: You are ONLY here to assist with transportation services for the agenc
     await session.say(f"Hello! My name is Alina, your digital agent. I'm retrieving your information. Please wait", allow_interruptions=False)
     
     # Enable interruptions for the rest of the conversation after first greeting
-    session.allow_interruptions = True
-    interruptions_enabled = True
+    # session.allow_interruptions = True
     logger.info("Interruptions ENABLED after first greeting - user can interrupt the bot now")
     
     # COMPLETELY DISABLE AUDIO INPUT during API fetching
@@ -491,13 +429,13 @@ Remember: You are ONLY here to assist with transportation services for the agenc
             #
             #     # Access caller and recipient information
             #     caller = call._from
-            #     print(f"\n\n\nCaller: {caller}\n\n\n")
+            #     logger.info(f"Caller: {caller}")
             #     # caller = "+12222222222"
             #     # caller = "+13012082222"
             #     # caller = "+13012082252"
             #     recipient = str(call.to)
             #     # recipient = "+17172007213"
-            #     print(f"\n\nRecipient: {recipient}\n\n")
+            #     logger.info(f"Recipient: {recipient}")
             # except:
 
             # For Asterisk
@@ -528,7 +466,6 @@ Remember: You are ONLY here to assist with transportation services for the agenc
             phone_number = await with_typing_during_api(extract_phone_number, caller)
             logger.info(f"Phone Number Extracted: {phone_number}")
             initial_agent.update_rider_phone(phone_number)
-            # print(f"\n\nPhone Number: {phone_number}")
             
             # Try to get client info from cache
             # cached_client = cache_manager.get_client_from_cache(phone_number, affiliate_id, family_id)
@@ -568,7 +505,7 @@ Remember: You are ONLY here to assist with transportation services for the agenc
                 phone_number = metadata['phoneNo']
                 if phone_number != "":
                     phone_number = await with_typing_during_api(extract_phone_number, phone_number)
-                    # print(f"\n\nPhone Number: {phone_number}")
+                    logger.info(f"Phone Number Extracted: {phone_number}")
                     
                     # Try to get client info from cache
                     # cached_client = cache_manager.get_client_from_cache(phone_number, affiliate_id, family_id)
@@ -715,6 +652,7 @@ Remember: You are ONLY here to assist with transportation services for the agenc
     if all_riders_info["number_of_riders"] == 1:
         rider_info = all_riders_info["rider_1"]
         client_id = rider_info["client_id"]
+        initial_agent.update_client_id(client_id)
         frequent_rides = ""
         try:
             frequent_rides = await with_typing_during_api(get_frequnt_addresses_manual, client_id, affiliate_id)
@@ -736,8 +674,10 @@ Remember: You are ONLY here to assist with transportation services for the agenc
             2. Use [get_ETA] function to get latest/last trip, pickup and dropoff address: No Data Available``
             """
             pass
-
-    # print(f"\n\nPrompt: {prompt}\n\n")
+    elif all_riders_info["number_of_riders"] > 1:
+        # For multiple riders, client_id will be set later when user selects a profile via select_rider_profile function
+        logger.info(f"[MULTIPLE RIDERS] Client ID will be set after profile selection via select_rider_profile function")
+        initial_agent.update_client_id(None)  # Explicitly set to None initially
 
     # Create user context information that we'll use in both the agent prompt and personalized message
     user_context = ""
@@ -769,10 +709,11 @@ Remember: You are ONLY here to assist with transportation services for the agenc
             user_context += f"Affiliate ID: {affiliate_id}\n"
             if "AffiliateFamilyID" in affiliate:
                 user_context += f"Affiliate Family ID: {affiliate['AffiliateFamilyID']}\n"
-        
+        client_id = None
         # Add rider information
         if all_riders_info["number_of_riders"] == 1:
             rider = all_riders_info["rider_1"]
+            client_id = rider['client_id']
             user_context += f"Rider Name: {rider['name']}\n"
             user_context += f"Rider ID: {rider['rider_id']}\n"
             user_context += f"Client ID: {rider['client_id']}\n"
@@ -791,37 +732,33 @@ Remember: You are ONLY here to assist with transportation services for the agenc
         
         logger.info("User context built successfully")
         
-        # Now create the final agent with the full context
+        # Update the initial_agent with the enhanced context
         try:
             # Include user context in the final prompt to ensure the agent remembers it
             final_prompt = user_context + "\n\n" + prompt
-            # Pass the client_id from the rider info to eliminate LLM hallucinations
-            if all_riders_info["number_of_riders"] == 1:
-                rider_client_id = all_riders_info["rider_1"]["client_id"] if all_riders_info["rider_1"]["client_id"] else None
-            else:
-                rider_client_id = None
-            logger.debug(f"[MAIN] Passing client_id to Assistant: {rider_client_id} (type: {type(rider_client_id)})")
-            agent = Assistant(call_sid=call_sid, context=ctx, room=ctx.room, instructions=final_prompt, affiliate_id=int(affiliate_id), rider_phone=phone_number, client_id=rider_client_id)
-            with open("final_prompt.txt","w") as f:
+            
+            agent = Assistant(call_sid=call_sid, context=ctx, room=ctx.room, instructions=final_prompt, affiliate_id=affiliate_id, rider_phone=phone_number, client_id=client_id)
+            # Set the family_id that's needed for various functions
+            agent.update_affliate_id_and_family(affiliate_id, family_id)
+            session.update_agent(agent)
+
+            with open(f"logs/prompt/final_prompt_{call_sid}.txt","w") as f:
                 f.write(final_prompt)
+                
+            logger.info("Successfully updated initial_agent with enhanced context")
+            
         except Exception as e:
-            logger.error(f"Error in generating agent object: {e}")
-            if all_riders_info["number_of_riders"] == 1:
-                rider_client_id = all_riders_info["rider_1"]["client_id"] if all_riders_info["rider_1"]["client_id"] else None
-            else:
-                rider_client_id = None
-            logger.debug(f"[MAIN EXCEPTION] Passing client_id to Assistant: {rider_client_id} (type: {type(rider_client_id)})")
-            agent = Assistant(call_sid=call_sid, context=ctx, room=ctx.room, instructions=prompt, affiliate_id=65, rider_phone=phone_number, client_id=rider_client_id)
-        
+            logger.error(f"Error updating agent instructions: {e}")
+            agent = Assistant(call_sid=call_sid, context=ctx, room=ctx.room, instructions=prompt, affiliate_id=affiliate_id, rider_phone=phone_number, client_id=client_id)
+            session.update_agent(agent) 
+            with open(f"logs/prompt/final_prompt_{call_sid}.txt","w") as f:
+                f.write(final_prompt)       
     except Exception as e:
-        logger.error(f"Error building user context: {e}")
-        # Create a basic agent if we failed to build the context
-        if all_riders_info.get("number_of_riders") == 1:
-            rider_client_id = all_riders_info["rider_1"]["client_id"] if all_riders_info["rider_1"]["client_id"] else None
-        else:
-            rider_client_id = None
-        logger.debug(f"[MAIN FINAL EXCEPTION] Passing client_id to Assistant: {rider_client_id} (type: {type(rider_client_id)})")
-        agent = Assistant(call_sid=call_sid, context=ctx, room=ctx.room, instructions=prompt, affiliate_id=int(affiliate_id), rider_phone=phone_number, client_id=rider_client_id)
+        agent = Assistant(call_sid=call_sid, context=ctx, room=ctx.room, instructions=prompt, affiliate_id=affiliate_id, rider_phone=phone_number, client_id=client_id)
+        session.update_agent(agent)
+        logger.info("Updated initial_agent with basic prompt as fallback")
+        with open(f"logs/prompt/final_prompt_{call_sid}.txt","w") as f:
+            f.write(final_prompt)
     # Define the conversation history collection function before we have the session reference
     conversation_history = []
     def setup_conversation_listeners(current_session):
@@ -836,6 +773,8 @@ Remember: You are ONLY here to assist with transportation services for the agenc
                     'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     })
                 if event.item.role == 'user':
+                    # Log user transcript for debugging
+                    logger.info(f"User transcript received: {event.item.text_content}")
                     conversation_history.append({
                     'speaker': 'User',
                     'transcription': event.item.text_content,
@@ -845,9 +784,26 @@ Remember: You are ONLY here to assist with transportation services for the agenc
     # Setup initial conversation listeners
     setup_conversation_listeners(session)
     
+    # Add additional listeners for debugging interruptions
+    @session.on("agent_speech_started")
+    def on_agent_speech_started():
+        logger.info(" Agent started speaking - interruptions should be possible now")
+    
+    @session.on("agent_speech_stopped")
+    def on_agent_speech_stopped():
+        logger.info("Agent stopped speaking")
+    
+    @session.on("user_speech_started")
+    def on_user_speech_started():
+        logger.info("User started speaking - should interrupt agent if speaking")
+    
+    @session.on("user_speech_stopped")
+    def on_user_speech_stopped():
+        logger.info("User stopped speaking")
+    
     # Setup supervisor with the final session
     supervisor = Supervisor(session=session,
-                          room=agent.room,
+                          room=initial_agent.room,
                           llm=openai.LLM(model="gpt-4o-mini"))
     await supervisor.start()
 
@@ -941,10 +897,10 @@ Remember: You are ONLY here to assist with transportation services for the agenc
 
         if digit == "0":
             logger.info("[ASTERISK DTMF] Transferring to dispatcher")
-            asyncio.create_task(transfer_call_dtmf(agent.room, agent.room.name))
+            asyncio.create_task(transfer_call_dtmf(initial_agent.room, initial_agent.room.name))
         elif digit == "1":
             logger.info("[ASTERISK DTMF] Transferring to driver")
-            asyncio.create_task(transfer_call_dtmf_driver(agent.room, agent.room.name))
+            asyncio.create_task(transfer_call_dtmf_driver(initial_agent.room, initial_agent.room.name))
 
     phone_collector = PhoneNumberCollector()
     phone_collector.start_collection()

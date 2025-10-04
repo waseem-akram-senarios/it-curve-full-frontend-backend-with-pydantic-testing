@@ -10,3 +10,4 @@ itcurves/
 test_pydantic_models.py
 models_backup.py
 models_updated.py
+logs/

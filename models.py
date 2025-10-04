@@ -21,19 +21,19 @@ class ReturnTripPayload(BaseModel):
     phone_number: str = Field(...,
                               description="Phone number of rider else caller's phone number")
     client_id: str = Field(
-        ..., description="Client Id else -1. I am applying python int() so generate value accordingly")
+        ..., description="Id from customer selected profile else -1. ")
     funding_source_id: str = Field(
-        ..., description="Funding Source Id else -1. I am applying python int() so generate value accordingly")
+        ..., description="Funding Source Id else -1. ")
     rider_name: str = Field(..., description="Complete verified name of the rider if available. If you do not have verified name, use Complete Name of the Caller or rider used in conversation. If you do not have name in your memory ask it from caller.")
     payment_type_id: str = Field(
-        ..., description="Payment Type Id else -1. I am applying python int() so generate value accordingly")
+        ..., description="Payment Type Id else -1. ")
     copay_funding_source_id: str = Field(
-        ..., description="Copay Funding Source Id else -1. I am applying python int() so generate value accordingly")
+        ..., description="Copay Funding Source Id else -1. ")
     copay_payment_type_id: str = Field(
-        ..., description="Copay Payment Type Id else -1. I am applying python int() so generate value accordingly")
+        ..., description="Copay Payment Type Id else -1. ")
     booking_time: str = Field(..., description="Booking Time if mentioned by rider in this format 'Year-Month-Date HH:MM' for the driver else ''. If the rider wants to book for now, get current time from memory. if is_will_call is true, set it to date today.")
     pickup_lat: str = Field(
-        ..., description="Pickup address latitude else 0. I am applying python float() so generate value accordingly")
+        ..., description="Pickup address latitude else 0. ")
     pickup_lng: str = Field(
         ..., description="Pickup address longitude else 0. I am applying python float() so generate value accordingly")
     dropoff_lat: str = Field(

@@ -56,7 +56,6 @@ DEFAULT_USER_ID = os.getenv("DEFAULT_USER_ID")
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 TWILIO_CLIENT = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
-# print(os.getenv('LIVEKIT_API_SECRET'))
 Agent_Directory = Path(__file__).parent
 
 load_dotenv(dotenv_path=".env")
@@ -260,7 +259,7 @@ async def entrypoint(ctx: agents.JobContext):
                 curr_prompt = file.read()
 
         except Exception as e:
-            print(f"Error in loading prompt: {e}")
+            logger.error(f"Error in loading prompt: {e}")
             main_leg = {"script": "main_leg", "complete": "no"}
             return_leg = {"script": "return_leg", "complete": "no"}
             agent = Assistant(call_sid=call_sid, room=ctx.room, affiliate_id=affiliate_id, main_leg=main_leg, return_leg=return_leg)
@@ -314,7 +313,7 @@ async def entrypoint(ctx: agents.JobContext):
                     curr_prompt = file.read()
             
         except Exception as e:
-            print(f"Error in initializing agent: {e}")
+            logger.error(f"Error in initializing agent: {e}")
             main_leg = {"script": "main_leg", "complete": "no"}
             return_leg = {"script": "return_leg", "complete": "no"}
             agent = Assistant(call_sid=call_sid, room=ctx.room, affiliate_id=affiliate_id, main_leg=main_leg, return_leg=return_leg)
@@ -355,7 +354,7 @@ async def entrypoint(ctx: agents.JobContext):
     conversation_history = []
     @session.on("conversation_item_added")
     def on_conversation_item_added(event: ConversationItemAddedEvent):
-        print(f"Conversation item added from {event.item.role}: {event.item.text_content}. interrupted: {event.item.interrupted}")
+        logger.info(f"Conversation item added from {event.item.role}: {event.item.text_content}. interrupted: {event.item.interrupted}")
         if event.item.text_content != '':
             if event.item.role == 'assistant':
                 conversation_history.append({
@@ -384,7 +383,7 @@ async def entrypoint(ctx: agents.JobContext):
 
     except Exception as e:
         greeting = "My name is Alina, your digital agent. How can I help you today?"
-        print(f"\n\nError in getting greetings: {e}\n\n")
+        logger.error(f"Error in getting greetings: {e}")
 
     try:
         if all_riders_info["number_of_riders"] == 1:
@@ -409,7 +408,7 @@ async def entrypoint(ctx: agents.JobContext):
             await session.say(f"Hello! {greeting}. I have multiple profiles for your number. Can I have your name please?", allow_interruptions=allow_interruption_status)
 
     except Exception as e:
-        print(f"Error occured in starting initial statement: {e}")
+        logger.error(f"Error occurred in starting initial statement: {e}")
         await session.say(f"Hello! {greeting}. How can I help you today?", allow_interruptions=allow_interruption_status)
 
     # Use the usage collector to aggregate agent usage metrics
@@ -484,9 +483,9 @@ async def entrypoint(ctx: agents.JobContext):
         # Insert document to MongoDB
         try:
             result = costlogs_collection.insert_one(mongo_doc)
-            print(f"\n\nDatabase operation successful: {result}\n\n")
+            logger.info(f"Database operation successful: {result}")
         except Exception as e:
-            print(f"\n\n\n\nDatabase operation failed: {e}\n\n\n\n")
+            logger.error(f"Database operation failed: {e}")
 
         # Also send to existing API for backward compatibility
         data = {
@@ -496,7 +495,7 @@ async def entrypoint(ctx: agents.JobContext):
             "cost": cost['total_cost'],
             "conversation_history": conversation_history
         }
-        print(f"\n\n\nPayload Sent: {data}\n\n\n")
+        logger.debug(f"Payload Sent: {data}")
 
         url = os.getenv("PYTHON_ANYWHERE_COST_LOGGING")
 
@@ -504,11 +503,11 @@ async def entrypoint(ctx: agents.JobContext):
         try:
             response = requests.post(url, json=data)
             if response.status_code == 201:
-                print(f"Success: {response.json()}")
+                logger.info(f"API Success: {response.json()}")
             else:
-                print(f"Error: {response.status_code}, {response.text}")
+                logger.error(f"API Error: {response.status_code}, {response.text}")
         except Exception as e:
-            print(f"Error sending data to API: {e}")
+            logger.error(f"Error sending data to API: {e}")
 
     # At shutdown, generate and log the summary from the usage collector
     ctx.add_shutdown_callback(lambda: asyncio.create_task(log_usage(starting_time, call_sid, conversation_history)))
