@@ -378,31 +378,32 @@ async def recognize_affiliate(receiver):
 
 
 async def extract_phone_number(phone_number):
-
     phone_number = str(phone_number)
-
-    # Dictionary of country codes and their lengths
-    country_codes = {
-        '1': 1,   # USA, Canada, etc.
-        '20': 2,  # Egypt
-        '44': 2,  # UK
-        '91': 2,  # India
-        '33': 2,  # France
-        '49': 2,  # Germany
-        '61': 2,  # Australia
-        '39': 2,  # Italy
-        '34': 2,  # Spain
-        '92': 2,  # Pakistan
-    }
-    # Remove the '+' sign and the country code using the dictionary
-    phone_number = phone_number.lstrip('+')
-    
-    for code, length in country_codes.items():
-        if phone_number.startswith(code):
-            phone_number = phone_number[length:]  # Remove the country code part
-            break  # Exit the loop once the code is found
-    
+    phone_number = phone_number.lstrip('+1')
     return phone_number
+
+    # # Dictionary of country codes and their lengths
+    # country_codes = {
+    #     '1': 1,   # USA, Canada, etc.
+    #     '20': 2,  # Egypt
+    #     '44': 2,  # UK
+    #     '91': 2,  # India
+    #     '33': 2,  # France
+    #     '49': 2,  # Germany
+    #     '61': 2,  # Australia
+    #     '39': 2,  # Italy
+    #     '34': 2,  # Spain
+    #     '92': 2,  # Pakistan
+    # }
+    # # Remove the '+' sign and the country code using the dictionary
+    # phone_number = phone_number.lstrip('+')
+    
+    # for code, length in country_codes.items():
+    #     if phone_number.startswith(code):
+    #         phone_number = phone_number[length:]  # Remove the country code part
+    #         break  # Exit the loop once the code is found
+    
+    # return phone_number
 
 
 async def get_client_name_voice(caller_number, affiliate_id, family_id):

@@ -575,7 +575,7 @@ async def entrypoint(ctx: agents.JobContext):
         logger.error("Error in Selecting Flow")
         prompt_file = os.path.join(Agent_Directory, "prompts", "prompt_new_rider.txt")
 
-    with open(prompt_file) as file:
+    with open(prompt_file, encoding="utf-8") as file:
         system_prompt = file.read()
     try:
         if all_riders_info["number_of_riders"] == 1:
