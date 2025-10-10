@@ -497,7 +497,7 @@ Return ONLY this JSON (no markdown, no extra text):
             self.repetition_count = 0
 
         # Condition 2: Good score - reset issue counter
-        if avg_score > 0.6:
+        if avg_score > 0.7:
             self.nth_issue = 0
             return
 
