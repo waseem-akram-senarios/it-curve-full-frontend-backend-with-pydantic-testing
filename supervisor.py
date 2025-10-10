@@ -189,7 +189,7 @@ class Supervisor:
                  llm = None,
                  history_window: int = 6,
                  min_turns_for_repetition: int = 6,
-                 repetition_threshold: int = 2) -> None:  # NEW PARAMETER
+                 repetition_threshold: int = 2) -> None:
         self.session = session
         self.llm = llm if llm else openai.LLM(model="gpt-4o-mini")
         self.room = room
@@ -197,18 +197,20 @@ class Supervisor:
         # Configuration
         self.history_window = history_window
         self.min_turns_for_repetition = min_turns_for_repetition
-        self.repetition_threshold = repetition_threshold  # NEW: require N repetitions before transfer
+        self.repetition_threshold = repetition_threshold
         
         # State tracking
         self.first_greeting_done = False
         self.escalated_to_live_agent = False
         self.nth_issue = 0
-        self.repetition_count = 0  # NEW: track consecutive repetition flags
+        self.repetition_count = 0
         self.score_history = []
         self.restricted_history = []
         self.repetition_flag = False
         self.transfer_reason = ""
         self.status_messages = []
+        self.last_bot_responses = []  # Track recent bot responses
+        self.off_topic_count = 0  # Track off-topic requests
 
     async def start(self):
         def on_close_wrapper(ev):
@@ -240,6 +242,16 @@ class Supervisor:
         text_lower = text.lower()
         return any(indicator in text_lower for indicator in status_indicators)
 
+    def _is_off_topic_request(self, text: str) -> bool:
+        """Detect if user is asking about off-topic topics."""
+        off_topic_keywords = [
+            "eat", "food", "burger", "pizza", "restaurant", "dining",
+            "movie", "film", "show", "entertainment", "game",
+            "medicine", "pill", "drug", "pharmacy", "pfizer"
+        ]
+        text_lower = text.lower()
+        return any(keyword in text_lower for keyword in off_topic_keywords)
+
     def _update_restricted_history(self, role: str, text: str):
         """Maintain a rolling window of conversation history."""
         
@@ -248,12 +260,19 @@ class Supervisor:
             self.status_messages.append(text)
             logger.debug(f"Detected status message: {text[:50]}...")
         
-        # Merge consecutive messages from the same role
-        if self.restricted_history and self.restricted_history[-1]["role"] == role:
-            self.restricted_history[-1]["text"] += " " + text
-            logger.debug(f"Merged consecutive {role} messages (now {len(self.restricted_history[-1]['text'])} chars)")
-        else:
-            self.restricted_history.append({"role": role, "text": text})
+        # Track off-topic requests
+        if role == "user" and self._is_off_topic_request(text):
+            self.off_topic_count += 1
+            logger.debug(f"Off-topic request detected (count: {self.off_topic_count}): {text[:50]}...")
+        
+        # Track bot responses for semantic similarity
+        if role == "assistant":
+            self.last_bot_responses.append(text)
+            if len(self.last_bot_responses) > 3:
+                self.last_bot_responses.pop(0)
+        
+        # Add each message as a separate turn (no merging)
+        self.restricted_history.append({"role": role, "text": text})
         
         # Keep only the last N exchanges
         if len(self.restricted_history) > self.history_window:
@@ -269,6 +288,26 @@ class Supervisor:
             formatted.append(f"{i}. {turn['role'].upper()}: {turn['text']}")
         
         return "\n".join(formatted)
+
+    def _check_semantic_repetition(self) -> bool:
+        """Check if bot responses are semantically repetitive."""
+        if len(self.last_bot_responses) < 3:
+            return False
+            
+        # Simple heuristic: check if responses contain similar key phrases
+        key_phrases = [
+            "help with your ride", "trip service", "booking rides", 
+            "assist you with", "tam transit", "how can i help"
+        ]
+        
+        matches = 0
+        for response in self.last_bot_responses:
+            response_lower = response.lower()
+            if any(phrase in response_lower for phrase in key_phrases):
+                matches += 1
+                
+        # If all 3 recent responses contain key phrases, consider it repetitive
+        return matches >= 3
 
     def _on_added(self, ev: ConversationItemAddedEvent):
         if self.escalated_to_live_agent:
@@ -309,17 +348,33 @@ class Supervisor:
                     await self._escalate_with_reason(self.transfer_reason)
                     return
         
+        # OFF-TOPIC LOOP CHECK: If user asks about off-topic topics 3+ times
+        if self.off_topic_count >= 3:
+            logger.warning(f"[OFF-TOPIC LOOP] User asked about off-topic topics {self.off_topic_count} times")
+            self.transfer_reason = f"User repeatedly asking about off-topic topics ({self.off_topic_count} times) - transferring to live agent"
+            await self._escalate_with_reason(self.transfer_reason)
+            return
+        
+        # SEMANTIC REPETITION CHECK: If bot gives semantically similar responses
+        if self._check_semantic_repetition():
+            logger.warning(f"[SEMANTIC REPETITION] Bot giving semantically similar responses")
+            self.transfer_reason = "Bot stuck in conversational loop - giving similar responses repeatedly"
+            await self._escalate_with_reason(self.transfer_reason)
+            return
+        
         history_context = self._format_history_for_prompt()
         
         if check_repetition:
             repetition_task = """
-TASK 2 - Detect GENUINE Repetition:
-Analyze the RESTRICTED HISTORY above. Set "repetition_detected" to TRUE only if you see CLEAR evidence of:
+TASK 2 - Detect Repetition:
+Analyze the RESTRICTED HISTORY above. Set "repetition_detected" to TRUE if you see evidence of:
 
 1. **User repeating the SAME substantive request** 3+ times without resolution (e.g., "I need a ride" → bot responds → "I need a ride" again → bot responds → "I need a ride" AGAIN)
 2. **Bot giving IDENTICAL unhelpful responses** to different user attempts (stuck in a loop)
 3. **User explicitly complaining** about repetition: "you keep saying the same thing", "we already discussed this", "stop repeating yourself"
 4. **Zero progress** over 3+ complete exchanges on the same unresolved topic
+5. **User repeatedly asking about off-topic topics** (e.g., food, movies, etc.) that the bot cannot help with, and the bot redirecting each time without the user moving on to a relevant topic (at least 3 instances)
+6. **Conversational loop** where the same pattern (e.g., user asks about X → bot responds with Y → user asks about X again in a different way) repeats 3+ times without progress.
 
 DO NOT flag as repetition:
 - Normal clarifications or follow-ups (e.g., "can you tell me?" after "please wait")
@@ -328,7 +383,7 @@ DO NOT flag as repetition:
 - Different phrasings of related questions as conversation naturally evolves
 - Early-stage conversations still gathering information
 
-BIAS: When uncertain, set to FALSE. Only flag OBVIOUS problematic loops.
+If you observe any of the conditions 1-6, set "repetition_detected" to TRUE. Otherwise, set to FALSE.
 """
         else:
             repetition_task = f"""
@@ -421,15 +476,9 @@ Return ONLY this JSON (no markdown, no extra text):
             "repetition_detected": score.repetition_detected
         })
 
-        # NEW: Additional safeguard - ignore repetition flag if scores are good
-        if score.repetition_detected and float(avg_score) >= 0.75:
-            logger.warning(f"Repetition flagged but scores are good ({avg_score:.2f}). Treating as false positive - NOT escalating.")
-            score.repetition_detected = False
-
-        # ===== MODIFIED REPETITION LOGIC =====
         # Check for transfer conditions
         
-        # Condition 1: Repetition detected - INCREMENT COUNTER instead of immediate transfer
+        # Condition 1: Repetition detected - INCREMENT COUNTER
         if score.repetition_detected:
             self.repetition_count += 1
             logger.info(f"[REPETITION COUNTER] Repetition #{self.repetition_count} detected (threshold: {self.repetition_threshold})")
@@ -448,13 +497,13 @@ Return ONLY this JSON (no markdown, no extra text):
             self.repetition_count = 0
 
         # Condition 2: Good score - reset issue counter
-        if avg_score > 0.7:
+        if avg_score > 0.6:
             self.nth_issue = 0
             return
 
         # Condition 3: Consecutive low scores
         self.nth_issue += 1
-        if self.nth_issue >= 2:
+        if self.nth_issue >= 3:
             self.transfer_reason = f"Bot unable to assist effectively ({self.nth_issue} consecutive low-quality responses)"
             await self._escalate_with_reason(self.transfer_reason)
 
