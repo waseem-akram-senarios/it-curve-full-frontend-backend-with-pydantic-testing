@@ -152,6 +152,7 @@
 #     async def _on_close(self, _: CloseEvent):
 #         await self.stop()
 
+
 import os
 import json
 import asyncio
@@ -268,7 +269,7 @@ class Supervisor:
         # Track bot responses for semantic similarity
         if role == "assistant":
             self.last_bot_responses.append(text)
-            if len(self.last_bot_responses) > 3:
+            if len(self.last_bot_responses) > 2:
                 self.last_bot_responses.pop(0)
         
         # Add each message as a separate turn (no merging)
@@ -291,7 +292,7 @@ class Supervisor:
 
     def _check_semantic_repetition(self) -> bool:
         """Check if bot responses are semantically repetitive."""
-        if len(self.last_bot_responses) < 3:
+        if len(self.last_bot_responses) < 2:
             return False
             
         # Simple heuristic: check if responses contain similar key phrases
@@ -306,8 +307,8 @@ class Supervisor:
             if any(phrase in response_lower for phrase in key_phrases):
                 matches += 1
                 
-        # If all 3 recent responses contain key phrases, consider it repetitive
-        return matches >= 3
+        # If all 2 recent responses contain key phrases, consider it repetitive
+        return matches >= 2
 
     def _on_added(self, ev: ConversationItemAddedEvent):
         if self.escalated_to_live_agent:
@@ -337,19 +338,19 @@ class Supervisor:
         last_bot = self.restricted_history[-1]["text"] if self.restricted_history[-1]["role"] == "assistant" else ""
         last_user = self.restricted_history[-2]["text"] if len(self.restricted_history) >= 2 and self.restricted_history[-2]["role"] == "user" else ""
         
-        # DIRECT REPETITION CHECK: If bot gives identical response 3+ times, escalate immediately
-        if len(self.restricted_history) >= 6:
+        # DIRECT REPETITION CHECK: If bot gives identical response 2+ times, escalate immediately
+        if len(self.restricted_history) >= 4:
             bot_messages = [turn["text"] for turn in self.restricted_history if turn["role"] == "assistant"]
-            if len(bot_messages) >= 3:
-                last_three = bot_messages[-3:]
-                if last_three[0] == last_three[1] == last_three[2]:
-                    logger.warning(f"[DIRECT REPETITION] Bot repeated identical message 3 times: '{last_three[0][:50]}...'")
+            if len(bot_messages) >= 2:
+                last_two = bot_messages[-2:]
+                if last_two[0] == last_two[1]:
+                    logger.warning(f"[DIRECT REPETITION] Bot repeated identical message 2 times: '{last_two[0][:50]}...'")
                     self.transfer_reason = "Bot stuck in loop - giving identical responses repeatedly"
                     await self._escalate_with_reason(self.transfer_reason)
                     return
         
-        # OFF-TOPIC LOOP CHECK: If user asks about off-topic topics 3+ times
-        if self.off_topic_count >= 3:
+        # OFF-TOPIC LOOP CHECK: If user asks about off-topic topics 2+ times
+        if self.off_topic_count >= 2:
             logger.warning(f"[OFF-TOPIC LOOP] User asked about off-topic topics {self.off_topic_count} times")
             self.transfer_reason = f"User repeatedly asking about off-topic topics ({self.off_topic_count} times) - transferring to live agent"
             await self._escalate_with_reason(self.transfer_reason)
@@ -366,56 +367,56 @@ class Supervisor:
         
         if check_repetition:
             repetition_task = """
-TASK 2 - Detect Repetition:
-Analyze the RESTRICTED HISTORY above. Set "repetition_detected" to TRUE if you see evidence of:
+            TASK 2 - Detect Repetition:
+            Analyze the RESTRICTED HISTORY above. Set "repetition_detected" to TRUE if you see evidence of:
 
-1. **User repeating the SAME substantive request** 3+ times without resolution (e.g., "I need a ride" → bot responds → "I need a ride" again → bot responds → "I need a ride" AGAIN)
-2. **Bot giving IDENTICAL unhelpful responses** to different user attempts (stuck in a loop)
-3. **User explicitly complaining** about repetition: "you keep saying the same thing", "we already discussed this", "stop repeating yourself"
-4. **Zero progress** over 3+ complete exchanges on the same unresolved topic
-5. **User repeatedly asking about off-topic topics** (e.g., food, movies, etc.) that the bot cannot help with, and the bot redirecting each time without the user moving on to a relevant topic (at least 3 instances)
-6. **Conversational loop** where the same pattern (e.g., user asks about X → bot responds with Y → user asks about X again in a different way) repeats 3+ times without progress.
+            1. **User repeating the SAME substantive request** 2+ times without resolution (e.g., "I need a ride" → bot responds → "I need a ride" again → bot responds → "I need a ride" AGAIN)
+            2. **Bot giving IDENTICAL unhelpful responses** to different user attempts (stuck in a loop)
+            3. **User explicitly complaining** about repetition: "you keep saying the same thing", "we already discussed this", "stop repeating yourself"
+            4. **Zero progress** over 2+ complete exchanges on the same unresolved topic
+            5. **User repeatedly asking about off-topic topics** (e.g., food, movies, etc.) that the bot cannot help with, and the bot redirecting each time without the user moving on to a relevant topic (at least 2 instances)
+            6. **Conversational loop** where the same pattern (e.g., user asks about X → bot responds with Y → user asks about X again in a different way) repeats 2+ times without progress.
 
-DO NOT flag as repetition:
-- Normal clarifications or follow-ups (e.g., "can you tell me?" after "please wait")
-- User confirming or acknowledging bot responses ("yes", "okay", "thanks")
-- Bot status messages followed by actual answers ("please wait" → then provides answer)
-- Different phrasings of related questions as conversation naturally evolves
-- Early-stage conversations still gathering information
+            DO NOT flag as repetition:
+            - Normal clarifications or follow-ups (e.g., "can you tell me?" after "please wait")
+            - User confirming or acknowledging bot responses ("yes", "okay", "thanks")
+            - Bot status messages followed by actual answers ("please wait" → then provides answer)
+            - Different phrasings of related questions as conversation naturally evolves
+            - Early-stage conversations still gathering information
 
-If you observe any of the conditions 1-6, set "repetition_detected" to TRUE. Otherwise, set to FALSE.
-"""
+            If you observe any of the conditions 1-6, set "repetition_detected" to TRUE. Otherwise, set to FALSE.
+            """
         else:
             repetition_task = f"""
-TASK 2 - Detect Repetition:
-NOT ENOUGH CONVERSATION HISTORY YET (less than {self.min_turns_for_repetition} turns). Set "repetition_detected" to FALSE.
-Repetition cannot be reliably detected without sufficient conversation history.
-"""
+            TASK 2 - Detect Repetition:
+            NOT ENOUGH CONVERSATION HISTORY YET (less than {self.min_turns_for_repetition} turns). Set "repetition_detected" to FALSE.
+            Repetition cannot be reliably detected without sufficient conversation history.
+            """
         
         prompt = f"""You are a supervisor scoring a chatbot's response. Return ONLY valid JSON, no other text.
 
-CONVERSATION HISTORY (last {self.history_window} turns):
-{history_context}
+            CONVERSATION HISTORY (last {self.history_window} turns):
+            {history_context}
 
-CURRENT EXCHANGE:
-User: {last_user}
-Bot: {last_bot}
+            CURRENT EXCHANGE:
+            User: {last_user}
+            Bot: {last_bot}
 
-SCORING (0.00 to 1.00, two decimals):
-1. Relevance: Does bot address user's request or ask focused clarifying question?
-2. Completeness: Does bot provide sufficient info or clear next steps?
-3. Groundedness: Are statements factual/supported, not making unsupported claims?
+            SCORING (0.00 to 1.00, two decimals):
+            1. Relevance: Does bot address user's request or ask focused clarifying question?
+            2. Completeness: Does bot provide sufficient info or clear next steps?
+            3. Groundedness: Are statements factual/supported, not making unsupported claims?
 
-SPECIAL CASES:
-- If user asks off-topic questions (movies, food, etc.) and bot redirects to its domain, score relevance=0.80, completeness=0.70
-- If bot gives identical response 2+ times in a row, lower all scores by 0.3
+            SPECIAL CASES:
+            - If user asks off-topic questions (movies, food, etc.) and bot redirects to its domain, score relevance=0.80, completeness=0.70
+            - If bot gives identical response 2+ times in a row, lower all scores by 0.3
 
-{repetition_task}
+            {repetition_task}
 
-CRITICAL: You MUST return valid JSON. Default to mid-range scores (0.50) if uncertain.
+            CRITICAL: You MUST return valid JSON. Default to mid-range scores (0.50) if uncertain.
 
-Return ONLY this JSON (no markdown, no extra text):
-{{"relevance": 0.xx, "completeness": 0.xx, "groundedness": 0.xx, "repetition_detected": false}}"""
+            Return ONLY this JSON (no markdown, no extra text):
+            {{"relevance": 0.xx, "completeness": 0.xx, "groundedness": 0.xx, "repetition_detected": false}}"""
 
         chat_ctx = ChatContext([ChatMessage(role="system", content=[prompt])])
 
