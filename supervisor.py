@@ -162,6 +162,7 @@ from logging_config import get_logger
 # Initialize logger
 logger = get_logger('supervisor')
 from pydantic import BaseModel, Field
+from universal_stt_detector import detect_any_stt_error
 from livekit import api
 from livekit.protocol.sip import TransferSIPParticipantRequest
 from livekit.agents.llm import ChatContext, ChatMessage
@@ -338,6 +339,38 @@ class Supervisor:
         last_bot = self.restricted_history[-1]["text"] if self.restricted_history[-1]["role"] == "assistant" else ""
         last_user = self.restricted_history[-2]["text"] if len(self.restricted_history) >= 2 and self.restricted_history[-2]["role"] == "user" else ""
         
+        # Universal STT Error Detection - works for ANY possible transcription error
+        universal_stt_result = None
+        if last_user and last_bot:
+            recent_context = [turn["text"] for turn in self.restricted_history[-6:]]
+            universal_stt_result = detect_any_stt_error(
+                user_input=last_user,
+                bot_response=last_bot,
+                conversation_history=recent_context,
+                confidence=None  # LiveKit doesn't expose STT confidence by default
+            )
+            
+            if universal_stt_result['is_likely_stt_error']:
+                confidence_score = universal_stt_result['confidence_score']
+                error_indicators = universal_stt_result['error_indicators']
+                
+                logger.warning(f"[UNIVERSAL STT] Potential STT error detected (confidence: {confidence_score:.2f}) - '{last_user}'")
+                logger.info(f"[UNIVERSAL STT] Error indicators: {error_indicators}")
+                
+                if universal_stt_result['suggested_corrections']:
+                    for correction in universal_stt_result['suggested_corrections'][:2]:  # Show top 2
+                        logger.info(f"[UNIVERSAL STT] Suggestion: '{correction['corrected_sentence']}' (confidence: {correction['confidence']:.2f}) - {correction['reason']}")
+                
+                # Log mismatch analysis for debugging
+                if universal_stt_result['mismatch_analysis']:
+                    mismatch = universal_stt_result['mismatch_analysis']
+                    if mismatch.get('mismatch_detected'):
+                        logger.info(f"[UNIVERSAL STT] Intent mismatch: {mismatch.get('mismatch_reason', 'Unknown')}")
+                
+                # High-confidence STT errors should adjust scoring
+                if confidence_score >= 0.7:
+                    logger.info(f"[UNIVERSAL STT] High-confidence STT error detected - will adjust supervisor scoring to prevent false escalation")
+        
         # DIRECT REPETITION CHECK: If bot gives identical response 2+ times, escalate immediately
         if len(self.restricted_history) >= 4:
             bot_messages = [turn["text"] for turn in self.restricted_history if turn["role"] == "assistant"]
@@ -393,6 +426,41 @@ class Supervisor:
             Repetition cannot be reliably detected without sufficient conversation history.
             """
         
+        # Build Universal STT analysis context for prompt
+        stt_context = ""
+        if universal_stt_result and universal_stt_result['is_likely_stt_error']:
+            confidence_score = universal_stt_result['confidence_score']
+            error_indicators = universal_stt_result['error_indicators']
+            
+            stt_context = f"""
+            UNIVERSAL STT ERROR ANALYSIS:
+            - STT error likelihood: {confidence_score:.2f} (0.0 = no error, 1.0 = definite error)
+            - Error indicators detected: {', '.join(error_indicators)}
+            - Original user input: "{last_user}"
+            - Bot response: "{last_bot}"
+            """
+            
+            if universal_stt_result['suggested_corrections']:
+                stt_context += "\n            - Suggested corrections:"
+                for correction in universal_stt_result['suggested_corrections'][:2]:
+                    stt_context += f"""
+            * "{correction['corrected_sentence']}" (confidence: {correction['confidence']:.2f}) - {correction['reason']}"""
+            
+            if universal_stt_result['mismatch_analysis'].get('mismatch_detected'):
+                mismatch = universal_stt_result['mismatch_analysis']
+                stt_context += f"""
+            - Intent mismatch detected: {mismatch.get('mismatch_reason', 'Unknown reason')}
+            - User intents: {mismatch.get('user_intents', [])}
+            - Bot intents: {mismatch.get('bot_intents', [])}"""
+            
+            stt_context += f"""
+            
+            SCORING ADJUSTMENT GUIDANCE:
+            - If STT error likelihood >= 0.7, consider increasing relevance score by 0.2-0.4
+            - If suggested corrections would make bot response highly relevant, adjust scores upward
+            - If intent mismatch is due to STT error, don't penalize the bot's response
+            - Focus on whether bot response would be appropriate for the CORRECTED input, not the original"""
+
         prompt = f"""You are a supervisor scoring a chatbot's response. Return ONLY valid JSON, no other text.
 
             CONVERSATION HISTORY (last {self.history_window} turns):
@@ -401,6 +469,7 @@ class Supervisor:
             CURRENT EXCHANGE:
             User: {last_user}
             Bot: {last_bot}
+            {stt_context}
 
             SCORING (0.00 to 1.00, two decimals):
             1. Relevance: Does bot address user's request or ask focused clarifying question?
@@ -410,6 +479,7 @@ class Supervisor:
             SPECIAL CASES:
             - If user asks off-topic questions (movies, food, etc.) and bot redirects to its domain, score relevance=0.80, completeness=0.70
             - If bot gives identical response 2+ times in a row, lower all scores by 0.3
+            - If STT validation suggests the user input was likely misheard and the bot's response would be highly relevant to the corrected input, increase relevance score by 0.2-0.3
 
             {repetition_task}
 

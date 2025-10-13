@@ -30,6 +30,7 @@ from side_functions import *
 from cost_tracker import get_cost_tracker, reset_cost_tracker, add_agent_usage, add_supervisor_usage, add_stt_usage, add_tts_usage, set_call_context, cleanup_call_tracker
 import copy
 from supervisor import Supervisor
+from universal_stt_detector import detect_any_stt_error
 import cache_manager
 from logging_config import get_logger, set_session_id
 
@@ -781,10 +782,47 @@ async def entrypoint(ctx: agents.JobContext):
                 if event.item.role == 'user':
                     # Log user transcript for debugging
                     logger.info(f"User transcript received: {event.item.text_content}")
+                    
+                    # Universal STT Error Detection - handles ANY possible transcription error
+                    recent_context = [item['transcription'] for item in conversation_history[-6:]]
+                    
+                    # Get the most recent bot response for analysis
+                    recent_bot_response = ""
+                    for item in reversed(conversation_history):
+                        if item.get('speaker') == 'Agent':
+                            recent_bot_response = item.get('transcription', '')
+                            break
+                    
+                    # Universal STT validation
+                    universal_validation = detect_any_stt_error(
+                        user_input=event.item.text_content,
+                        bot_response=recent_bot_response,
+                        conversation_history=recent_context,
+                        confidence=None  # LiveKit doesn't expose STT confidence by default
+                    )
+                    
+                    # Log universal validation results
+                    if universal_validation['is_likely_stt_error']:
+                        confidence_score = universal_validation['confidence_score']
+                        error_indicators = universal_validation['error_indicators']
+                        
+                        logger.warning(f"Universal STT error detected (confidence: {confidence_score:.2f}) - '{event.item.text_content}'")
+                        logger.info(f"Error indicators: {error_indicators}")
+                        
+                        if universal_validation['suggested_corrections']:
+                            for correction in universal_validation['suggested_corrections'][:2]:
+                                logger.info(f"Suggested: '{correction['corrected_sentence']}' (confidence: {correction['confidence']:.2f}) - {correction['reason']}")
+                        
+                        if universal_validation['mismatch_analysis'].get('mismatch_detected'):
+                            mismatch = universal_validation['mismatch_analysis']
+                            logger.info(f"Intent mismatch: {mismatch.get('mismatch_reason', 'Unknown')}")
+                    
+                    # Store universal validation metadata with conversation history
                     conversation_history.append({
                     'speaker': 'User',
                     'transcription': event.item.text_content,
-                    'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    'universal_stt_validation': universal_validation
                     })
     
     # Setup initial conversation listeners
