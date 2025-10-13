@@ -584,11 +584,23 @@ class Assistant(Agent):
             # Track token usage for cost calculation
             try:
                 from cost_tracker import add_websearch_usage
+                logger.debug(f"Response object type: {type(response)}")
+                
                 if hasattr(response, 'usage') and response.usage:
-                    input_tokens = getattr(response.usage, 'prompt_tokens', 0)
-                    output_tokens = getattr(response.usage, 'completion_tokens', 0)
+                    logger.debug(f"Usage object: {response.usage}")
+                    # For OpenAI responses API, tokens are in input_tokens/output_tokens, not prompt_tokens/completion_tokens
+                    input_tokens = getattr(response.usage, 'input_tokens', 0)
+                    output_tokens = getattr(response.usage, 'output_tokens', 0)
+                    logger.debug(f"Extracted token values - input: {input_tokens}, output: {output_tokens}")
                     add_websearch_usage(input_tokens, output_tokens, "gpt-4o")
                     logger.debug(f"Web search usage: {input_tokens} input, {output_tokens} output tokens")
+                else:
+                    logger.warning(f"No usage information available in response. Response type: {type(response)}")
+                    # Estimate tokens based on text length as fallback
+                    estimated_input = len(prompt.split()) * 1.3  # Rough estimate
+                    estimated_output = len(response.output_text.split()) * 1.3 if hasattr(response, 'output_text') else 0
+                    logger.info(f"Using estimated tokens - input: {estimated_input:.0f}, output: {estimated_output:.0f}")
+                    add_websearch_usage(int(estimated_input), int(estimated_output), "gpt-4o")
             except Exception as usage_error:
                 logger.warning(f"Failed to track web search usage: {usage_error}")
 
