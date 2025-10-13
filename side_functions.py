@@ -164,6 +164,7 @@ async def seconds_to_minutes(seconds):
 
 
 async def search_web_manual(prompt: str):
+    from cost_tracker import add_websearch_usage
 
     logger.info(f"Called search_web_manual function with prompt: {prompt}")
 
@@ -174,6 +175,13 @@ async def search_web_manual(prompt: str):
             tools=[{"type": "web_search_preview"}],
             input=prompt
         )
+        
+        # Track token usage for cost calculation
+        if hasattr(response, 'usage') and response.usage:
+            input_tokens = getattr(response.usage, 'prompt_tokens', 0)
+            output_tokens = getattr(response.usage, 'completion_tokens', 0)
+            add_websearch_usage(input_tokens, output_tokens, "gpt-4o")
+            logger.debug(f"Web search usage: {input_tokens} input, {output_tokens} output tokens")
     
         return response.output_text
     
@@ -483,10 +491,25 @@ async def get_client_name_voice(caller_number, affiliate_id, family_id):
     return result
 
 
-def calculate_cost(llm_input_tokens, llm_output_tokens, stt_audio_seconds, tts_characters):
-    # Pricing per unit for gpt-4.1-mini
-    llm_input_cost_per_million = 0.4  # $ per 1M tokens
-    llm_output_cost_per_million = 1.6  # $ per 1M tokens
+def calculate_cost(llm_input_tokens, llm_output_tokens, stt_audio_seconds, tts_characters, model_name="gpt-4.1-mini"):
+    # Model pricing per 1M tokens
+    model_pricing = {
+        "gpt-4.1-mini": {
+            "input_cost_per_million": 0.4,   # $ per 1M tokens
+            "output_cost_per_million": 1.6   # $ per 1M tokens
+        },
+        "gpt-4o": {
+            "input_cost_per_million": 2.5,   # $ per 1M tokens
+            "output_cost_per_million": 10.0  # $ per 1M tokens
+        }
+    }
+    
+    # Get pricing for the specified model, default to gpt-4.1-mini if not found
+    pricing = model_pricing.get(model_name, model_pricing["gpt-4.1-mini"])
+    llm_input_cost_per_million = pricing["input_cost_per_million"]
+    llm_output_cost_per_million = pricing["output_cost_per_million"]
+    
+    # Fixed pricing for STT and TTS
     stt_cost_per_minute = 0.004
     tts_cost_per_million_character = 15  
     
@@ -504,16 +527,34 @@ def calculate_cost(llm_input_tokens, llm_output_tokens, stt_audio_seconds, tts_c
         'tts_cost': tts_cost,
         'llm_input_cost': llm_input_cost,
         'llm_output_cost': llm_output_cost,
-        'total_cost': total_cost
+        'total_cost': total_cost,
+        'model_name': model_name
     }
     
     return cost
 
 
-def calculate_supervisor_cost(llm_input_tokens, llm_output_tokens):
-    # Pricing per unit for gpt-4o-mini
-    llm_input_cost_per_million = 0.15  # $ per 1M tokens
-    llm_output_cost_per_million = 0.6  # $ per 1M tokens
+def calculate_supervisor_cost(llm_input_tokens, llm_output_tokens, model_name="gpt-4.1-mini"):
+    # Model pricing per 1M tokens
+    model_pricing = {
+        "gpt-4.1-mini": {
+            "input_cost_per_million": 0.4,   # $ per 1M tokens
+            "output_cost_per_million": 1.6   # $ per 1M tokens
+        },
+        "gpt-4o-mini": {
+            "input_cost_per_million": 0.15,  # $ per 1M tokens
+            "output_cost_per_million": 0.6   # $ per 1M tokens
+        },
+        "gpt-4o": {
+            "input_cost_per_million": 2.5,   # $ per 1M tokens
+            "output_cost_per_million": 10.0  # $ per 1M tokens
+        }
+    }
+    
+    # Get pricing for the specified model, default to gpt-4.1-mini if not found
+    pricing = model_pricing.get(model_name, model_pricing["gpt-4.1-mini"])
+    llm_input_cost_per_million = pricing["input_cost_per_million"]
+    llm_output_cost_per_million = pricing["output_cost_per_million"]
     
     # Cost calculations
     llm_input_cost = (llm_input_tokens / 1000000) * llm_input_cost_per_million
@@ -525,7 +566,8 @@ def calculate_supervisor_cost(llm_input_tokens, llm_output_tokens):
     cost = {
         'llm_input_cost': llm_input_cost,
         'llm_output_cost': llm_output_cost,
-        'total_cost': total_cost
+        'total_cost': total_cost,
+        'model_name': model_name
     }
     
     return cost

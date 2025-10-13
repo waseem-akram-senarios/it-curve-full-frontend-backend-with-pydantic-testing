@@ -580,6 +580,17 @@ class Assistant(Agent):
                     }],
                 input=prompt
             )
+            
+            # Track token usage for cost calculation
+            try:
+                from cost_tracker import add_websearch_usage
+                if hasattr(response, 'usage') and response.usage:
+                    input_tokens = getattr(response.usage, 'prompt_tokens', 0)
+                    output_tokens = getattr(response.usage, 'completion_tokens', 0)
+                    add_websearch_usage(input_tokens, output_tokens, "gpt-4o")
+                    logger.debug(f"Web search usage: {input_tokens} input, {output_tokens} output tokens")
+            except Exception as usage_error:
+                logger.warning(f"Failed to track web search usage: {usage_error}")
 
             # Output the result
             # await asyncio.sleep(2)
