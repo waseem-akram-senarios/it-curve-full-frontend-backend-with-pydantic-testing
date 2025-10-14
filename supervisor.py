@@ -159,7 +159,12 @@ class Supervisor:
     def _on_added(self, ev: ConversationItemAddedEvent):
         if self.escalated_to_live_agent:
             return
-            
+        
+        # Suppress escalation if transfers are disabled for this session (e.g., after booking)
+        if hasattr(self.session, "should_allow_transfer") and not getattr(self.session, "should_allow_transfer"):
+            logger.info("[ESCALATION SUPPRESSED] Transfer disabled by session flag; skipping escalation")
+            return
+
         if self.first_greeting_done is False and ev.item.role == "assistant":
             self.first_greeting_done = True
             return

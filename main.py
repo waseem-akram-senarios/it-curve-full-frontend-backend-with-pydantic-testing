@@ -282,7 +282,11 @@ async def entrypoint(ctx: agents.JobContext):
         vad=silero.VAD.load(min_silence_duration=0.75),
         turn_detection=EnglishModel(),
     )
+
+    # Allow supervisor-initiated transfers until a booking is completed
+    session.should_allow_transfer = True
     
+
     # Simple default prompt to start with - will be updated later
     default_prompt = """You are a Caring, Sympathetic voice assistant helping riders with their queries. Your primary goal is to provide efficient and clear assistance while maintaining casual tone. Keep your responses concise, direct, less talktive and clear since this is a voice interface.
         Your name is Alina and you are an AI assistant for agency whose name is mentioned in the greetings. Keep your tone casual like a human and not extremely professional.

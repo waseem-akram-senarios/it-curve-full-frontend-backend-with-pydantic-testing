@@ -1952,6 +1952,22 @@ class Assistant(Agent):
             return f"error: {e}"
 
     @function_tool()
+    async def return_trip_started(self) -> str:
+        """
+        When user says or intents to book a return trip, immediately call this tool
+         to enable transfers for return trip.
+        """
+        # Disable further supervisor transfers for this call after a successful booking
+        try:
+            if hasattr(self, "session") and self.session is not None:
+                setattr(self.session, "should_allow_transfer", True)
+                logger.info("Enabled transfers for return trip")
+        except Exception as e:
+            logger.warning(f"Failed to enable transfers for return trip: {e}")
+
+        return "Return trip has started!"
+
+    @function_tool()
     async def collect_return_trip_payload(self, payload: ReturnTripPayload) -> str:
         """
         Function that is used to collect return trip payload.
@@ -1960,6 +1976,7 @@ class Assistant(Agent):
         Returns:
             str: Confirmation message or error message.
         """
+
         # Extract all payload fields to local variables for minimal refactor impact
         pickup_street_address = payload.pickup_street_address
         dropoff_street_address = payload.dropoff_street_address
@@ -2377,6 +2394,14 @@ class Assistant(Agent):
 
                         self.main_leg = None
                         self.return_leg = None
+
+                        # Disable further supervisor transfers for this call after a successful booking
+                        try:
+                            if hasattr(self, "session") and self.session is not None:
+                                setattr(self.session, "should_allow_transfer", False)
+                                logger.info("Disabled transfers after successful booking for this session")
+                        except Exception as e:
+                            logger.warning(f"Unable to disable transfers after booking: {e}")
 
                         logger.info(f"Booking response: {response_text}")
                         return response_text
