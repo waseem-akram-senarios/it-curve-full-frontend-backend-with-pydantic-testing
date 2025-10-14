@@ -1078,7 +1078,7 @@ async def entrypoint(ctx: agents.JobContext):
                 "score": score
             })
         logger.debug(f'supervisor score history: {supervisor.score_history}, length: {len(formatted_history)}')
-
+        total_cost = cost_breakdown.agent_cost + cost_breakdown.supervisor_cost + cost_breakdown.websearch_cost + cost_breakdown.stt_cost + cost_breakdown.tts_cost
         # Create MongoDB document
         mongo_doc = {
             "user": ObjectId(DEFAULT_USER_ID),
@@ -1127,7 +1127,7 @@ async def entrypoint(ctx: agents.JobContext):
                 "websearch_cost": cost_breakdown.websearch_cost,
                 "stt_cost": cost_breakdown.stt_cost,
                 "tts_cost": cost_breakdown.tts_cost,
-                "total_cost": cost_breakdown.total_cost,
+                "total_cost": total_cost,
                 "detailed_breakdown": cost_summary
             },
             "conversation_history": formatted_history,
@@ -1146,7 +1146,7 @@ async def entrypoint(ctx: agents.JobContext):
             "start_time": starting_time,
             "end_time": ending_time,
             "call_sid": call_sid,
-            "cost": cost_breakdown.total_cost,
+            "cost": total_cost,
             "conversation_history": conversation_history
         }
         logger.debug(f"Payload Sent: {data}")
