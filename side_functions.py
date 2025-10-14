@@ -192,11 +192,11 @@ async def search_web_manual(prompt: str):
             logger.warning(f"No usage information available in response. Response type: {type(response)}")
             # For now, estimate tokens based on text length as fallback
             estimated_input = len(prompt.split()) * 1.3  # Rough estimate
-            estimated_output = len(response.output_text.split()) * 1.3 if hasattr(response, 'output_text') else 0
+            estimated_output = len(response.text.split()) * 1.3 if hasattr(response, 'text') else 0
             logger.info(f"Using estimated tokens - input: {estimated_input:.0f}, output: {estimated_output:.0f}")
             add_websearch_usage(int(estimated_input), int(estimated_output), "gpt-4o")
     
-        return response.output_text
+        return response.text
     
     except Exception as e:
         logger.error(f"Error in search web: {e}")
