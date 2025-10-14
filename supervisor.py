@@ -1,158 +1,3 @@
-# import os
-# import json
-# import asyncio
-
-# from decimal import Decimal
-# from logging_config import get_logger
-
-# # Initialize logger
-# logger = get_logger('supervisor')
-# from pydantic import BaseModel, Field
-# from livekit import api
-# from livekit.protocol.sip import TransferSIPParticipantRequest
-# from livekit.agents.llm import ChatContext, ChatMessage
-# from livekit.plugins import openai
-# from livekit.plugins.turn_detector.multilingual import MultilingualModel
-# from livekit.agents import (
-#     AgentSession,
-#     ConversationItemAddedEvent,
-#     CloseEvent,
-#     metrics,
-#     MetricsCollectedEvent
-# )
-
-# class SupervisorScore(BaseModel):
-#     """Supervisor scores"""
-#     relevance: Decimal = Field(ge=0, le=1, description="Relevance score 0 to 1")
-#     completeness: Decimal = Field(ge=0, le=1, description="Completeness score 0 to 1")
-#     groundedness: Decimal = Field(ge=0, le=1, description="Groundedness score 0 to 1")
-
-
-# class Supervisor:
-#     def __init__(self,
-#                  session: AgentSession,
-#                  room,
-#                  llm = None) -> None:
-#         self.session = session
-#         self.llm = llm if llm else openai.LLM(model="gpt-4o-mini")
-#         self.room = room
-
-#         self.first_greeting_done = False
-#         self.escalated_to_live_agent = False
-#         self.nth_issue = 0
-#         self.score_history = []
-
-#     async def start(self):
-#         # Create a synchronous wrapper for the close event since it's async
-#         def on_close_wrapper(ev):
-#             asyncio.create_task(self._on_close(ev))
-
-#         # Wire event handlers (class-bound methods)
-#         self.session.on("conversation_item_added")(self._on_added)
-#         self.session.on("close")(on_close_wrapper)
-
-#         self.usage_collector = metrics.UsageCollector()
-#         @self.llm.on("metrics_collected")
-#         def on_metrics_collected(ev: MetricsCollectedEvent):
-#             self.usage_collector.collect(ev)
-
-#     def _on_added(self, ev: ConversationItemAddedEvent):
-#         if self.escalated_to_live_agent:
-#             return
-#         if self.first_greeting_done is False and ev.item.role == "assistant":
-#             self.first_greeting_done = True
-#             return
-
-#         if ev.item.role == "assistant":
-#             asyncio.create_task(self._score_response_and_act())
-
-#     async def _score_response_and_act(self):
-#         prompt = """You are a deterministic supervisor that scores one bot reply against one user message.
-# Return only a compact JSON with three numbers: "relevance", "completeness", "groundedness".
-
-# Inputs (in the user message):
-# - "user_text": the user's utterance for this turn.
-# - "bot_text": the bot's reply for this turn.
-
-# Scoring (0-1, two decimals; any value in this range is allowed):
-# - Relevance: how directly the reply addresses the user's intent or asks a focused clarifying question that advances it.
-# - Completeness: whether the reply covers the necessary elements for this step or gives a clear next action; major omissions → lower score.
-# - Groundedness: whether statements are supported by provided context or make no external claims; unsupported/conflicting claims → lower score.
-
-# Frustration handling:
-# - If the user appears frustrated (e.g., complaints, “you're not listening,” repeated re-asks) and the bot fails to address or fix the issue in this turn, assign **lower values** to the scores to reflect the poor experience.
-
-# Output format — output ONLY this JSON (no extra text/keys):
-# {"relevance": x.xx, "completeness": x.xx, "groundedness": x.xx}
-
-# If uncertain, choose the lower score."""
-
-#         chat_ctx = ChatContext([ChatMessage(role="system", content=[prompt]),
-#                                 *self.session._chat_ctx.items[-6:]])
-
-#         result = ""
-#         async with self.llm.chat(chat_ctx=chat_ctx) as stream:
-#             async for chunk in stream:
-#                 d = getattr(chunk, "delta", None)
-#                 if d and d.content:
-#                     result += d.content
-
-#         try:
-#             score = SupervisorScore.model_validate(json.loads(result))
-#         except Exception as e:
-#             logger.debug(f"[supervisor llm response] {result}")
-#             logger.error(f"[supervisor score parse error] {e}")
-#             return
-
-#         avg_score = (score.relevance + score.completeness + score.groundedness) / 3
-#         logger.info(f"[supervisor score] {score} = {avg_score}")
-
-#         self.score_history.append({
-#             "relevance": str(float(score.relevance)),
-#             "completeness": str(float(score.completeness)),
-#             "groundedness": str(float(score.groundedness)),
-#             "average": str(float(avg_score))
-#         })
-
-#         if avg_score > 0.7:
-#             self.nth_issue = 0
-#             return
-
-#         self.nth_issue += 1
-#         if self.nth_issue >= 2:
-#             self.escalated_to_live_agent = True
-#             await self.session.interrupt()
-#             await self.session.say("Let me transfer you to live agent", allow_interruptions=False)
-#             await self.transfer_call_voice()
-
-#     async def transfer_call_voice(self):
-#         logger.info("transfer_call_voice function called...")
-#         try:
-#             async with api.LiveKitAPI() as livekit_api:
-#                 asterisk_ip = os.getenv("ASTERISK_SERVER_IP")
-#                 transfer_to = f"sip:5000@{str(asterisk_ip)}"
-#                 # transfer_to = "sip:5000@139.64.158.216"
-#                 participant_identity = list(self.room.remote_participants.values())[0].identity
-#                 # Create transfer request
-#                 transfer_request = TransferSIPParticipantRequest(
-#                     participant_identity=participant_identity,
-#                     room_name=self.room.name,
-#                     transfer_to=transfer_to,
-#                     play_dialtone=False,
-#                     # wait_until_answered=True,
-#                 )
-
-#                 # Transfer caller
-#                 await livekit_api.sip.transfer_sip_participant(transfer_request)
-#         except Exception as e:
-#             logger.error(f"Error during call transfer: {e}")
-#             return "Issue with call transfer"
-
-
-#     async def _on_close(self, _: CloseEvent):
-#         await self.stop()
-
-
 import os
 import json
 import asyncio
@@ -191,7 +36,7 @@ class Supervisor:
                  llm = None,
                  history_window: int = 6,
                  min_turns_for_repetition: int = 6,
-                 repetition_threshold: int = 2) -> None:
+                 repetition_threshold: int = 3) -> None:  # Changed default from 2 to 3
         self.session = session
         self.llm = llm if llm else openai.LLM(model="gpt-4o-mini")
         self.room = room
@@ -270,7 +115,7 @@ class Supervisor:
         # Track bot responses for semantic similarity
         if role == "assistant":
             self.last_bot_responses.append(text)
-            if len(self.last_bot_responses) > 2:
+            if len(self.last_bot_responses) > 3:  # Changed from 2 to 3
                 self.last_bot_responses.pop(0)
         
         # Add each message as a separate turn (no merging)
@@ -293,7 +138,7 @@ class Supervisor:
 
     def _check_semantic_repetition(self) -> bool:
         """Check if bot responses are semantically repetitive."""
-        if len(self.last_bot_responses) < 2:
+        if len(self.last_bot_responses) < 3:  # Changed from 2 to 3
             return False
             
         # Simple heuristic: check if responses contain similar key phrases
@@ -308,8 +153,8 @@ class Supervisor:
             if any(phrase in response_lower for phrase in key_phrases):
                 matches += 1
                 
-        # If all 2 recent responses contain key phrases, consider it repetitive
-        return matches >= 2
+        # If all 3 recent responses contain key phrases, consider it repetitive
+        return matches >= 3  # Changed from 2 to 3
 
     def _on_added(self, ev: ConversationItemAddedEvent):
         if self.escalated_to_live_agent:
@@ -371,19 +216,19 @@ class Supervisor:
                 if confidence_score >= 0.7:
                     logger.info(f"[UNIVERSAL STT] High-confidence STT error detected - will adjust supervisor scoring to prevent false escalation")
         
-        # DIRECT REPETITION CHECK: If bot gives identical response 2+ times, escalate immediately
-        if len(self.restricted_history) >= 4:
+        # DIRECT REPETITION CHECK: If bot gives identical response 3+ times, escalate immediately
+        if len(self.restricted_history) >= 6:  # Need at least 3 bot responses
             bot_messages = [turn["text"] for turn in self.restricted_history if turn["role"] == "assistant"]
-            if len(bot_messages) >= 2:
-                last_two = bot_messages[-2:]
-                if last_two[0] == last_two[1]:
-                    logger.warning(f"[DIRECT REPETITION] Bot repeated identical message 2 times: '{last_two[0][:50]}...'")
+            if len(bot_messages) >= 3:
+                last_three = bot_messages[-3:]
+                if last_three[0] == last_three[1] == last_three[2]:
+                    logger.warning(f"[DIRECT REPETITION] Bot repeated identical message 3 times: '{last_three[0][:50]}...'")
                     self.transfer_reason = "Bot stuck in loop - giving identical responses repeatedly"
                     await self._escalate_with_reason(self.transfer_reason)
                     return
         
-        # OFF-TOPIC LOOP CHECK: If user asks about off-topic topics 2+ times
-        if self.off_topic_count >= 2:
+        # OFF-TOPIC LOOP CHECK: If user asks about off-topic topics 3+ times
+        if self.off_topic_count >= 3:  # Changed from 2 to 3
             logger.warning(f"[OFF-TOPIC LOOP] User asked about off-topic topics {self.off_topic_count} times")
             self.transfer_reason = f"User repeatedly asking about off-topic topics ({self.off_topic_count} times) - transferring to live agent"
             await self._escalate_with_reason(self.transfer_reason)
@@ -403,12 +248,12 @@ class Supervisor:
             TASK 2 - Detect Repetition:
             Analyze the RESTRICTED HISTORY above. Set "repetition_detected" to TRUE if you see evidence of:
 
-            1. **User repeating the SAME substantive request** 2+ times without resolution (e.g., "I need a ride" → bot responds → "I need a ride" again → bot responds → "I need a ride" AGAIN)
+            1. **User repeating the SAME substantive request** 3+ times without resolution (e.g., "I need a ride" → bot responds → "I need a ride" again → bot responds → "I need a ride" AGAIN)
             2. **Bot giving IDENTICAL unhelpful responses** to different user attempts (stuck in a loop)
             3. **User explicitly complaining** about repetition: "you keep saying the same thing", "we already discussed this", "stop repeating yourself"
-            4. **Zero progress** over 2+ complete exchanges on the same unresolved topic
-            5. **User repeatedly asking about off-topic topics** (e.g., food, movies, etc.) that the bot cannot help with, and the bot redirecting each time without the user moving on to a relevant topic (at least 2 instances)
-            6. **Conversational loop** where the same pattern (e.g., user asks about X → bot responds with Y → user asks about X again in a different way) repeats 2+ times without progress.
+            4. **Zero progress** over 3+ complete exchanges on the same unresolved topic
+            5. **User repeatedly asking about off-topic topics** (e.g., food, movies, etc.) that the bot cannot help with, and the bot redirecting each time without the user moving on to a relevant topic (at least 3 instances)
+            6. **Conversational loop** where the same pattern (e.g., user asks about X → bot responds with Y → user asks about X again in a different way) repeats 3+ times without progress.
 
             DO NOT flag as repetition:
             - Normal clarifications or follow-ups (e.g., "can you tell me?" after "please wait")
@@ -478,7 +323,7 @@ class Supervisor:
 
             SPECIAL CASES:
             - If user asks off-topic questions (movies, food, etc.) and bot redirects to its domain, score relevance=0.80, completeness=0.70
-            - If bot gives identical response 2+ times in a row, lower all scores by 0.3
+            - If bot gives identical response 3+ times in a row, lower all scores by 0.3
             - If STT validation suggests the user input was likely misheard and the bot's response would be highly relevant to the corrected input, increase relevance score by 0.2-0.3
 
             {repetition_task}
@@ -514,9 +359,9 @@ class Supervisor:
             logger.debug(f"[supervisor llm response] {result}")
             logger.error(f"[supervisor score parse error] {e}")
             
-            if len(self.restricted_history) >= 4:
+            if len(self.restricted_history) >= 6:  # Need at least 3 bot responses
                 recent_bot_messages = [turn["text"] for turn in self.restricted_history if turn["role"] == "assistant"]
-                if len(recent_bot_messages) >= 2 and recent_bot_messages[-1] == recent_bot_messages[-2]:
+                if len(recent_bot_messages) >= 3 and recent_bot_messages[-1] == recent_bot_messages[-2] == recent_bot_messages[-3]:
                     logger.warning("[FALLBACK] Detected identical bot responses - using fallback low scores")
                     score = SupervisorScore(
                         relevance=Decimal("0.30"),
@@ -554,7 +399,7 @@ class Supervisor:
             self.repetition_count += 1
             logger.info(f"[REPETITION COUNTER] Repetition #{self.repetition_count} detected (threshold: {self.repetition_threshold})")
             
-            if self.repetition_count >= self.repetition_threshold:
+            if self.repetition_count >= self.repetition_threshold:  # Now uses 3 instead of 2
                 self.transfer_reason = f"Conversation repetition detected {self.repetition_count} times - transferring to live agent for better assistance"
                 await self._escalate_with_reason(self.transfer_reason)
                 return
@@ -574,6 +419,7 @@ class Supervisor:
 
         # Condition 3: Consecutive low scores
         self.nth_issue += 1
+        # CHANGE: Updated check condition from 2 to 3 to allow more attempts before escalation
         if self.nth_issue >= 3:
             self.transfer_reason = f"Bot unable to assist effectively ({self.nth_issue} consecutive low-quality responses)"
             await self._escalate_with_reason(self.transfer_reason)
