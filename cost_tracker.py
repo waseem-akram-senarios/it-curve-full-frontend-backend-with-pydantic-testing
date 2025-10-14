@@ -24,6 +24,22 @@ class TokenUsage:
         self.output_tokens += output_tokens
 
 @dataclass
+class AudioUsage:
+    """Represents audio/TTS usage for a specific provider and model."""
+    audio_seconds: float = 0.0  # For STT
+    characters: int = 0  # For TTS
+    provider: str = ""
+    model: str = ""
+    
+    def add_stt_usage(self, audio_seconds: float):
+        """Add STT audio usage."""
+        self.audio_seconds += audio_seconds
+    
+    def add_tts_usage(self, characters: int):
+        """Add TTS character usage."""
+        self.characters += characters
+
+@dataclass
 class CostBreakdown:
     """Detailed cost breakdown for all operations."""
     agent_cost: float = 0.0
@@ -38,7 +54,11 @@ class CostBreakdown:
     supervisor_tokens: TokenUsage = field(default_factory=TokenUsage)
     websearch_tokens: TokenUsage = field(default_factory=TokenUsage)
     
-    # Audio/TTS usage
+    # Audio/TTS usage with provider and model tracking
+    stt_usage: AudioUsage = field(default_factory=AudioUsage)
+    tts_usage: AudioUsage = field(default_factory=AudioUsage)
+    
+    # Legacy fields for backward compatibility
     stt_audio_seconds: float = 0.0
     tts_characters: int = 0.0
 
@@ -65,8 +85,63 @@ class CostTracker:
             }
         }
         
-        # Fixed pricing for STT and TTS
-        self.stt_cost_per_minute = 0.004
+        # STT and TTS pricing by provider and model (Updated from Deepgram STREAMING pricing table)
+        self.audio_pricing = {
+            "deepgram": {
+                # Nova models (Streaming prices)
+                "nova-2": {
+                    "stt_cost_per_minute": 0.0058,  # Nova-1 & 2 streaming
+                    "tts_cost_per_million_character": 15.0
+                },
+                "nova-2-phonecall": {
+                    "stt_cost_per_minute": 0.0058,  # Nova-1 & 2 streaming
+                    "tts_cost_per_million_character": 15.0
+                },
+                "nova-3": {
+                    "stt_cost_per_minute": 0.0077,  # Nova-3 Monolingual streaming
+                    "tts_cost_per_million_character": 15.0
+                },
+                "nova-3-phonecall": {
+                    "stt_cost_per_minute": 0.0077,  # Nova-3 Monolingual streaming
+                    "tts_cost_per_million_character": 15.0
+                },
+                "nova-3-multilingual": {
+                    "stt_cost_per_minute": 0.0092,  # Nova-3 Multilingual streaming
+                    "tts_cost_per_million_character": 15.0
+                },
+                # Legacy models
+                "nova-1": {
+                    "stt_cost_per_minute": 0.0058,  # Nova-1 & 2 streaming
+                    "tts_cost_per_million_character": 15.0
+                },
+                # Enhanced models (Streaming prices)
+                "enhanced": {
+                    "stt_cost_per_minute": 0.0165,  # Enhanced streaming
+                    "tts_cost_per_million_character": 15.0
+                },
+                # Base model (Streaming prices)
+                "base": {
+                    "stt_cost_per_minute": 0.0145,  # Base streaming
+                    "tts_cost_per_million_character": 15.0
+                },
+                # Add-on features (same for streaming)
+                "redaction": {
+                    "stt_cost_per_minute": 0.0020,  # Add-on cost
+                    "tts_cost_per_million_character": 15.0
+                },
+                "keyterm-prompting": {
+                    "stt_cost_per_minute": 0.0013,  # Add-on cost
+                    "tts_cost_per_million_character": 15.0
+                },
+                "speaker-diarization": {
+                    "stt_cost_per_minute": 0.0020,  # Add-on cost
+                    "tts_cost_per_million_character": 15.0
+                }
+            }
+        }
+        
+        # Legacy pricing for backward compatibility
+        self.stt_cost_per_minute = 0.0058
         self.tts_cost_per_million_character = 15.0
     
     def reset(self):
@@ -96,17 +171,25 @@ class CostTracker:
             self.breakdown.websearch_tokens.model_name = model_name
             logger.debug(f"Added websearch usage: {input_tokens} input, {output_tokens} output tokens ({model_name})")
     
-    def add_stt_usage(self, audio_seconds: float):
-        """Add STT audio usage."""
+    def add_stt_usage(self, audio_seconds: float, provider: str = "deepgram", model: str = "nova-3-phonecall"):
+        """Add STT audio usage with provider and model tracking."""
         with self._lock:
+            self.breakdown.stt_usage.add_stt_usage(audio_seconds)
+            self.breakdown.stt_usage.provider = provider
+            self.breakdown.stt_usage.model = model
+            # Update legacy field for backward compatibility
             self.breakdown.stt_audio_seconds += audio_seconds
-            logger.debug(f"Added STT usage: {audio_seconds} seconds")
+            logger.debug(f"Added STT usage: {audio_seconds} seconds ({provider} {model})")
     
-    def add_tts_usage(self, characters: int):
-        """Add TTS character usage."""
+    def add_tts_usage(self, characters: int, provider: str = "deepgram", model: str = "nova-3-phonecall"):
+        """Add TTS character usage with provider and model tracking."""
         with self._lock:
+            self.breakdown.tts_usage.add_tts_usage(characters)
+            self.breakdown.tts_usage.provider = provider
+            self.breakdown.tts_usage.model = model
+            # Update legacy field for backward compatibility
             self.breakdown.tts_characters += characters
-            logger.debug(f"Added TTS usage: {characters} characters")
+            logger.debug(f"Added TTS usage: {characters} characters ({provider} {model})")
     
     def _calculate_llm_cost(self, tokens: TokenUsage) -> float:
         """Calculate cost for LLM token usage."""
@@ -128,11 +211,13 @@ class CostTracker:
             self.breakdown.supervisor_cost = self._calculate_llm_cost(self.breakdown.supervisor_tokens)
             self.breakdown.websearch_cost = self._calculate_llm_cost(self.breakdown.websearch_tokens)
             
-            # Calculate STT cost
-            self.breakdown.stt_cost = (self.breakdown.stt_audio_seconds / 60) * self.stt_cost_per_minute
+            # Calculate STT cost using provider-specific pricing
+            stt_pricing = self._get_audio_pricing(self.breakdown.stt_usage.provider, self.breakdown.stt_usage.model)
+            self.breakdown.stt_cost = (self.breakdown.stt_usage.audio_seconds / 60) * stt_pricing["stt_cost_per_minute"]
             
-            # Calculate TTS cost
-            self.breakdown.tts_cost = (self.breakdown.tts_characters / 1000000) * self.tts_cost_per_million_character
+            # Calculate TTS cost using provider-specific pricing
+            tts_pricing = self._get_audio_pricing(self.breakdown.tts_usage.provider, self.breakdown.tts_usage.model)
+            self.breakdown.tts_cost = (self.breakdown.tts_usage.characters / 1000000) * tts_pricing["tts_cost_per_million_character"]
             
             # Calculate total cost
             self.breakdown.total_cost = (
@@ -145,6 +230,18 @@ class CostTracker:
             
             logger.info(f"Total cost calculated: ${self.breakdown.total_cost:.6f}")
             return self.breakdown
+    
+    def _get_audio_pricing(self, provider: str, model: str) -> Dict:
+        """Get pricing for audio provider and model, with fallback to legacy pricing."""
+        if provider in self.audio_pricing and model in self.audio_pricing[provider]:
+            return self.audio_pricing[provider][model]
+        else:
+            # Fallback to legacy pricing
+            logger.warning(f"No pricing found for {provider} {model}, using legacy pricing")
+            return {
+                "stt_cost_per_minute": self.stt_cost_per_minute,
+                "tts_cost_per_million_character": self.tts_cost_per_million_character
+            }
     
     def get_summary_dict(self) -> Dict:
         """Get cost summary as dictionary for logging/storage."""
@@ -243,13 +340,13 @@ def add_websearch_usage(input_tokens: int, output_tokens: int, model_name: str =
     """Add web search token usage to current call's tracker."""
     get_cost_tracker().add_websearch_usage(input_tokens, output_tokens, model_name)
 
-def add_stt_usage(audio_seconds: float):
+def add_stt_usage(audio_seconds: float, provider: str = "deepgram", model: str = "nova-3-phonecall"):
     """Add STT usage to current call's tracker."""
-    get_cost_tracker().add_stt_usage(audio_seconds)
+    get_cost_tracker().add_stt_usage(audio_seconds, provider, model)
 
-def add_tts_usage(characters: int):
+def add_tts_usage(characters: int, provider: str = "deepgram", model: str = "nova-3-phonecall"):
     """Add TTS usage to current call's tracker."""
-    get_cost_tracker().add_tts_usage(characters)
+    get_cost_tracker().add_tts_usage(characters, provider, model)
 
 def get_cost_summary() -> Dict:
     """Get complete cost summary for current call."""

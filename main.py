@@ -265,10 +265,11 @@ async def entrypoint(ctx: agents.JobContext):
         AudioConfig(BuiltinAudioClip.KEYBOARD_TYPING2, volume=0.5),
         AudioConfig(BuiltinAudioClip.KEYBOARD_TYPING, volume=0.6)
     ])
-    
+    deepgram_stt_model = "nova-3"
+    deepgram_tts_model = "aura-asteria-en"
     session = AgentSession(
         stt=deepgram.STT(
-            model="nova-3", 
+            model=deepgram_stt_model, 
             language="en",
             interim_results=True,  # Enable interim results for faster interruption
             smart_format=True
@@ -277,7 +278,7 @@ async def entrypoint(ctx: agents.JobContext):
         false_interruption_timeout = 2.0,
         resume_false_interruption = True,
         llm=openai.LLM(model="gpt-4.1-mini", temperature=0.1),
-        tts=deepgram.TTS(model="aura-asteria-en"),
+        tts=deepgram.TTS(model=deepgram_tts_model),
         vad=silero.VAD.load(min_silence_duration=0.75),
         turn_detection=EnglishModel(),
     )
@@ -948,6 +949,41 @@ async def entrypoint(ctx: agents.JobContext):
             logger.info("[ASTERISK DTMF] Transferring to driver")
             asyncio.create_task(transfer_call_dtmf_driver(initial_agent.room, initial_agent.room.name))
 
+    # Room and participant disconnect event handlers
+    @ctx.room.on("disconnected")
+    def on_room_disconnected():
+        logger.info(f"[ROOM DISCONNECT] Room {ctx.room.name} disconnected for call {call_sid}")
+        logger.info(f"[ROOM DISCONNECT] Disconnect reason: Connection lost or terminated")
+
+    @ctx.room.on("participant_disconnected")
+    def on_participant_disconnected(participant):
+        logger.info(f"[PARTICIPANT DISCONNECT] Participant {participant.identity} disconnected from call {call_sid}")
+        logger.info(f"[PARTICIPANT DISCONNECT] Participant SID: {participant.sid}")
+        logger.info(f"[PARTICIPANT DISCONNECT] Remaining participants: {len(ctx.room.remote_participants)}")
+        
+        # Check if all participants have left
+        if len(ctx.room.remote_participants) == 0:
+            logger.info(f"[ALL PARTICIPANTS LEFT] No participants remaining in call {call_sid}")
+            logger.info(f"[ALL PARTICIPANTS LEFT] Call session ending")
+
+    @ctx.room.on("participant_connected")
+    def on_participant_connected(participant):
+        logger.info(f"[PARTICIPANT CONNECT] Participant {participant.identity} connected to call {call_sid}")
+        logger.info(f"[PARTICIPANT CONNECT] Participant SID: {participant.sid}")
+        logger.info(f"[PARTICIPANT CONNECT] Total participants: {len(ctx.room.remote_participants) + 1}")  # +1 for agent
+
+    @ctx.room.on("connection_state_changed")
+    def on_connection_state_changed(state):
+        logger.info(f"[CONNECTION STATE] Room connection state changed to: {state} for call {call_sid}")
+        if state == rtc.ConnectionState.DISCONNECTED:
+            logger.info(f"[CONNECTION STATE] Room fully disconnected for call {call_sid}")
+        elif state == rtc.ConnectionState.FAILED:
+            logger.info(f"[CONNECTION STATE] Room connection failed for call {call_sid}")
+        elif state == rtc.ConnectionState.CONNECTED:
+            logger.info(f"[CONNECTION STATE] Room successfully connected for call {call_sid}")
+        elif state == rtc.ConnectionState.RECONNECTING:
+            logger.info(f"[CONNECTION STATE] Room reconnecting for call {call_sid}")
+
     phone_collector = PhoneNumberCollector()
     phone_collector.start_collection()
 
@@ -971,8 +1007,8 @@ async def entrypoint(ctx: agents.JobContext):
         
         # Add agent usage to cost tracker
         add_agent_usage(agent_input_tokens, agent_output_tokens, "gpt-4.1-mini")
-        add_stt_usage(stt_audio_seconds)
-        add_tts_usage(tts_characters)
+        add_stt_usage(stt_audio_seconds, "deepgram", deepgram_stt_model)
+        add_tts_usage(tts_characters, "deepgram", deepgram_tts_model)
         
         # Get supervisor usage from supervisor's usage collector
         supervisor_summary = supervisor.usage_collector.get_summary()
@@ -986,6 +1022,29 @@ async def entrypoint(ctx: agents.JobContext):
         cost_tracker = get_cost_tracker()
         cost_breakdown = cost_tracker.calculate_total_costs()
         cost_summary = cost_tracker.get_summary_dict()
+        
+        # Get web search token usage
+        websearch_input_tokens = cost_breakdown.websearch_tokens.input_tokens
+        websearch_output_tokens = cost_breakdown.websearch_tokens.output_tokens
+        
+        # Get STT and TTS usage details
+        stt_provider = cost_breakdown.stt_usage.provider
+        stt_model = cost_breakdown.stt_usage.model
+        stt_usage_seconds = cost_breakdown.stt_usage.audio_seconds
+        
+        tts_provider = cost_breakdown.tts_usage.provider
+        tts_model = cost_breakdown.tts_usage.model
+        tts_usage_characters = cost_breakdown.tts_usage.characters
+        
+        # Log token breakdown for transparency
+        logger.info(f"Usage breakdown by component:")
+        logger.info(f"  Agent (gpt-4.1-mini): {agent_input_tokens} input, {agent_output_tokens} output tokens")
+        logger.info(f"  Supervisor (gpt-4.1-mini): {supervisor_input_tokens} input, {supervisor_output_tokens} output tokens")
+        logger.info(f"  WebSearch (gpt-4o): {websearch_input_tokens} input, {websearch_output_tokens} output tokens")
+        logger.info(f"  STT ({stt_provider} {stt_model}): {stt_usage_seconds} seconds")
+        logger.info(f"  TTS ({tts_provider} {tts_model}): {tts_usage_characters} characters")
+        logger.info(f"  Total tokens: {agent_input_tokens + supervisor_input_tokens + websearch_input_tokens} input, "
+                   f"{agent_output_tokens + supervisor_output_tokens + websearch_output_tokens} output")
 
         # Specify the US Eastern time zone
         eastern = pytz.timezone('US/Eastern')
@@ -1029,12 +1088,43 @@ async def entrypoint(ctx: agents.JobContext):
             "start_time": datetime.strptime(starting_time, "%Y-%m-%d %H:%M:%S"),
             "end_time": datetime.strptime(ending_time, "%Y-%m-%d %H:%M:%S"),
             "duration_seconds": elapsed_time,
-            "llm_input_tokens": agent_input_tokens + supervisor_input_tokens,
-            "llm_output_tokens": agent_output_tokens + supervisor_output_tokens,
+            "tokens": {
+                "agent": {
+                    "input_tokens": agent_input_tokens,
+                    "output_tokens": agent_output_tokens,
+                    "model": "gpt-4.1-mini"
+                },
+                "supervisor": {
+                    "input_tokens": supervisor_input_tokens,
+                    "output_tokens": supervisor_output_tokens,
+                    "model": "gpt-4.1-mini"
+                },
+                "websearch": {
+                    "input_tokens": websearch_input_tokens,
+                    "output_tokens": websearch_output_tokens,
+                    "model": "gpt-4o"
+                },
+                "total": {
+                    "input_tokens": agent_input_tokens + supervisor_input_tokens + websearch_input_tokens,
+                    "output_tokens": agent_output_tokens + supervisor_output_tokens + websearch_output_tokens
+                }
+            },
+            "audio_usage": {
+                "stt": {
+                    "audio_seconds": stt_usage_seconds,
+                    "provider": stt_provider,
+                    "model": stt_model
+                },
+                "tts": {
+                    "characters": tts_usage_characters,
+                    "provider": tts_provider,
+                    "model": tts_model
+                }
+            },
             "cost": {
-                "llm_cost": cost_breakdown.agent_cost,
-                "websearch_cost": cost_breakdown.websearch_cost,
+                "agent_cost": cost_breakdown.agent_cost,
                 "supervisor_cost": cost_breakdown.supervisor_cost,
+                "websearch_cost": cost_breakdown.websearch_cost,
                 "stt_cost": cost_breakdown.stt_cost,
                 "tts_cost": cost_breakdown.tts_cost,
                 "total_cost": cost_breakdown.total_cost,
@@ -1043,7 +1133,7 @@ async def entrypoint(ctx: agents.JobContext):
             "conversation_history": formatted_history,
             "createdAt": datetime.now()
         }
-
+        logger.debug(f"MongoDB Document: {mongo_doc}")
         # Insert document to MongoDB
         try:
             result = costlogs_collection.insert_one(mongo_doc)
@@ -1083,7 +1173,7 @@ async def entrypoint(ctx: agents.JobContext):
         cleanup_call_tracker(call_sid)
         logger.info(f"Cleaned up cost tracker for call: {call_sid}")
     
-    ctx.add_shutdown_callback(lambda: asyncio.create_task(cleanup_and_log()))
+    ctx.add_shutdown_callback(cleanup_and_log)
 
 if __name__ == "__main__":
     agents.cli.run_app(agents.WorkerOptions(entrypoint_fnc=entrypoint, port=int(os.getenv("PORT"))))
