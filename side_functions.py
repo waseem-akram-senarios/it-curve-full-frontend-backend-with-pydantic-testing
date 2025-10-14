@@ -180,6 +180,14 @@ async def search_web_manual(prompt: str):
         logger.debug(f"Response object type: {type(response)}")
         logger.debug(f"Response attributes: {dir(response)}")
         
+        # Debug the text/output structure
+        if hasattr(response, 'text'):
+            logger.debug(f"Response.text type: {type(response.text)}")
+            logger.debug(f"Response.text attributes: {dir(response.text)}")
+        if hasattr(response, 'output'):
+            logger.debug(f"Response.output type: {type(response.output)}")
+            logger.debug(f"Response.output: {response.output}")
+        
         if hasattr(response, 'usage') and response.usage:
             logger.debug(f"Usage object: {response.usage}")
             # For OpenAI responses API, tokens are in input_tokens/output_tokens, not prompt_tokens/completion_tokens
@@ -192,11 +200,51 @@ async def search_web_manual(prompt: str):
             logger.warning(f"No usage information available in response. Response type: {type(response)}")
             # For now, estimate tokens based on text length as fallback
             estimated_input = len(prompt.split()) * 1.3  # Rough estimate
-            estimated_output = len(response.text.split()) * 1.3 if hasattr(response, 'text') else 0
+            # Try to get text content for estimation
+            text_content = ""
+            if hasattr(response, 'output') and response.output:
+                # Extract text from the response structure for estimation
+                for item in response.output:
+                    if hasattr(item, 'type') and item.type == 'message':
+                        if hasattr(item, 'content') and item.content:
+                            for content_item in item.content:
+                                if hasattr(content_item, 'type') and content_item.type == 'output_text':
+                                    text_content = content_item.text
+                                    break
+                        if text_content:
+                            break
+                # Fallback if structure parsing fails
+                if not text_content:
+                    text_content = str(response.output)
+            elif hasattr(response, 'text') and hasattr(response.text, 'content'):
+                text_content = response.text.content
+            elif hasattr(response, 'text'):
+                text_content = str(response.text)
+            
+            estimated_output = len(text_content.split()) * 1.3 if text_content else 0
             logger.info(f"Using estimated tokens - input: {estimated_input:.0f}, output: {estimated_output:.0f}")
             add_websearch_usage(int(estimated_input), int(estimated_output), "gpt-4o")
     
-        return response.text
+        # Extract text from the response structure
+        if hasattr(response, 'output') and response.output:
+            # response.output is a list of response objects
+            for item in response.output:
+                if hasattr(item, 'type') and item.type == 'message':
+                    # This is a ResponseOutputMessage
+                    if hasattr(item, 'content') and item.content:
+                        for content_item in item.content:
+                            if hasattr(content_item, 'type') and content_item.type == 'output_text':
+                                # This is ResponseOutputText with the actual text
+                                return content_item.text
+            # Fallback to string representation if structure parsing fails
+            return str(response.output)
+        elif hasattr(response, 'text') and hasattr(response.text, 'content'):
+            return response.text.content
+        elif hasattr(response, 'text'):
+            return str(response.text)
+        else:
+            logger.error(f"Could not extract text from response. Available attributes: {dir(response)}")
+            return "Unable to extract response text"
     
     except Exception as e:
         logger.error(f"Error in search web: {e}")

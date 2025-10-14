@@ -598,7 +598,24 @@ class Assistant(Agent):
                     logger.warning(f"No usage information available in response. Response type: {type(response)}")
                     # Estimate tokens based on text length as fallback
                     estimated_input = len(prompt.split()) * 1.3  # Rough estimate
-                    estimated_output = len(response.output_text.split()) * 1.3 if hasattr(response, 'output_text') else 0
+                    
+                    # Extract text from the response structure for estimation
+                    text_content = ""
+                    if hasattr(response, 'output') and response.output:
+                        for item in response.output:
+                            if hasattr(item, 'type') and item.type == 'message':
+                                if hasattr(item, 'content') and item.content:
+                                    for content_item in item.content:
+                                        if hasattr(content_item, 'type') and content_item.type == 'output_text':
+                                            text_content = content_item.text
+                                            break
+                                if text_content:
+                                    break
+                        # Fallback if structure parsing fails
+                        if not text_content:
+                            text_content = str(response.output)
+                    
+                    estimated_output = len(text_content.split()) * 1.3 if text_content else 0
                     logger.info(f"Using estimated tokens - input: {estimated_input:.0f}, output: {estimated_output:.0f}")
                     add_websearch_usage(int(estimated_input), int(estimated_output), "gpt-4o")
             except Exception as usage_error:
@@ -607,7 +624,23 @@ class Assistant(Agent):
             # Output the result
             # await asyncio.sleep(2)
             # await self.Stop_Music()
-            return response.output_text
+            
+            # Extract text from the response structure
+            if hasattr(response, 'output') and response.output:
+                # response.output is a list of response objects
+                for item in response.output:
+                    if hasattr(item, 'type') and item.type == 'message':
+                        # This is a ResponseOutputMessage
+                        if hasattr(item, 'content') and item.content:
+                            for content_item in item.content:
+                                if hasattr(content_item, 'type') and content_item.type == 'output_text':
+                                    # This is ResponseOutputText with the actual text
+                                    return content_item.text
+                # Fallback to string representation if structure parsing fails
+                return str(response.output)
+            else:
+                logger.error(f"Could not extract text from response. Available attributes: {dir(response)}")
+                return "Unable to extract response text"
 
         except Exception as e:
             # await asyncio.sleep(2)
