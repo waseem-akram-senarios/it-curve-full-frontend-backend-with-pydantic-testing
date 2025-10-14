@@ -274,6 +274,8 @@ async def entrypoint(ctx: agents.JobContext):
             smart_format=True
         ),
         allow_interruptions=True,
+        false_interruption_timeout = 2.0,
+        resume_false_interruption = True,
         llm=openai.LLM(model="gpt-4.1-mini", temperature=0.1),
         tts=deepgram.TTS(model="aura-asteria-en"),
         vad=silero.VAD.load(min_silence_duration=0.75),
