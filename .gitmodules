@@ -1,0 +1,4 @@
+[submodule "VoiceAgent3/IT_Curves_Bot"]
+	path = VoiceAgent3/IT_Curves_Bot
+	url = https://github.com/AIDevLabOrg/IT_Curves_Bot.git
+	branch = monitor-agent
