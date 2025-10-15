@@ -21,3 +21,10 @@ __pycache__/
 *.DS_Store
 .idea/
 .vscode/
+
+# secrets
+.env
+.env.*
+*.env
+*.env.*
+*.backup
