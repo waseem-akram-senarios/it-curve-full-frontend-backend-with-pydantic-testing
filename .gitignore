@@ -1,13 +1,17 @@
-.env
-venv/
-.DS_Store
-*.wav
+# --- Python ---
 __pycache__/
-itcurves/
+*.py[cod]
+*.so
+*.pyd
+*.pyo
+
+# --- Environments ---
+.env
+.env.*
+.venv/
+venv/
+
+# --- Logs / caches ---
 *.log
-.idea/
-*.pkl
-test_pydantic_models.py
-models_backup.py
-models_updated.py
-logs/
+.cache/
+.pytest_cache/
