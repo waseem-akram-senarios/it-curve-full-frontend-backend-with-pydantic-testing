@@ -1,22 +1,23 @@
-# --- Python ---
-__pycache__/
-*.py[cod]
-*.so
-*.pyd
-*.pyo
-
-# --- Environments ---
+# Envs
 .env
 .env.*
+
+# Virtual envs
 .venv/
 venv/
 
-# --- Tools / IDE ---
-*.DS_Store
-.idea/
-.vscode/
+# Python cache/compiled
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
 
-# --- Logs / caches ---
+# Logs & caches
 *.log
 .cache/
 .pytest_cache/
+
+# OS / IDE
+*.DS_Store
+.idea/
+.vscode/
