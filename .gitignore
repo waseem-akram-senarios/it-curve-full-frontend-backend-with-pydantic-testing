@@ -28,3 +28,10 @@ __pycache__/
 *.env
 *.env.*
 *.backup
+
+# secrets
+.env
+.env.*
+*.env
+*.env.*
+*.backup
