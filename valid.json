@@ -1,0 +1,56 @@
+{
+  "payload": {
+    "schemaVersion": "1.0",
+    "generalInfo": {
+      "CompleteUserName": "John Doe",
+      "CreatedBy": "System Admin",
+      "CreatedByAppID": 1,
+      "CreatedUserId": 1001,
+      "RequestAffiliateID": 2001,
+      "ReturnDetailID": "",
+      "FamilyID": 3001
+    },
+    "riderInfo": {
+      "ID": 4001,
+      "PhoneNo": "+13015551234",
+      "PickupPerson": "Jane Smith",
+      "DateOfBirth": "1980-05-15",
+      "RiderID": "RIDER001",
+      "RiderPassword": "",
+      "MedicalID": "MED001",
+      "ClientAddress": "123 Main St",
+      "ClientCity": "Baltimore",
+      "ClientState": "MD",
+      "ClientZip": "21201"
+    },
+    "insuranceInfo": {
+      "AgencyID": 5001,
+      "InsuranceID": 6001,
+      "CaseWorkerID": 7001,
+      "AuthID": "AUTH001",
+      "ServiceCodeID": "AMBULATORY",
+      "MedicalID": "MED001"
+    },
+    "routeSettingInfo": {
+      "TimeWindow": 30,
+      "EndTimeWindow": 30,
+      "MinRideTime": 15,
+      "MaxRideTime": 120,
+      "ServiceTimeAmb": 5,
+      "ServiceTimeWC": 10,
+      "ApptTimeWindow": 15,
+      "AdditionalSameLocAm": 0,
+      "AdditionalSameLocWC": 0
+    },
+    "systemConfigInfo": {
+      "DefaultCustomerShowPhoneNo": false,
+      "IsSkipPaymentProcessOnSD": false,
+      "Ta01": 0,
+      "UseHTMLFormatEmail": true,
+      "Web_Shuttle_SendEmailFromSASCode": false,
+      "SRDuplicateCallDelay": 300,
+      "ServiceHoursViolation": false
+    }
+  }
+}
+

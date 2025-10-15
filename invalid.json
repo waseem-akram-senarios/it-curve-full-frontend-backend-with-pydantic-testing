@@ -1,0 +1,55 @@
+{
+  "payload": {
+    "generalInfo": {
+      "CompleteUserName": "",
+      "CreatedBy": "System Admin",
+      "CreatedByAppID": -1,
+      "CreatedUserId": 1001,
+      "RequestAffiliateID": 2001,
+      "ReturnDetailID": "",
+      "FamilyID": 3001
+    },
+    "riderInfo": {
+      "ID": 4001,
+      "PhoneNo": "3015551234",
+      "PickupPerson": "Jane Smith",
+      "DateOfBirth": "1800-01-01",
+      "RiderID": "RIDER001",
+      "RiderPassword": "",
+      "MedicalID": "MED001",
+      "ClientAddress": "123 Main St",
+      "ClientCity": "Baltimore",
+      "ClientState": "MD",
+      "ClientZip": "00000"
+    },
+    "insuranceInfo": {
+      "AgencyID": 5001,
+      "InsuranceID": 6001,
+      "CaseWorkerID": 7001,
+      "AuthID": "",
+      "ServiceCodeID": "WHEELCHAIR",
+      "MedicalID": "MED001"
+    },
+    "routeSettingInfo": {
+      "TimeWindow": 30,
+      "EndTimeWindow": 30,
+      "MinRideTime": 120,
+      "MaxRideTime": 60,
+      "ServiceTimeAmb": 5,
+      "ServiceTimeWC": 0,
+      "ApptTimeWindow": 15,
+      "AdditionalSameLocAm": 0,
+      "AdditionalSameLocWC": 0
+    },
+    "systemConfigInfo": {
+      "DefaultCustomerShowPhoneNo": false,
+      "IsSkipPaymentProcessOnSD": false,
+      "Ta01": 0,
+      "UseHTMLFormatEmail": true,
+      "Web_Shuttle_SendEmailFromSASCode": false,
+      "SRDuplicateCallDelay": 300,
+      "ServiceHoursViolation": false
+    }
+  }
+}
+

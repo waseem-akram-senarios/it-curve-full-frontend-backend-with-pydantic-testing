@@ -1,0 +1,79 @@
+services:
+  # Backend LiveKit Agent
+  backend:
+    build:
+      context: ./VoiceAgent3/IT_Curves_Bot
+      dockerfile: Dockerfile
+    container_name: itcurves-backend
+    ports:
+      - "11000:11000"
+    environment:
+      - PORT=11000
+      - MONGODB_URI=${MONGODB_URI}
+      - DEFAULT_USER_ID=${DEFAULT_USER_ID}
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
+      - ASTERISK_SERVER_IP=${ASTERISK_SERVER_IP}
+      - PYTHON_ANYWHERE_COST_LOGGING=${PYTHON_ANYWHERE_COST_LOGGING}
+      - LIVEKIT_URL=${LIVEKIT_URL}
+      - LIVEKIT_API_KEY=${LIVEKIT_API_KEY}
+      - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET}
+      - DEEPGRAM_API_KEY=${DEEPGRAM_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - CARTESIA_API_KEY=${CARTESIA_API_KEY}
+      - ALL_AFFILIATE_DETAILS_API=${ALL_AFFILIATE_DETAILS_API}
+      - GET_AFFILIATE_API=${GET_AFFILIATE_API}
+      - SEARCH_CLIENT_DATA_API=${SEARCH_CLIENT_DATA_API}
+      - ITC_GEOCODE_API=${ITC_GEOCODE_API}
+      - GET_PAYMENT_TYPE_FSID_API=${GET_PAYMENT_TYPE_FSID_API}
+      - GET_PAYMENT_TPYE_AFFILIATE_API=${GET_PAYMENT_TPYE_AFFILIATE_API}
+      - RIDER_VERIFICATION_API=${RIDER_VERIFICATION_API}
+      - GET_NAME_API=${GET_NAME_API}
+      - GET_HISTORIC_RIDES_API=${GET_HISTORIC_RIDES_API}
+      - GET_DIRECTION=${GET_DIRECTION}
+      - GET_DIRECTION_USER=${GET_DIRECTION_USER}
+      - GET_DIRECTION_PASSWORD=${GET_DIRECTION_PASSWORD}
+      - GET_FARE_API=${GET_FARE_API}
+      - TRIP_STATS_API=${TRIP_STATS_API}
+      - TRIP_BOOKING_API=${TRIP_BOOKING_API}
+      - EXISTING_RIDES_API=${EXISTING_RIDES_API}
+    volumes:
+      - ./VoiceAgent3/IT_Curves_Bot/logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; socket.create_connection(('localhost', 11000), timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Frontend Next.js Application
+  frontend:
+    build:
+      context: ./ncs_pvt-virtual-agent-frontend-741b6d813bd5
+      dockerfile: Dockerfile
+    container_name: itcurves-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - NEXT_PUBLIC_DID_API_KEY=${NEXT_PUBLIC_DID_API_KEY}
+      - LIVEKIT_API_KEY=${LIVEKIT_API_KEY}
+      - LIVEKIT_API_SECRET=${LIVEKIT_API_SECRET}
+      - NEXT_PUBLIC_LIVEKIT_URL=${NEXT_PUBLIC_LIVEKIT_URL}
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/token?roomName=health-check"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+# Networks
+networks:
+  default:
+    name: itcurves-network

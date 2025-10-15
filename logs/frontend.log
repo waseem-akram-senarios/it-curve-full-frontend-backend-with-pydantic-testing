@@ -1,0 +1,22 @@
+
+> agents-playground@0.1.0 dev
+> next dev
+
+  ▲ Next.js 14.2.21
+  - Local:        http://localhost:3000
+  - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 5.2s
+ ○ Compiling / ...
+ ✓ Compiled / in 14.6s (331 modules)
+ GET / 200 in 15297ms
+ GET / 200 in 35ms
+ GET / 200 in 12ms
+ GET / 200 in 17ms
+ ⚠ The "images.domains" configuration is deprecated. Please use "images.remotePatterns" configuration instead.
+ ✓ Compiled /api/token in 218ms (101 modules)
+ GET /api/token?roomName=both-21-1-BARWOOD+%26+REGENCY+TAXI-nQlyl&participantName=BARWOOD+%26+REGENCY+TAXI&metadata=%7B%22phoneNo%22%3A%22%22%2C%22clientID%22%3A%22%22%2C%22userID%22%3A%22%22%2C%22affiliateId%22%3A%2221%22%2C%22familyId%22%3A%221%22%2C%22affiliateName%22%3A%22BARWOOD+%26+REGENCY+TAXI%22%7D 200 in 367ms
+ GET / 200 in 160ms
+ GET / 200 in 37ms
+[?25h

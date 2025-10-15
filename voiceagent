@@ -1,0 +1,5 @@
+#!/bin/bash
+# Simple alias script for VoiceAgent project
+cd /home/senarios/VoiceAgent5withFeNew
+./run-project.sh "$@"
+

@@ -1,0 +1,28 @@
+2025-10-13 20:46:42 - ivr_bot.helper_functions - ERROR - ❌ [VALIDATE_PHONE] Unexpected error: Unexpected error
+2025-10-13 20:48:07 - ivr_bot.helper_functions - ERROR - ❌ [VALIDATE_PHONE] Unexpected error: Unexpected error
+2025-10-15 15:07:27 - ivr_bot.side_functions - ERROR - ❌ [HISTORIC_TRIPS] Response validation failed: models.HistoricTrip() argument after ** must be a mapping, not str
+2025-10-15 15:07:28 - ivr_bot.side_functions - ERROR - ❌ [HISTORIC_TRIPS] Response validation failed: models.HistoricTrip() argument after ** must be a mapping, not str
+2025-10-15 15:08:05 - ivr_bot.side_functions - ERROR - ❌ [HISTORIC_TRIPS] Response validation failed: 'str' object has no attribute 'get'
+2025-10-15 15:08:06 - ivr_bot.side_functions - ERROR - ❌ [HISTORIC_TRIPS] Response validation failed: 'str' object has no attribute 'get'
+2025-10-15 15:11:52 - ivr_bot.helper_functions - ERROR - ❌ [TRIP_STATS] Response validation failed: models.TripStatsResponse() argument after ** must be a mapping, not list
+2025-10-15 15:11:53 - ivr_bot.helper_functions - ERROR - ❌ [TRIP_STATS] Response validation failed: 3 validation errors for TripStatsResponse
+total_trips
+  Field required [type=missing, input_value={'type': 'https://tools.i...ePositionInLine: 23.']}}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.10/v/missing
+completed_trips
+  Field required [type=missing, input_value={'type': 'https://tools.i...ePositionInLine: 23.']}}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.10/v/missing
+cancelled_trips
+  Field required [type=missing, input_value={'type': 'https://tools.i...ePositionInLine: 23.']}}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.10/v/missing
+2025-10-15 15:22:41 - ivr_bot.helper_functions - ERROR - ❌ [TRIP_STATS] Response validation failed: models.TripStatsResponse() argument after ** must be a mapping, not list
+2025-10-15 15:22:42 - ivr_bot.helper_functions - ERROR - ❌ [TRIP_STATS] Response validation failed: 3 validation errors for TripStatsResponse
+total_trips
+  Field required [type=missing, input_value={'type': 'https://tools.i...ePositionInLine: 23.']}}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.10/v/missing
+completed_trips
+  Field required [type=missing, input_value={'type': 'https://tools.i...ePositionInLine: 23.']}}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.10/v/missing
+cancelled_trips
+  Field required [type=missing, input_value={'type': 'https://tools.i...ePositionInLine: 23.']}}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.10/v/missing

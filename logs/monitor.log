@@ -1,0 +1,469 @@
+2025-10-14 20:58:27,808 - INFO - 🚀 Starting Voice Agent Monitor...
+2025-10-14 20:58:27,808 - INFO - 🔄 Restarting all services...
+2025-10-14 20:58:27,809 - INFO - 🛑 Stopping all services...
+2025-10-14 20:58:28,401 - INFO - 🛑 Killed process on port 8000
+2025-10-14 20:58:28,957 - INFO - 🛑 Killed process on port 3000
+2025-10-14 20:58:31,972 - INFO - ✅ All services stopped
+2025-10-14 20:58:36,977 - INFO - 🚀 Starting Validation API...
+2025-10-14 20:58:38,989 - INFO - ⏳ Waiting for Validation API to start... (1/10)
+2025-10-14 20:58:40,994 - INFO - ✅ Validation API started successfully
+2025-10-14 20:58:43,997 - INFO - 🎤 Starting Voice Agent...
+2025-10-14 20:58:47,003 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 20:58:47,003 - INFO - ⏳ Waiting for Voice Agent to start... (1/15)
+2025-10-14 20:58:50,006 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 20:58:50,006 - INFO - ⏳ Waiting for Voice Agent to start... (2/15)
+2025-10-14 20:58:53,009 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 20:58:53,009 - INFO - ⏳ Waiting for Voice Agent to start... (3/15)
+2025-10-14 20:58:56,012 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 20:58:56,012 - INFO - ⏳ Waiting for Voice Agent to start... (4/15)
+2025-10-14 20:58:59,015 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 20:58:59,015 - INFO - ⏳ Waiting for Voice Agent to start... (5/15)
+2025-10-14 20:59:02,018 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 20:59:02,018 - INFO - ⏳ Waiting for Voice Agent to start... (6/15)
+2025-10-14 20:59:05,022 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 20:59:05,022 - INFO - ⏳ Waiting for Voice Agent to start... (7/15)
+2025-10-14 20:59:08,025 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 20:59:08,025 - INFO - ⏳ Waiting for Voice Agent to start... (8/15)
+2025-10-14 20:59:11,029 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 20:59:11,029 - INFO - ⏳ Waiting for Voice Agent to start... (9/15)
+2025-10-14 20:59:14,033 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 20:59:14,034 - INFO - ⏳ Waiting for Voice Agent to start... (10/15)
+2025-10-14 20:59:17,038 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 20:59:17,039 - INFO - ⏳ Waiting for Voice Agent to start... (11/15)
+2025-10-14 20:59:20,044 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 20:59:20,045 - INFO - ⏳ Waiting for Voice Agent to start... (12/15)
+2025-10-14 20:59:23,049 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 20:59:23,049 - INFO - ⏳ Waiting for Voice Agent to start... (13/15)
+2025-10-14 20:59:26,054 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 20:59:26,054 - INFO - ⏳ Waiting for Voice Agent to start... (14/15)
+2025-10-14 20:59:29,058 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 20:59:29,058 - INFO - ⏳ Waiting for Voice Agent to start... (15/15)
+2025-10-14 20:59:29,059 - ERROR - ❌ Voice Agent failed to start
+2025-10-14 20:59:34,064 - INFO - 🌐 Starting Frontend...
+2025-10-14 20:59:37,076 - INFO - ⏳ Waiting for Frontend to start... (1/10)
+2025-10-14 20:59:40,087 - INFO - ⏳ Waiting for Frontend to start... (2/10)
+2025-10-14 20:59:43,095 - INFO - ⏳ Waiting for Frontend to start... (3/10)
+2025-10-14 20:59:46,103 - INFO - ⏳ Waiting for Frontend to start... (4/10)
+2025-10-14 20:59:49,107 - INFO - ⏳ Waiting for Frontend to start... (5/10)
+2025-10-14 20:59:52,115 - INFO - ⏳ Waiting for Frontend to start... (6/10)
+2025-10-14 20:59:55,126 - INFO - ⏳ Waiting for Frontend to start... (7/10)
+2025-10-14 20:59:58,131 - INFO - ⏳ Waiting for Frontend to start... (8/10)
+2025-10-14 21:00:01,139 - INFO - ⏳ Waiting for Frontend to start... (9/10)
+2025-10-14 21:00:04,148 - INFO - ⏳ Waiting for Frontend to start... (10/10)
+2025-10-14 21:00:04,149 - ERROR - ❌ Frontend failed to start
+2025-10-14 21:00:04,149 - ERROR - ❌ Some services failed to restart
+2025-10-14 21:00:04,149 - INFO - 🔍 Checking all services...
+2025-10-14 21:00:04,163 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:00:04,164 - WARNING - ⚠️ Issues found: Frontend not responding, Voice agent has errors
+2025-10-14 21:00:04,164 - INFO - 🔄 Attempting restart (2/5)...
+2025-10-14 21:00:04,165 - INFO - 🔄 Restarting all services...
+2025-10-14 21:00:04,165 - INFO - 🛑 Stopping all services...
+2025-10-14 21:00:04,719 - INFO - 🛑 Killed process on port 8000
+2025-10-14 21:00:05,248 - INFO - 🛑 Killed process on port 11000
+2025-10-14 21:00:09,017 - INFO - ✅ All services stopped
+2025-10-14 21:00:14,022 - INFO - 🚀 Starting Validation API...
+2025-10-14 21:00:16,034 - INFO - ✅ Validation API started successfully
+2025-10-14 21:00:19,038 - INFO - 🎤 Starting Voice Agent...
+2025-10-14 21:00:22,047 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:00:22,047 - INFO - ⏳ Waiting for Voice Agent to start... (1/15)
+2025-10-14 21:00:25,051 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:00:25,051 - INFO - ⏳ Waiting for Voice Agent to start... (2/15)
+2025-10-14 21:00:28,054 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:00:28,054 - INFO - ⏳ Waiting for Voice Agent to start... (3/15)
+2025-10-14 21:00:31,057 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:00:31,057 - INFO - ⏳ Waiting for Voice Agent to start... (4/15)
+2025-10-14 21:00:34,060 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:00:34,060 - INFO - ⏳ Waiting for Voice Agent to start... (5/15)
+2025-10-14 21:00:37,063 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:00:37,063 - INFO - ⏳ Waiting for Voice Agent to start... (6/15)
+2025-10-14 21:00:40,066 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:00:40,066 - INFO - ⏳ Waiting for Voice Agent to start... (7/15)
+2025-10-14 21:00:43,070 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:00:43,070 - INFO - ⏳ Waiting for Voice Agent to start... (8/15)
+2025-10-14 21:00:46,074 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:00:46,075 - INFO - ⏳ Waiting for Voice Agent to start... (9/15)
+2025-10-14 21:00:49,079 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:00:49,079 - INFO - ⏳ Waiting for Voice Agent to start... (10/15)
+2025-10-14 21:00:52,082 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:00:52,082 - INFO - ⏳ Waiting for Voice Agent to start... (11/15)
+2025-10-14 21:00:55,086 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:00:55,087 - INFO - ⏳ Waiting for Voice Agent to start... (12/15)
+2025-10-14 21:00:58,090 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:00:58,090 - INFO - ⏳ Waiting for Voice Agent to start... (13/15)
+2025-10-14 21:01:01,093 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:01:01,093 - INFO - ⏳ Waiting for Voice Agent to start... (14/15)
+2025-10-14 21:01:04,097 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:01:04,098 - INFO - ⏳ Waiting for Voice Agent to start... (15/15)
+2025-10-14 21:01:04,098 - ERROR - ❌ Voice Agent failed to start
+2025-10-14 21:01:09,104 - INFO - 🌐 Starting Frontend...
+2025-10-14 21:01:12,113 - INFO - ⏳ Waiting for Frontend to start... (1/10)
+2025-10-14 21:01:15,123 - INFO - ⏳ Waiting for Frontend to start... (2/10)
+2025-10-14 21:01:18,131 - INFO - ⏳ Waiting for Frontend to start... (3/10)
+2025-10-14 21:01:21,136 - INFO - ⏳ Waiting for Frontend to start... (4/10)
+2025-10-14 21:01:24,140 - INFO - ⏳ Waiting for Frontend to start... (5/10)
+2025-10-14 21:01:27,148 - INFO - ⏳ Waiting for Frontend to start... (6/10)
+2025-10-14 21:01:30,156 - INFO - ⏳ Waiting for Frontend to start... (7/10)
+2025-10-14 21:01:33,165 - INFO - ⏳ Waiting for Frontend to start... (8/10)
+2025-10-14 21:01:36,172 - INFO - ⏳ Waiting for Frontend to start... (9/10)
+2025-10-14 21:01:39,178 - INFO - ⏳ Waiting for Frontend to start... (10/10)
+2025-10-14 21:01:39,178 - ERROR - ❌ Frontend failed to start
+2025-10-14 21:01:39,179 - ERROR - ❌ Some services failed to restart
+2025-10-14 21:01:39,179 - ERROR - ❌ Service recovery failed
+2025-10-14 21:02:39,239 - INFO - 🔍 Checking all services...
+2025-10-14 21:02:39,243 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:02:39,244 - WARNING - ⚠️ Issues found: Frontend not responding, Voice agent has errors
+2025-10-14 21:02:39,244 - INFO - 🔄 Attempting restart (3/5)...
+2025-10-14 21:02:39,244 - INFO - 🔄 Restarting all services...
+2025-10-14 21:02:39,244 - INFO - 🛑 Stopping all services...
+2025-10-14 21:02:39,967 - INFO - 🛑 Killed process on port 8000
+2025-10-14 21:02:40,663 - INFO - 🛑 Killed process on port 11000
+2025-10-14 21:02:44,684 - INFO - ✅ All services stopped
+2025-10-14 21:02:49,689 - INFO - 🚀 Starting Validation API...
+2025-10-14 21:02:51,696 - INFO - ⏳ Waiting for Validation API to start... (1/10)
+2025-10-14 21:02:53,707 - INFO - ✅ Validation API started successfully
+2025-10-14 21:02:56,710 - INFO - 🎤 Starting Voice Agent...
+2025-10-14 21:02:59,715 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:02:59,715 - INFO - ⏳ Waiting for Voice Agent to start... (1/15)
+2025-10-14 21:03:02,720 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:03:02,720 - INFO - ⏳ Waiting for Voice Agent to start... (2/15)
+2025-10-14 21:03:05,723 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:03:05,723 - INFO - ⏳ Waiting for Voice Agent to start... (3/15)
+2025-10-14 21:03:08,726 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:03:08,727 - INFO - ⏳ Waiting for Voice Agent to start... (4/15)
+2025-10-14 21:03:11,730 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:03:11,731 - INFO - ⏳ Waiting for Voice Agent to start... (5/15)
+2025-10-14 21:03:14,734 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:03:14,735 - INFO - ⏳ Waiting for Voice Agent to start... (6/15)
+2025-10-14 21:03:17,739 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:03:17,739 - INFO - ⏳ Waiting for Voice Agent to start... (7/15)
+2025-10-14 21:03:20,742 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:03:20,742 - INFO - ⏳ Waiting for Voice Agent to start... (8/15)
+2025-10-14 21:03:23,745 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:03:23,746 - INFO - ⏳ Waiting for Voice Agent to start... (9/15)
+2025-10-14 21:03:26,749 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:03:26,750 - INFO - ⏳ Waiting for Voice Agent to start... (10/15)
+2025-10-14 21:03:29,754 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:03:29,755 - INFO - ⏳ Waiting for Voice Agent to start... (11/15)
+2025-10-14 21:03:32,760 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:03:32,761 - INFO - ⏳ Waiting for Voice Agent to start... (12/15)
+2025-10-14 21:03:35,766 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:03:35,767 - INFO - ⏳ Waiting for Voice Agent to start... (13/15)
+2025-10-14 21:03:38,772 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:03:38,773 - INFO - ⏳ Waiting for Voice Agent to start... (14/15)
+2025-10-14 21:03:41,778 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:03:41,778 - INFO - ⏳ Waiting for Voice Agent to start... (15/15)
+2025-10-14 21:03:41,779 - ERROR - ❌ Voice Agent failed to start
+2025-10-14 21:03:46,784 - INFO - 🌐 Starting Frontend...
+2025-10-14 21:03:49,790 - INFO - ⏳ Waiting for Frontend to start... (1/10)
+2025-10-14 21:03:52,796 - INFO - ⏳ Waiting for Frontend to start... (2/10)
+2025-10-14 21:03:55,802 - INFO - ⏳ Waiting for Frontend to start... (3/10)
+2025-10-14 21:03:58,806 - INFO - ⏳ Waiting for Frontend to start... (4/10)
+2025-10-14 21:04:01,814 - INFO - ⏳ Waiting for Frontend to start... (5/10)
+2025-10-14 21:04:04,821 - INFO - ⏳ Waiting for Frontend to start... (6/10)
+2025-10-14 21:04:07,827 - INFO - ⏳ Waiting for Frontend to start... (7/10)
+2025-10-14 21:04:10,831 - INFO - ⏳ Waiting for Frontend to start... (8/10)
+2025-10-14 21:04:13,838 - INFO - ⏳ Waiting for Frontend to start... (9/10)
+2025-10-14 21:04:16,846 - INFO - ⏳ Waiting for Frontend to start... (10/10)
+2025-10-14 21:04:16,846 - ERROR - ❌ Frontend failed to start
+2025-10-14 21:04:16,847 - ERROR - ❌ Some services failed to restart
+2025-10-14 21:04:16,847 - ERROR - ❌ Service recovery failed
+2025-10-14 21:05:16,907 - INFO - 🔍 Checking all services...
+2025-10-14 21:05:16,913 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:05:16,913 - WARNING - ⚠️ Issues found: Frontend not responding, Voice agent has errors
+2025-10-14 21:05:16,914 - INFO - 🔄 Attempting restart (4/5)...
+2025-10-14 21:05:16,914 - INFO - 🔄 Restarting all services...
+2025-10-14 21:05:16,914 - INFO - 🛑 Stopping all services...
+2025-10-14 21:05:17,444 - INFO - 🛑 Killed process on port 8000
+2025-10-14 21:05:17,988 - INFO - 🛑 Killed process on port 11000
+2025-10-14 21:05:21,958 - INFO - ✅ All services stopped
+2025-10-14 21:05:26,963 - INFO - 🚀 Starting Validation API...
+2025-10-14 21:05:28,971 - INFO - ✅ Validation API started successfully
+2025-10-14 21:05:31,974 - INFO - 🎤 Starting Voice Agent...
+2025-10-14 21:05:34,978 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:05:34,979 - INFO - ⏳ Waiting for Voice Agent to start... (1/15)
+2025-10-14 21:05:37,982 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:05:37,982 - INFO - ⏳ Waiting for Voice Agent to start... (2/15)
+2025-10-14 21:05:40,985 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:05:40,986 - INFO - ⏳ Waiting for Voice Agent to start... (3/15)
+2025-10-14 21:05:43,989 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:05:43,989 - INFO - ⏳ Waiting for Voice Agent to start... (4/15)
+2025-10-14 21:05:46,992 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:05:46,993 - INFO - ⏳ Waiting for Voice Agent to start... (5/15)
+2025-10-14 21:05:49,996 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:05:49,997 - INFO - ⏳ Waiting for Voice Agent to start... (6/15)
+2025-10-14 21:05:53,000 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:05:53,001 - INFO - ⏳ Waiting for Voice Agent to start... (7/15)
+2025-10-14 21:05:56,004 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:05:56,004 - INFO - ⏳ Waiting for Voice Agent to start... (8/15)
+2025-10-14 21:05:59,007 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:05:59,007 - INFO - ⏳ Waiting for Voice Agent to start... (9/15)
+2025-10-14 21:06:02,011 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:06:02,012 - INFO - ⏳ Waiting for Voice Agent to start... (10/15)
+2025-10-14 21:06:05,015 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:06:05,016 - INFO - ⏳ Waiting for Voice Agent to start... (11/15)
+2025-10-14 21:06:08,020 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:06:08,020 - INFO - ⏳ Waiting for Voice Agent to start... (12/15)
+2025-10-14 21:06:11,023 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:06:11,023 - INFO - ⏳ Waiting for Voice Agent to start... (13/15)
+2025-10-14 21:06:14,026 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:06:14,027 - INFO - ⏳ Waiting for Voice Agent to start... (14/15)
+2025-10-14 21:06:17,030 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:06:17,031 - INFO - ⏳ Waiting for Voice Agent to start... (15/15)
+2025-10-14 21:06:17,031 - ERROR - ❌ Voice Agent failed to start
+2025-10-14 21:06:22,036 - INFO - 🌐 Starting Frontend...
+2025-10-14 21:06:25,081 - INFO - ✅ Frontend started successfully
+2025-10-14 21:06:25,081 - ERROR - ❌ Some services failed to restart
+2025-10-14 21:06:25,081 - ERROR - ❌ Service recovery failed
+2025-10-14 21:07:25,141 - INFO - 🔍 Checking all services...
+2025-10-14 21:07:25,236 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:07:25,236 - WARNING - ⚠️ Issues found: Voice agent has errors
+2025-10-14 21:07:25,236 - INFO - 🔄 Attempting restart (5/5)...
+2025-10-14 21:07:25,236 - INFO - 🔄 Restarting all services...
+2025-10-14 21:07:25,236 - INFO - 🛑 Stopping all services...
+2025-10-14 21:07:25,759 - INFO - 🛑 Killed process on port 8000
+2025-10-14 21:07:26,319 - INFO - 🛑 Killed process on port 3000
+2025-10-14 21:07:26,831 - INFO - 🛑 Killed process on port 11000
+2025-10-14 21:07:30,700 - INFO - ✅ All services stopped
+2025-10-14 21:07:35,705 - INFO - 🚀 Starting Validation API...
+2025-10-14 21:07:37,710 - INFO - ✅ Validation API started successfully
+2025-10-14 21:07:40,713 - INFO - 🎤 Starting Voice Agent...
+2025-10-14 21:07:43,718 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:07:43,718 - INFO - ⏳ Waiting for Voice Agent to start... (1/15)
+2025-10-14 21:07:46,721 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:07:46,721 - INFO - ⏳ Waiting for Voice Agent to start... (2/15)
+2025-10-14 21:07:49,724 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:07:49,724 - INFO - ⏳ Waiting for Voice Agent to start... (3/15)
+2025-10-14 21:07:52,727 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:07:52,727 - INFO - ⏳ Waiting for Voice Agent to start... (4/15)
+2025-10-14 21:07:55,730 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:07:55,730 - INFO - ⏳ Waiting for Voice Agent to start... (5/15)
+2025-10-14 21:07:58,733 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:07:58,733 - INFO - ⏳ Waiting for Voice Agent to start... (6/15)
+2025-10-14 21:08:01,736 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:08:01,737 - INFO - ⏳ Waiting for Voice Agent to start... (7/15)
+2025-10-14 21:08:04,741 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:08:04,742 - INFO - ⏳ Waiting for Voice Agent to start... (8/15)
+2025-10-14 21:08:07,746 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:08:07,747 - INFO - ⏳ Waiting for Voice Agent to start... (9/15)
+2025-10-14 21:08:10,751 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:08:10,752 - INFO - ⏳ Waiting for Voice Agent to start... (10/15)
+2025-10-14 21:08:13,757 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:08:13,758 - INFO - ⏳ Waiting for Voice Agent to start... (11/15)
+2025-10-14 21:08:16,763 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:08:16,763 - INFO - ⏳ Waiting for Voice Agent to start... (12/15)
+2025-10-14 21:08:19,767 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:08:19,768 - INFO - ⏳ Waiting for Voice Agent to start... (13/15)
+2025-10-14 21:08:22,772 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:08:22,773 - INFO - ⏳ Waiting for Voice Agent to start... (14/15)
+2025-10-14 21:08:25,777 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:08:25,778 - INFO - ⏳ Waiting for Voice Agent to start... (15/15)
+2025-10-14 21:08:25,778 - ERROR - ❌ Voice Agent failed to start
+2025-10-14 21:08:30,784 - INFO - 🌐 Starting Frontend...
+2025-10-14 21:08:33,790 - INFO - ⏳ Waiting for Frontend to start... (1/10)
+2025-10-14 21:08:36,795 - INFO - ⏳ Waiting for Frontend to start... (2/10)
+2025-10-14 21:08:39,801 - INFO - ⏳ Waiting for Frontend to start... (3/10)
+2025-10-14 21:08:42,808 - INFO - ⏳ Waiting for Frontend to start... (4/10)
+2025-10-14 21:08:45,815 - INFO - ⏳ Waiting for Frontend to start... (5/10)
+2025-10-14 21:08:48,822 - INFO - ⏳ Waiting for Frontend to start... (6/10)
+2025-10-14 21:08:51,829 - INFO - ⏳ Waiting for Frontend to start... (7/10)
+2025-10-14 21:08:54,838 - INFO - ⏳ Waiting for Frontend to start... (8/10)
+2025-10-14 21:08:57,845 - INFO - ⏳ Waiting for Frontend to start... (9/10)
+2025-10-14 21:09:00,853 - INFO - ⏳ Waiting for Frontend to start... (10/10)
+2025-10-14 21:09:00,853 - ERROR - ❌ Frontend failed to start
+2025-10-14 21:09:00,853 - ERROR - ❌ Some services failed to restart
+2025-10-14 21:09:00,854 - ERROR - ❌ Service recovery failed
+2025-10-14 21:10:00,914 - INFO - 🔍 Checking all services...
+2025-10-14 21:10:00,923 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:10:00,923 - WARNING - ⚠️ Issues found: Frontend not responding, Voice agent has errors
+2025-10-14 21:10:00,923 - ERROR - ❌ Maximum restart attempts (5) reached
+2025-10-14 21:10:00,924 - ERROR - 🆘 Manual intervention required
+2025-10-14 21:11:00,984 - INFO - 🔍 Checking all services...
+2025-10-14 21:11:00,994 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:11:00,994 - WARNING - ⚠️ Issues found: Frontend not responding, Voice agent has errors
+2025-10-14 21:11:00,994 - ERROR - ❌ Maximum restart attempts (5) reached
+2025-10-14 21:11:00,994 - ERROR - 🆘 Manual intervention required
+2025-10-14 21:12:01,054 - INFO - 🔍 Checking all services...
+2025-10-14 21:12:01,059 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:12:01,059 - WARNING - ⚠️ Issues found: Frontend not responding, Voice agent has errors
+2025-10-14 21:12:01,059 - ERROR - ❌ Maximum restart attempts (5) reached
+2025-10-14 21:12:01,059 - ERROR - 🆘 Manual intervention required
+2025-10-14 21:13:01,119 - INFO - 🔍 Checking all services...
+2025-10-14 21:13:01,132 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:13:01,133 - WARNING - ⚠️ Issues found: Frontend not responding, Voice agent has errors
+2025-10-14 21:13:01,133 - ERROR - ❌ Maximum restart attempts (5) reached
+2025-10-14 21:13:01,133 - ERROR - 🆘 Manual intervention required
+2025-10-14 21:14:01,193 - INFO - 🔍 Checking all services...
+2025-10-14 21:14:01,202 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:14:01,202 - WARNING - ⚠️ Issues found: Frontend not responding, Voice agent has errors
+2025-10-14 21:14:01,203 - ERROR - ❌ Maximum restart attempts (5) reached
+2025-10-14 21:14:01,203 - ERROR - 🆘 Manual intervention required
+2025-10-14 21:15:01,263 - INFO - 🔍 Checking all services...
+2025-10-14 21:15:01,280 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:15:01,280 - WARNING - ⚠️ Issues found: Frontend not responding, Voice agent has errors
+2025-10-14 21:15:01,281 - ERROR - ❌ Maximum restart attempts (5) reached
+2025-10-14 21:15:01,281 - ERROR - 🆘 Manual intervention required
+2025-10-14 21:16:01,342 - INFO - 🔍 Checking all services...
+2025-10-14 21:16:01,356 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:16:01,357 - WARNING - ⚠️ Issues found: Frontend not responding, Voice agent has errors
+2025-10-14 21:16:01,358 - ERROR - ❌ Maximum restart attempts (5) reached
+2025-10-14 21:16:01,358 - ERROR - 🆘 Manual intervention required
+2025-10-14 21:17:01,418 - INFO - 🔍 Checking all services...
+2025-10-14 21:17:01,431 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:17:01,431 - WARNING - ⚠️ Issues found: Frontend not responding, Voice agent has errors
+2025-10-14 21:17:01,432 - ERROR - ❌ Maximum restart attempts (5) reached
+2025-10-14 21:17:01,432 - ERROR - 🆘 Manual intervention required
+2025-10-14 21:18:01,492 - INFO - 🔍 Checking all services...
+2025-10-14 21:18:01,500 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:18:01,500 - WARNING - ⚠️ Issues found: Frontend not responding, Voice agent has errors
+2025-10-14 21:18:01,500 - ERROR - ❌ Maximum restart attempts (5) reached
+2025-10-14 21:18:01,500 - ERROR - 🆘 Manual intervention required
+2025-10-14 21:19:01,560 - INFO - 🔍 Checking all services...
+2025-10-14 21:19:01,568 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:19:01,569 - WARNING - ⚠️ Issues found: Frontend not responding, Voice agent has errors
+2025-10-14 21:19:01,569 - ERROR - ❌ Maximum restart attempts (5) reached
+2025-10-14 21:19:01,569 - ERROR - 🆘 Manual intervention required
+2025-10-14 21:20:01,629 - INFO - 🔍 Checking all services...
+2025-10-14 21:20:01,645 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:20:01,645 - WARNING - ⚠️ Issues found: Frontend not responding, Voice agent has errors
+2025-10-14 21:20:01,646 - ERROR - ❌ Maximum restart attempts (5) reached
+2025-10-14 21:20:01,646 - ERROR - 🆘 Manual intervention required
+2025-10-14 21:21:01,711 - INFO - 🔍 Checking all services...
+2025-10-14 21:21:01,724 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:21:01,724 - WARNING - ⚠️ Issues found: Frontend not responding, Voice agent has errors
+2025-10-14 21:21:01,724 - ERROR - ❌ Maximum restart attempts (5) reached
+2025-10-14 21:21:01,724 - ERROR - 🆘 Manual intervention required
+2025-10-14 21:22:01,785 - INFO - 🔍 Checking all services...
+2025-10-14 21:22:01,794 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:22:01,794 - WARNING - ⚠️ Issues found: Frontend not responding, Voice agent has errors
+2025-10-14 21:22:01,794 - ERROR - ❌ Maximum restart attempts (5) reached
+2025-10-14 21:22:01,795 - ERROR - 🆘 Manual intervention required
+2025-10-14 21:23:01,855 - INFO - 🔍 Checking all services...
+2025-10-14 21:23:01,868 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:23:01,869 - WARNING - ⚠️ Issues found: Frontend not responding, Voice agent has errors
+2025-10-14 21:23:01,869 - ERROR - ❌ Maximum restart attempts (5) reached
+2025-10-14 21:23:01,869 - ERROR - 🆘 Manual intervention required
+2025-10-14 21:24:01,930 - INFO - 🔍 Checking all services...
+2025-10-14 21:24:01,939 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:24:01,940 - WARNING - ⚠️ Issues found: Frontend not responding, Voice agent has errors
+2025-10-14 21:24:01,940 - ERROR - ❌ Maximum restart attempts (5) reached
+2025-10-14 21:24:01,940 - ERROR - 🆘 Manual intervention required
+2025-10-14 21:25:02,000 - INFO - 🔍 Checking all services...
+2025-10-14 21:25:02,006 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:25:02,006 - WARNING - ⚠️ Issues found: Frontend not responding, Voice agent has errors
+2025-10-14 21:25:02,007 - ERROR - ❌ Maximum restart attempts (5) reached
+2025-10-14 21:25:02,007 - ERROR - 🆘 Manual intervention required
+2025-10-14 21:26:02,067 - INFO - 🔍 Checking all services...
+2025-10-14 21:26:02,073 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:26:02,073 - WARNING - ⚠️ Issues found: Validation API not responding, Frontend not responding, Voice agent has errors
+2025-10-14 21:26:02,073 - ERROR - ❌ Maximum restart attempts (5) reached
+2025-10-14 21:26:02,073 - ERROR - 🆘 Manual intervention required
+2025-10-14 21:27:02,133 - INFO - 🔍 Checking all services...
+2025-10-14 21:27:02,147 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:27:02,148 - WARNING - ⚠️ Issues found: Frontend not responding, Voice agent has errors
+2025-10-14 21:27:02,148 - ERROR - ❌ Maximum restart attempts (5) reached
+2025-10-14 21:27:02,148 - ERROR - 🆘 Manual intervention required
+2025-10-14 21:28:02,208 - INFO - 🔍 Checking all services...
+2025-10-14 21:28:02,213 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:28:02,214 - WARNING - ⚠️ Issues found: Frontend not responding, Voice agent has errors
+2025-10-14 21:28:02,214 - ERROR - ❌ Maximum restart attempts (5) reached
+2025-10-14 21:28:02,214 - ERROR - 🆘 Manual intervention required
+2025-10-14 21:29:02,274 - INFO - 🔍 Checking all services...
+2025-10-14 21:29:02,283 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:29:02,283 - WARNING - ⚠️ Issues found: Frontend not responding, Voice agent has errors
+2025-10-14 21:29:02,283 - ERROR - ❌ Maximum restart attempts (5) reached
+2025-10-14 21:29:02,284 - ERROR - 🆘 Manual intervention required
+2025-10-14 21:30:02,344 - INFO - 🔍 Checking all services...
+2025-10-14 21:30:02,357 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:30:02,358 - WARNING - ⚠️ Issues found: Frontend not responding, Voice agent has errors
+2025-10-14 21:30:02,358 - ERROR - ❌ Maximum restart attempts (5) reached
+2025-10-14 21:30:02,359 - ERROR - 🆘 Manual intervention required
+2025-10-14 21:31:02,419 - INFO - 🔍 Checking all services...
+2025-10-14 21:31:02,428 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:31:02,429 - WARNING - ⚠️ Issues found: Frontend not responding, Voice agent has errors
+2025-10-14 21:31:02,429 - ERROR - ❌ Maximum restart attempts (5) reached
+2025-10-14 21:31:02,429 - ERROR - 🆘 Manual intervention required
+2025-10-14 21:32:02,489 - INFO - 🔍 Checking all services...
+2025-10-14 21:32:02,493 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:32:02,493 - WARNING - ⚠️ Issues found: Frontend not responding, Voice agent has errors
+2025-10-14 21:32:02,493 - ERROR - ❌ Maximum restart attempts (5) reached
+2025-10-14 21:32:02,494 - ERROR - 🆘 Manual intervention required
+2025-10-14 21:33:02,554 - INFO - 🔍 Checking all services...
+2025-10-14 21:33:02,559 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:33:02,560 - WARNING - ⚠️ Issues found: Frontend not responding, Voice agent has errors
+2025-10-14 21:33:02,560 - ERROR - ❌ Maximum restart attempts (5) reached
+2025-10-14 21:33:02,561 - ERROR - 🆘 Manual intervention required
+2025-10-14 21:34:02,621 - INFO - 🔍 Checking all services...
+2025-10-14 21:34:02,637 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:34:02,638 - WARNING - ⚠️ Issues found: Frontend not responding, Voice agent has errors
+2025-10-14 21:34:02,638 - ERROR - ❌ Maximum restart attempts (5) reached
+2025-10-14 21:34:02,639 - ERROR - 🆘 Manual intervention required
+2025-10-14 21:35:02,699 - INFO - 🔍 Checking all services...
+2025-10-14 21:35:02,705 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:35:02,705 - WARNING - ⚠️ Issues found: Frontend not responding, Voice agent has errors
+2025-10-14 21:35:02,705 - ERROR - ❌ Maximum restart attempts (5) reached
+2025-10-14 21:35:02,705 - ERROR - 🆘 Manual intervention required
+2025-10-14 21:36:02,766 - INFO - 🔍 Checking all services...
+2025-10-14 21:36:02,771 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:36:02,771 - WARNING - ⚠️ Issues found: Frontend not responding, Voice agent has errors
+2025-10-14 21:36:02,771 - ERROR - ❌ Maximum restart attempts (5) reached
+2025-10-14 21:36:02,772 - ERROR - 🆘 Manual intervention required
+2025-10-14 21:37:02,793 - INFO - 🔍 Checking all services...
+2025-10-14 21:37:02,805 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:37:02,805 - WARNING - ⚠️ Issues found: Frontend not responding, Voice agent has errors
+2025-10-14 21:37:02,806 - ERROR - ❌ Maximum restart attempts (5) reached
+2025-10-14 21:37:02,806 - ERROR - 🆘 Manual intervention required
+2025-10-14 21:38:02,866 - INFO - 🔍 Checking all services...
+2025-10-14 21:38:02,881 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:38:02,881 - WARNING - ⚠️ Issues found: Frontend not responding, Voice agent has errors
+2025-10-14 21:38:02,882 - ERROR - ❌ Maximum restart attempts (5) reached
+2025-10-14 21:38:02,882 - ERROR - 🆘 Manual intervention required
+2025-10-14 21:39:02,943 - INFO - 🔍 Checking all services...
+2025-10-14 21:39:02,958 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:39:02,959 - WARNING - ⚠️ Issues found: Frontend not responding, Voice agent has errors
+2025-10-14 21:39:02,960 - ERROR - ❌ Maximum restart attempts (5) reached
+2025-10-14 21:39:02,960 - ERROR - 🆘 Manual intervention required
+2025-10-14 21:40:03,020 - INFO - 🔍 Checking all services...
+2025-10-14 21:40:03,030 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:40:03,030 - WARNING - ⚠️ Issues found: Frontend not responding, Voice agent has errors
+2025-10-14 21:40:03,030 - ERROR - ❌ Maximum restart attempts (5) reached
+2025-10-14 21:40:03,030 - ERROR - 🆘 Manual intervention required
+2025-10-14 21:41:03,091 - INFO - 🔍 Checking all services...
+2025-10-14 21:41:03,103 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:41:03,104 - WARNING - ⚠️ Issues found: Frontend not responding, Voice agent has errors
+2025-10-14 21:41:03,104 - ERROR - ❌ Maximum restart attempts (5) reached
+2025-10-14 21:41:03,104 - ERROR - 🆘 Manual intervention required
+2025-10-14 21:42:03,164 - INFO - 🔍 Checking all services...
+2025-10-14 21:42:03,171 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:42:03,171 - WARNING - ⚠️ Issues found: Frontend not responding, Voice agent has errors
+2025-10-14 21:42:03,171 - ERROR - ❌ Maximum restart attempts (5) reached
+2025-10-14 21:42:03,171 - ERROR - 🆘 Manual intervention required
+2025-10-14 21:43:03,231 - INFO - 🔍 Checking all services...
+2025-10-14 21:43:03,244 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:43:03,244 - WARNING - ⚠️ Issues found: Frontend not responding, Voice agent has errors
+2025-10-14 21:43:03,245 - ERROR - ❌ Maximum restart attempts (5) reached
+2025-10-14 21:43:03,245 - ERROR - 🆘 Manual intervention required
+2025-10-14 21:44:03,306 - INFO - 🔍 Checking all services...
+2025-10-14 21:44:03,320 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:44:03,321 - WARNING - ⚠️ Issues found: Frontend not responding, Voice agent has errors
+2025-10-14 21:44:03,321 - ERROR - ❌ Maximum restart attempts (5) reached
+2025-10-14 21:44:03,321 - ERROR - 🆘 Manual intervention required
+2025-10-14 21:45:03,382 - INFO - 🔍 Checking all services...
+2025-10-14 21:45:03,394 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:45:03,395 - WARNING - ⚠️ Issues found: Frontend not responding, Voice agent has errors
+2025-10-14 21:45:03,395 - ERROR - ❌ Maximum restart attempts (5) reached
+2025-10-14 21:45:03,395 - ERROR - 🆘 Manual intervention required
+2025-10-14 21:46:03,456 - INFO - 🔍 Checking all services...
+2025-10-14 21:46:03,468 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:46:03,469 - WARNING - ⚠️ Issues found: Frontend not responding, Voice agent has errors
+2025-10-14 21:46:03,469 - ERROR - ❌ Maximum restart attempts (5) reached
+2025-10-14 21:46:03,470 - ERROR - 🆘 Manual intervention required
+2025-10-14 21:47:03,528 - INFO - 🔍 Checking all services...
+2025-10-14 21:47:03,541 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:47:03,542 - WARNING - ⚠️ Issues found: Frontend not responding, Voice agent has errors
+2025-10-14 21:47:03,543 - ERROR - ❌ Maximum restart attempts (5) reached
+2025-10-14 21:47:03,543 - ERROR - 🆘 Manual intervention required
+2025-10-14 21:48:03,604 - INFO - 🔍 Checking all services...
+2025-10-14 21:48:03,618 - WARNING - ⚠️ Found error indicator in logs: APIConnectionError
+2025-10-14 21:48:03,618 - WARNING - ⚠️ Issues found: Frontend not responding, Voice agent has errors
+2025-10-14 21:48:03,619 - ERROR - ❌ Maximum restart attempts (5) reached
+2025-10-14 21:48:03,619 - ERROR - 🆘 Manual intervention required

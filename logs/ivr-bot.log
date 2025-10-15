@@ -1,0 +1,303 @@
+2025-10-13 20:28:14 - ivr_bot.helper_functions - INFO - Client ID None
+2025-10-13 20:28:14 - ivr_bot.helper_functions - WARNING - ❌ Client ID not available (received: None) - self.client_id will be None
+2025-10-13 20:28:14 - ivr_bot.helper_functions - WARNING - Failed to initialize Agent with increased function call limits
+2025-10-13 20:28:14 - ivr_bot.helper_functions - WARNING - ❌ [VALIDATE_NAME] Invalid name rejected: 12345 - Error: Name can only contain letters, spaces, hyphens, periods, and apostrophes
+2025-10-13 20:28:14 - ivr_bot.helper_functions - INFO - ✅ [VALIDATE_NAME] Name validated and stored: John Smith
+2025-10-13 20:28:14 - ivr_bot.helper_functions - WARNING - ❌ [VALIDATE_NAME] Invalid name rejected: User@123 - Error: Name can only contain letters, spaces, hyphens, periods, and apostrophes
+2025-10-13 20:28:14 - ivr_bot.helper_functions - INFO - ✅ [VALIDATE_NAME] Name validated and stored: Mary O'Brien
+2025-10-13 20:28:35 - ivr_bot.helper_functions - INFO - Client ID None
+2025-10-13 20:28:35 - ivr_bot.helper_functions - WARNING - ❌ Client ID not available (received: None) - self.client_id will be None
+2025-10-13 20:28:35 - ivr_bot.helper_functions - WARNING - Failed to initialize Agent with increased function call limits
+2025-10-13 20:28:35 - ivr_bot.helper_functions - INFO - ✅ [VALIDATE_NAME] Name validated and stored: John Doe
+2025-10-13 20:28:42 - ivr_bot.helper_functions - INFO - Client ID None
+2025-10-13 20:28:42 - ivr_bot.helper_functions - WARNING - ❌ Client ID not available (received: None) - self.client_id will be None
+2025-10-13 20:28:42 - ivr_bot.helper_functions - WARNING - Failed to initialize Agent with increased function call limits
+2025-10-13 20:46:42 - ivr_bot.helper_functions - WARNING - Invalid phone number format: +13015551234
+2025-10-13 20:46:42 - ivr_bot.helper_functions - INFO - Client ID test_client
+2025-10-13 20:46:42 - ivr_bot.helper_functions - INFO - ✅ Client ID set to: test_client
+2025-10-13 20:46:42 - ivr_bot.helper_functions - INFO - ✅ [VALIDATE_PHONE] Phone validated and stored: +13015551234
+2025-10-13 20:46:42 - ivr_bot.helper_functions - WARNING - Invalid phone number format: +13015551234
+2025-10-13 20:46:42 - ivr_bot.helper_functions - INFO - Client ID test_client
+2025-10-13 20:46:42 - ivr_bot.helper_functions - INFO - ✅ Client ID set to: test_client
+2025-10-13 20:46:42 - ivr_bot.helper_functions - WARNING - ❌ [VALIDATE_PHONE] Invalid phone rejected: 123456789 - Error: Must be E.164 format with 7-15 digits total (+13015551234)
+2025-10-13 20:46:42 - ivr_bot.helper_functions - WARNING - Invalid phone number format: +13015551234
+2025-10-13 20:46:42 - ivr_bot.helper_functions - INFO - Client ID test_client
+2025-10-13 20:46:42 - ivr_bot.helper_functions - INFO - ✅ Client ID set to: test_client
+2025-10-13 20:46:42 - ivr_bot.helper_functions - WARNING - ❌ [VALIDATE_PHONE] Invalid phone rejected:  - Error: Phone number cannot be empty
+2025-10-13 20:46:42 - ivr_bot.helper_functions - WARNING - Invalid phone number format: +13015551234
+2025-10-13 20:46:42 - ivr_bot.helper_functions - INFO - Client ID test_client
+2025-10-13 20:46:42 - ivr_bot.helper_functions - INFO - ✅ Client ID set to: test_client
+2025-10-13 20:46:42 - ivr_bot.helper_functions - WARNING - ❌ [VALIDATE_PHONE] Invalid phone rejected: +123456789 - Error: Phone number must have at least 10 digits total (including country code)
+2025-10-13 20:46:42 - ivr_bot.helper_functions - WARNING - Invalid phone number format: +13015551234
+2025-10-13 20:46:42 - ivr_bot.helper_functions - INFO - Client ID test_client
+2025-10-13 20:46:42 - ivr_bot.helper_functions - INFO - ✅ Client ID set to: test_client
+2025-10-13 20:46:42 - ivr_bot.helper_functions - ERROR - ❌ [VALIDATE_PHONE] Unexpected error: Unexpected error
+2025-10-13 20:46:42 - ivr_bot.helper_functions - WARNING - Invalid phone number format: +13015551234
+2025-10-13 20:46:42 - ivr_bot.helper_functions - INFO - Client ID test_client
+2025-10-13 20:46:42 - ivr_bot.helper_functions - INFO - ✅ Client ID set to: test_client
+2025-10-13 20:46:42 - ivr_bot.helper_functions - INFO - ✅ [VALIDATE_PHONE] Phone validated and stored: +13015551234
+2025-10-13 20:46:42 - ivr_bot.helper_functions - WARNING - Invalid phone number format: +13015551234
+2025-10-13 20:46:42 - ivr_bot.helper_functions - INFO - Client ID test_client
+2025-10-13 20:46:42 - ivr_bot.helper_functions - INFO - ✅ Client ID set to: test_client
+2025-10-13 20:48:07 - ivr_bot.helper_functions - WARNING - Invalid phone number format: +13015551234
+2025-10-13 20:48:07 - ivr_bot.helper_functions - INFO - Client ID test_client
+2025-10-13 20:48:07 - ivr_bot.helper_functions - INFO - ✅ Client ID set to: test_client
+2025-10-13 20:48:07 - ivr_bot.helper_functions - INFO - ✅ [VALIDATE_PHONE] Phone validated and stored: +13015551234
+2025-10-13 20:48:07 - ivr_bot.helper_functions - WARNING - Invalid phone number format: +13015551234
+2025-10-13 20:48:07 - ivr_bot.helper_functions - INFO - Client ID test_client
+2025-10-13 20:48:07 - ivr_bot.helper_functions - INFO - ✅ Client ID set to: test_client
+2025-10-13 20:48:07 - ivr_bot.helper_functions - WARNING - ❌ [VALIDATE_PHONE] Invalid phone rejected: 123456789 - Error: Must be E.164 format with 7-15 digits total (+13015551234)
+2025-10-13 20:48:07 - ivr_bot.helper_functions - WARNING - Invalid phone number format: +13015551234
+2025-10-13 20:48:07 - ivr_bot.helper_functions - INFO - Client ID test_client
+2025-10-13 20:48:07 - ivr_bot.helper_functions - INFO - ✅ Client ID set to: test_client
+2025-10-13 20:48:07 - ivr_bot.helper_functions - WARNING - ❌ [VALIDATE_PHONE] Invalid phone rejected:  - Error: Phone number cannot be empty
+2025-10-13 20:48:07 - ivr_bot.helper_functions - WARNING - Invalid phone number format: +13015551234
+2025-10-13 20:48:07 - ivr_bot.helper_functions - INFO - Client ID test_client
+2025-10-13 20:48:07 - ivr_bot.helper_functions - INFO - ✅ Client ID set to: test_client
+2025-10-13 20:48:07 - ivr_bot.helper_functions - WARNING - ❌ [VALIDATE_PHONE] Invalid phone rejected: +123456789 - Error: Phone number must have at least 10 digits total (including country code)
+2025-10-13 20:48:07 - ivr_bot.helper_functions - WARNING - Invalid phone number format: +13015551234
+2025-10-13 20:48:07 - ivr_bot.helper_functions - INFO - Client ID test_client
+2025-10-13 20:48:07 - ivr_bot.helper_functions - INFO - ✅ Client ID set to: test_client
+2025-10-13 20:48:07 - ivr_bot.helper_functions - ERROR - ❌ [VALIDATE_PHONE] Unexpected error: Unexpected error
+2025-10-13 20:48:07 - ivr_bot.helper_functions - WARNING - Invalid phone number format: +13015551234
+2025-10-13 20:48:07 - ivr_bot.helper_functions - INFO - Client ID test_client
+2025-10-13 20:48:07 - ivr_bot.helper_functions - INFO - ✅ Client ID set to: test_client
+2025-10-13 20:48:07 - ivr_bot.helper_functions - INFO - ✅ [VALIDATE_PHONE] Phone validated and stored: +13015551234
+2025-10-13 20:48:07 - ivr_bot.helper_functions - WARNING - Invalid phone number format: +13015551234
+2025-10-13 20:48:07 - ivr_bot.helper_functions - INFO - Client ID test_client
+2025-10-13 20:48:07 - ivr_bot.helper_functions - INFO - ✅ Client ID set to: test_client
+2025-10-14 13:26:51 - ivr_bot.helper_functions - WARNING - Invalid phone number format: +13015551234
+2025-10-14 13:26:51 - ivr_bot.helper_functions - INFO - Client ID test_client
+2025-10-14 13:26:51 - ivr_bot.helper_functions - INFO - ✅ Client ID set to: test_client
+2025-10-14 13:26:51 - ivr_bot.helper_functions - WARNING - Invalid phone number format: +13015551234
+2025-10-14 13:26:51 - ivr_bot.helper_functions - INFO - Client ID test_client
+2025-10-14 13:26:51 - ivr_bot.helper_functions - INFO - ✅ Client ID set to: test_client
+2025-10-14 13:26:51 - ivr_bot.helper_functions - WARNING - Invalid phone number format: +13015551234
+2025-10-14 13:26:51 - ivr_bot.helper_functions - INFO - Client ID test_client
+2025-10-14 13:26:51 - ivr_bot.helper_functions - INFO - ✅ Client ID set to: test_client
+2025-10-14 13:26:51 - ivr_bot.helper_functions - WARNING - Invalid phone number format: +13015551234
+2025-10-14 13:26:51 - ivr_bot.helper_functions - INFO - Client ID test_client
+2025-10-14 13:26:51 - ivr_bot.helper_functions - INFO - ✅ Client ID set to: test_client
+2025-10-14 13:26:51 - ivr_bot.helper_functions - WARNING - Invalid phone number format: +13015551234
+2025-10-14 13:26:51 - ivr_bot.helper_functions - INFO - Client ID test_client
+2025-10-14 13:26:51 - ivr_bot.helper_functions - INFO - ✅ Client ID set to: test_client
+2025-10-14 13:26:51 - ivr_bot.helper_functions - WARNING - Invalid phone number format: +13015551234
+2025-10-14 13:26:51 - ivr_bot.helper_functions - INFO - Client ID test_client
+2025-10-14 13:26:51 - ivr_bot.helper_functions - INFO - ✅ Client ID set to: test_client
+2025-10-14 13:26:51 - ivr_bot.helper_functions - WARNING - Invalid phone number format: +13015551234
+2025-10-14 13:26:51 - ivr_bot.helper_functions - INFO - Client ID test_client
+2025-10-14 13:26:51 - ivr_bot.helper_functions - INFO - ✅ Client ID set to: test_client
+2025-10-14 14:54:09 - ivr_bot.helper_functions - INFO - Client ID None
+2025-10-14 14:54:09 - ivr_bot.helper_functions - WARNING - ❌ Client ID not available (received: None) - self.client_id will be None
+2025-10-14 14:54:09 - ivr_bot.helper_functions - WARNING - Failed to initialize Agent with increased function call limits
+2025-10-14 14:54:09 - ivr_bot.helper_functions - WARNING - ❌ [VALIDATE_PHONE] Invalid phone rejected: 070879 - Error: Phone number must be exactly 11 digits in format +13854156545 (country code + 10 digits)
+2025-10-14 14:54:09 - ivr_bot.helper_functions - INFO - ✅ [VALIDATE_PHONE] Phone validated and stored: +13854156545
+2025-10-14 14:54:42 - ivr_bot.helper_functions - INFO - Client ID None
+2025-10-14 14:54:42 - ivr_bot.helper_functions - WARNING - ❌ Client ID not available (received: None) - self.client_id will be None
+2025-10-14 14:54:42 - ivr_bot.helper_functions - WARNING - Failed to initialize Agent with increased function call limits
+2025-10-14 14:54:42 - ivr_bot.helper_functions - WARNING - ❌ [VALIDATE_PHONE] Invalid phone rejected: 070879 - Error: Phone number must be exactly 11 digits in format +13854156545 (country code + 10 digits)
+2025-10-14 14:54:42 - ivr_bot.helper_functions - WARNING - ❌ [VALIDATE_PHONE] Invalid phone rejected: 1234567890 - Error: Phone number must be exactly 11 digits in format +13854156545 (country code + 10 digits)
+2025-10-14 14:54:42 - ivr_bot.helper_functions - WARNING - ❌ [VALIDATE_PHONE] Invalid phone rejected: +1234567890 - Error: Phone number must be exactly 11 digits in format +13854156545 (country code + 10 digits)
+2025-10-14 14:54:42 - ivr_bot.helper_functions - WARNING - ❌ [VALIDATE_PHONE] Invalid phone rejected: +123456789012 - Error: Phone number must be exactly 11 digits in format +13854156545 (country code + 10 digits)
+2025-10-14 14:54:42 - ivr_bot.helper_functions - INFO - ✅ [VALIDATE_PHONE] Phone validated and stored: +13854156545
+2025-10-14 15:04:06 - ivr_bot.cache_manager - INFO - Loaded affiliate cache with 1 entries
+2025-10-14 15:04:06 - ivr_bot.cache_manager - INFO - Loaded client cache with 0 entries
+2025-10-14 15:04:06 - ivr_bot.cache_manager - INFO - Loaded client cache keys: []
+2025-10-14 15:04:06 - ivr_bot.cache_manager - INFO - Loaded affiliate cache keys: ['ids:1:21']
+2025-10-14 15:04:47 - ivr_bot.cache_manager - INFO - Loaded affiliate cache with 1 entries
+2025-10-14 15:04:47 - ivr_bot.cache_manager - INFO - Loaded client cache with 0 entries
+2025-10-14 15:04:47 - ivr_bot.cache_manager - INFO - Loaded client cache keys: []
+2025-10-14 15:04:47 - ivr_bot.cache_manager - INFO - Loaded affiliate cache keys: ['ids:1:21']
+2025-10-14 15:04:47 - ivr_bot.helper_functions - INFO - Client ID None
+2025-10-14 15:04:47 - ivr_bot.helper_functions - WARNING - ❌ Client ID not available (received: None) - self.client_id will be None
+2025-10-14 15:04:47 - ivr_bot.helper_functions - WARNING - Failed to initialize Agent with increased function call limits
+2025-10-14 15:04:47 - ivr_bot.helper_functions - WARNING - ❌ [VALIDATE_PHONE] Invalid phone rejected: 070879 - Error: Phone number must be exactly 11 digits in format +13854156545 (country code + 10 digits)
+2025-10-14 15:04:47 - ivr_bot.helper_functions - WARNING - ❌ [VALIDATE_PHONE] Invalid phone rejected: 1234567890 - Error: Phone number must be exactly 11 digits in format +13854156545 (country code + 10 digits)
+2025-10-14 15:04:47 - ivr_bot.helper_functions - WARNING - ❌ [VALIDATE_PHONE] Invalid phone rejected: +1234567890 - Error: Phone number must be exactly 11 digits in format +13854156545 (country code + 10 digits)
+2025-10-14 15:04:47 - ivr_bot.helper_functions - WARNING - ❌ [VALIDATE_PHONE] Invalid phone rejected: 123456789012 - Error: Phone number must be exactly 11 digits in format +13854156545 (country code + 10 digits)
+2025-10-14 15:04:47 - ivr_bot.helper_functions - INFO - Client ID None
+2025-10-14 15:04:47 - ivr_bot.helper_functions - WARNING - ❌ Client ID not available (received: None) - self.client_id will be None
+2025-10-14 15:04:47 - ivr_bot.helper_functions - WARNING - Failed to initialize Agent with increased function call limits
+2025-10-14 15:04:47 - ivr_bot.helper_functions - WARNING - ❌ Invalid phone number format: 070879 - Must be exactly 11 digits starting with 1 (like 13854156545)
+2025-10-14 15:04:47 - ivr_bot.helper_functions - INFO - Client ID None
+2025-10-14 15:04:47 - ivr_bot.helper_functions - WARNING - ❌ Client ID not available (received: None) - self.client_id will be None
+2025-10-14 15:04:47 - ivr_bot.helper_functions - WARNING - Failed to initialize Agent with increased function call limits
+2025-10-14 15:04:47 - ivr_bot.helper_functions - WARNING - ❌ Invalid phone number format: 1234567890 - Must be exactly 11 digits starting with 1 (like 13854156545)
+2025-10-14 15:04:47 - ivr_bot.helper_functions - INFO - Client ID None
+2025-10-14 15:04:47 - ivr_bot.helper_functions - WARNING - ❌ Client ID not available (received: None) - self.client_id will be None
+2025-10-14 15:04:47 - ivr_bot.helper_functions - WARNING - Failed to initialize Agent with increased function call limits
+2025-10-14 15:04:47 - ivr_bot.helper_functions - WARNING - ❌ Invalid phone number format: +1234567890 - Must be exactly 11 digits starting with 1 (like 13854156545)
+2025-10-14 15:04:47 - ivr_bot.helper_functions - INFO - Client ID None
+2025-10-14 15:04:47 - ivr_bot.helper_functions - WARNING - ❌ Client ID not available (received: None) - self.client_id will be None
+2025-10-14 15:04:47 - ivr_bot.helper_functions - WARNING - Failed to initialize Agent with increased function call limits
+2025-10-14 15:04:47 - ivr_bot.helper_functions - WARNING - ❌ Invalid phone number format: 123456789012 - Must be exactly 11 digits starting with 1 (like 13854156545)
+2025-10-14 15:17:41 - ivr_bot.helper_functions - INFO - Client ID None
+2025-10-14 15:17:41 - ivr_bot.helper_functions - WARNING - ❌ Client ID not available (received: None) - self.client_id will be None
+2025-10-14 15:17:41 - ivr_bot.helper_functions - WARNING - Failed to initialize Agent with increased function call limits
+2025-10-14 15:17:41 - ivr_bot.helper_functions - WARNING - ❌ [VALIDATE_PHONE] Invalid phone rejected: 564 - Error: Phone number must be exactly 11 digits in format +13854156545 (country code + 10 digits)
+2025-10-14 15:17:41 - ivr_bot.helper_functions - WARNING - ❌ [VALIDATE_PHONE] Invalid phone rejected: 34 - Error: Phone number must be exactly 11 digits in format +13854156545 (country code + 10 digits)
+2025-10-14 15:17:41 - ivr_bot.helper_functions - WARNING - ❌ [VALIDATE_PHONE] Invalid phone rejected: 070879 - Error: Phone number must be exactly 11 digits in format +13854156545 (country code + 10 digits)
+2025-10-14 15:17:41 - ivr_bot.helper_functions - WARNING - ❌ [VALIDATE_PHONE] Invalid phone rejected: 1234567890 - Error: Phone number must be exactly 11 digits in format +13854156545 (country code + 10 digits)
+2025-10-14 15:17:41 - ivr_bot.helper_functions - INFO - ✅ [VALIDATE_PHONE] Phone validated and stored: +13854156545
+2025-10-14 19:36:58 - ivr_bot.helper_functions - INFO - Client ID None
+2025-10-14 19:36:58 - ivr_bot.helper_functions - WARNING - ❌ Client ID not available (received: None) - self.client_id will be None
+2025-10-14 19:36:58 - ivr_bot.helper_functions - INFO - ✅ [ASSISTANT_INIT] Validated initialization parameters
+2025-10-14 19:36:58 - ivr_bot.helper_functions - WARNING - Failed to initialize Agent with increased function call limits
+2025-10-14 19:36:58 - ivr_bot.helper_functions - INFO - ✅ Successfully converted Pydantic data to backend API format
+2025-10-14 21:34:20 - ivr_bot.helper_functions - INFO - Client ID None
+2025-10-14 21:34:20 - ivr_bot.helper_functions - WARNING - ❌ Client ID not available (received: None) - self.client_id will be None
+2025-10-14 21:34:20 - ivr_bot.helper_functions - INFO - ✅ [ASSISTANT_INIT] Validated initialization parameters
+2025-10-14 21:34:20 - ivr_bot.helper_functions - WARNING - Failed to initialize Agent with increased function call limits
+2025-10-14 21:34:58 - ivr_bot.helper_functions - INFO - Client ID None
+2025-10-14 21:34:58 - ivr_bot.helper_functions - WARNING - ❌ Client ID not available (received: None) - self.client_id will be None
+2025-10-14 21:34:58 - ivr_bot.helper_functions - INFO - ✅ [ASSISTANT_INIT] Validated initialization parameters
+2025-10-14 21:34:58 - ivr_bot.helper_functions - WARNING - Failed to initialize Agent with increased function call limits
+2025-10-14 21:35:20 - ivr_bot.helper_functions - INFO - Client ID None
+2025-10-14 21:35:20 - ivr_bot.helper_functions - WARNING - ❌ Client ID not available (received: None) - self.client_id will be None
+2025-10-14 21:35:20 - ivr_bot.helper_functions - INFO - ✅ [ASSISTANT_INIT] Validated initialization parameters
+2025-10-14 21:35:20 - ivr_bot.helper_functions - WARNING - Failed to initialize Agent with increased function call limits
+2025-10-14 21:35:20 - ivr_bot.helper_functions - INFO - Tier 1 validation passed: Format validation successful
+2025-10-14 21:35:20 - ivr_bot.helper_functions - WARNING - Tier 2 validation failed: {'error': 'ValidationError', 'details': [{'loc': ['generalInfo'], 'msg': 'Field required', 'type': 'missing'}, {'loc': ['riderInfo'], 'msg': 'Field required', 'type': 'missing'}, {'loc': ['insuranceInfo'], 'msg': 'Field required', 'type': 'missing'}, {'loc': ['routeSettingInfo'], 'msg': 'Field required', 'type': 'missing'}, {'loc': ['systemConfigInfo'], 'msg': 'Field required', 'type': 'missing'}, {'loc': ['pickup_street_address'], 'msg': 'Extra inputs are not permitted', 'type': 'extra_forbidden'}, {'loc': ['dropoff_street_address'], 'msg': 'Extra inputs are not permitted', 'type': 'extra_forbidden'}, {'loc': ['pickup_city'], 'msg': 'Extra inputs are not permitted', 'type': 'extra_forbidden'}, {'loc': ['dropoff_city'], 'msg': 'Extra inputs are not permitted', 'type': 'extra_forbidden'}, {'loc': ['pickup_state'], 'msg': 'Extra inputs are not permitted', 'type': 'extra_forbidden'}, {'loc': ['dropoff_state'], 'msg': 'Extra inputs are not permitted', 'type': 'extra_forbidden'}, {'loc': ['rider_name'], 'msg': 'Extra inputs are not permitted', 'type': 'extra_forbidden'}, {'loc': ['home_phone'], 'msg': 'Extra inputs are not permitted', 'type': 'extra_forbidden'}, {'loc': ['office_phone'], 'msg': 'Extra inputs are not permitted', 'type': 'extra_forbidden'}, {'loc': ['pickup_phone_number'], 'msg': 'Extra inputs are not permitted', 'type': 'extra_forbidden'}, {'loc': ['dropoff_phone_number'], 'msg': 'Extra inputs are not permitted', 'type': 'extra_forbidden'}, {'loc': ['client_id'], 'msg': 'Extra inputs are not permitted', 'type': 'extra_forbidden'}, {'loc': ['funding_source_id'], 'msg': 'Extra inputs are not permitted', 'type': 'extra_forbidden'}, {'loc': ['payment_type_id'], 'msg': 'Extra inputs are not permitted', 'type': 'extra_forbidden'}, {'loc': ['copay_funding_source_id'], 'msg': 'Extra inputs are not permitted', 'type': 'extra_forbidden'}, {'loc': ['copay_payment_type_id'], 'msg': 'Extra inputs are not permitted', 'type': 'extra_forbidden'}, {'loc': ['rider_id'], 'msg': 'Extra inputs are not permitted', 'type': 'extra_forbidden'}, {'loc': ['booking_time'], 'msg': 'Extra inputs are not permitted', 'type': 'extra_forbidden'}, {'loc': ['will_call_day'], 'msg': 'Extra inputs are not permitted', 'type': 'extra_forbidden'}, {'loc': ['pickup_lat'], 'msg': 'Extra inputs are not permitted', 'type': 'extra_forbidden'}, {'loc': ['pickup_lng'], 'msg': 'Extra inputs are not permitted', 'type': 'extra_forbidden'}, {'loc': ['dropoff_lat'], 'msg': 'Extra inputs are not permitted', 'type': 'extra_forbidden'}, {'loc': ['dropoff_lng'], 'msg': 'Extra inputs are not permitted', 'type': 'extra_forbidden'}, {'loc': ['number_of_wheel_chairs'], 'msg': 'Extra inputs are not permitted', 'type': 'extra_forbidden'}, {'loc': ['number_of_passengers'], 'msg': 'Extra inputs are not permitted', 'type': 'extra_forbidden'}, {'loc': ['total_passengers'], 'msg': 'Extra inputs are not permitted', 'type': 'extra_forbidden'}, {'loc': ['total_wheelchairs'], 'msg': 'Extra inputs are not permitted', 'type': 'extra_forbidden'}, {'loc': ['is_schedule'], 'msg': 'Extra inputs are not permitted', 'type': 'extra_forbidden'}, {'loc': ['is_will_call'], 'msg': 'Extra inputs are not permitted', 'type': 'extra_forbidden'}, {'loc': ['pickup_city_zip_code'], 'msg': 'Extra inputs are not permitted', 'type': 'extra_forbidden'}, {'loc': ['dropoff_city_zip_code'], 'msg': 'Extra inputs are not permitted', 'type': 'extra_forbidden'}, {'loc': ['rider_home_address'], 'msg': 'Extra inputs are not permitted', 'type': 'extra_forbidden'}, {'loc': ['rider_home_city'], 'msg': 'Extra inputs are not permitted', 'type': 'extra_forbidden'}, {'loc': ['rider_home_state'], 'msg': 'Extra inputs are not permitted', 'type': 'extra_forbidden'}, {'loc': ['extra_details'], 'msg': 'Extra inputs are not permitted', 'type': 'extra_forbidden'}, {'loc': ['pickup_remarks'], 'msg': 'Extra inputs are not permitted', 'type': 'extra_forbidden'}, {'loc': ['dropoff_remarks'], 'msg': 'Extra inputs are not permitted', 'type': 'extra_forbidden'}]}
+2025-10-14 21:35:20 - ivr_bot.helper_functions - INFO - 🚀 [BOOK_TRIPS] Starting trip booking process...
+2025-10-14 21:35:20 - ivr_bot.helper_functions - WARNING - ❌ [BOOK_TRIPS] Both legs are empty
+2025-10-15 14:56:01 - ivr_bot.side_functions - DEBUG - Affiliate data: [{'AffiliateID': 62, 'AffiliateName': 'TAM Transit', 'AffiliateFamilyID': 8, 'TwillioPhoneNumber': '2403270505', 'TypeForIVRAI': ''}, {'AffiliateID': 21, 'AffiliateName': 'Barwood and Regency Taxi ', 'AffiliateFamilyID': 1, 'TwillioPhoneNumber': '3019841900', 'TypeForIVRAI': 'BOTH'}, {'AffiliateID': 17, 'AffiliateName': 'RTH', 'AffiliateFamilyID': 6, 'TwillioPhoneNumber': '9097380827', 'TypeForIVRAI': ''}, {'AffiliateID': 21, 'AffiliateName': 'Barwood and Regency Taxi ', 'AffiliateFamilyID': 1, 'TwillioPhoneNumber': '3019841900', 'TypeForIVRAI': 'BOTH'}, {'AffiliateID': 21, 'AffiliateName': 'Barwood and Regency Taxi ', 'AffiliateFamilyID': 1, 'TwillioPhoneNumber': '3019005009', 'TypeForIVRAI': 'BOTH'}, {'AffiliateID': 62, 'AffiliateName': 'TAM Transit', 'AffiliateFamilyID': 8, 'TwillioPhoneNumber': '2405024545', 'TypeForIVRAI': ''}]
+2025-10-15 14:57:09 - ivr_bot.side_functions - DEBUG - Affiliate data: [{'AffiliateID': 62, 'AffiliateName': 'TAM Transit', 'AffiliateFamilyID': 8, 'TwillioPhoneNumber': '2403270505', 'TypeForIVRAI': ''}, {'AffiliateID': 21, 'AffiliateName': 'Barwood and Regency Taxi ', 'AffiliateFamilyID': 1, 'TwillioPhoneNumber': '3019841900', 'TypeForIVRAI': 'BOTH'}, {'AffiliateID': 17, 'AffiliateName': 'RTH', 'AffiliateFamilyID': 6, 'TwillioPhoneNumber': '9097380827', 'TypeForIVRAI': ''}, {'AffiliateID': 21, 'AffiliateName': 'Barwood and Regency Taxi ', 'AffiliateFamilyID': 1, 'TwillioPhoneNumber': '3019841900', 'TypeForIVRAI': 'BOTH'}, {'AffiliateID': 21, 'AffiliateName': 'Barwood and Regency Taxi ', 'AffiliateFamilyID': 1, 'TwillioPhoneNumber': '3019005009', 'TypeForIVRAI': 'BOTH'}, {'AffiliateID': 62, 'AffiliateName': 'TAM Transit', 'AffiliateFamilyID': 8, 'TwillioPhoneNumber': '2405024545', 'TypeForIVRAI': ''}]
+2025-10-15 14:57:12 - ivr_bot.side_functions - DEBUG - Affiliate data: [{'AffiliateID': 62, 'AffiliateName': 'TAM Transit', 'AffiliateFamilyID': 8, 'TwillioPhoneNumber': '2403270505', 'TypeForIVRAI': ''}, {'AffiliateID': 21, 'AffiliateName': 'Barwood and Regency Taxi ', 'AffiliateFamilyID': 1, 'TwillioPhoneNumber': '3019841900', 'TypeForIVRAI': 'BOTH'}, {'AffiliateID': 17, 'AffiliateName': 'RTH', 'AffiliateFamilyID': 6, 'TwillioPhoneNumber': '9097380827', 'TypeForIVRAI': ''}, {'AffiliateID': 21, 'AffiliateName': 'Barwood and Regency Taxi ', 'AffiliateFamilyID': 1, 'TwillioPhoneNumber': '3019841900', 'TypeForIVRAI': 'BOTH'}, {'AffiliateID': 21, 'AffiliateName': 'Barwood and Regency Taxi ', 'AffiliateFamilyID': 1, 'TwillioPhoneNumber': '3019005009', 'TypeForIVRAI': 'BOTH'}, {'AffiliateID': 62, 'AffiliateName': 'TAM Transit', 'AffiliateFamilyID': 8, 'TwillioPhoneNumber': '2405024545', 'TypeForIVRAI': ''}]
+2025-10-15 14:57:13 - ivr_bot.side_functions - DEBUG - Affiliate data: [{'AffiliateID': 62, 'AffiliateName': 'TAM Transit', 'AffiliateFamilyID': 8, 'TwillioPhoneNumber': '2403270505', 'TypeForIVRAI': ''}, {'AffiliateID': 21, 'AffiliateName': 'Barwood and Regency Taxi ', 'AffiliateFamilyID': 1, 'TwillioPhoneNumber': '3019841900', 'TypeForIVRAI': 'BOTH'}, {'AffiliateID': 17, 'AffiliateName': 'RTH', 'AffiliateFamilyID': 6, 'TwillioPhoneNumber': '9097380827', 'TypeForIVRAI': ''}, {'AffiliateID': 21, 'AffiliateName': 'Barwood and Regency Taxi ', 'AffiliateFamilyID': 1, 'TwillioPhoneNumber': '3019841900', 'TypeForIVRAI': 'BOTH'}, {'AffiliateID': 21, 'AffiliateName': 'Barwood and Regency Taxi ', 'AffiliateFamilyID': 1, 'TwillioPhoneNumber': '3019005009', 'TypeForIVRAI': 'BOTH'}, {'AffiliateID': 62, 'AffiliateName': 'TAM Transit', 'AffiliateFamilyID': 8, 'TwillioPhoneNumber': '2405024545', 'TypeForIVRAI': ''}]
+2025-10-15 14:57:15 - ivr_bot.side_functions - DEBUG - Affiliate data: [{'AffiliateID': 62, 'AffiliateName': 'TAM Transit', 'AffiliateFamilyID': 8, 'TwillioPhoneNumber': '2403270505', 'TypeForIVRAI': ''}, {'AffiliateID': 21, 'AffiliateName': 'Barwood and Regency Taxi ', 'AffiliateFamilyID': 1, 'TwillioPhoneNumber': '3019841900', 'TypeForIVRAI': 'BOTH'}, {'AffiliateID': 17, 'AffiliateName': 'RTH', 'AffiliateFamilyID': 6, 'TwillioPhoneNumber': '9097380827', 'TypeForIVRAI': ''}, {'AffiliateID': 21, 'AffiliateName': 'Barwood and Regency Taxi ', 'AffiliateFamilyID': 1, 'TwillioPhoneNumber': '3019841900', 'TypeForIVRAI': 'BOTH'}, {'AffiliateID': 21, 'AffiliateName': 'Barwood and Regency Taxi ', 'AffiliateFamilyID': 1, 'TwillioPhoneNumber': '3019005009', 'TypeForIVRAI': 'BOTH'}, {'AffiliateID': 62, 'AffiliateName': 'TAM Transit', 'AffiliateFamilyID': 8, 'TwillioPhoneNumber': '2405024545', 'TypeForIVRAI': ''}]
+2025-10-15 15:06:01 - ivr_bot.side_functions - INFO - Called get_Existing_Trips_Number function
+2025-10-15 15:06:01 - ivr_bot.side_functions - DEBUG - Payload Sent for existing trips: {'searchCriteria': 'CustomerID', 'searchText': '12345', 'bActiveRecords': True, 'iATSPID': 21, 'responseJSON': 'string', 'responseCode': 100}
+2025-10-15 15:06:02 - ivr_bot.side_functions - INFO - No trip ETA Found for the rider
+2025-10-15 15:06:02 - ivr_bot.side_functions - INFO - Called get_Existing_Trips_Number function
+2025-10-15 15:06:02 - ivr_bot.side_functions - DEBUG - Payload Sent for existing trips: {'searchCriteria': 'CustomerID', 'searchText': 'invalid', 'bActiveRecords': True, 'iATSPID': 21, 'responseJSON': 'string', 'responseCode': 100}
+2025-10-15 15:06:03 - ivr_bot.side_functions - INFO - No trip ETA Found for the rider
+2025-10-15 15:07:26 - ivr_bot.side_functions - DEBUG - Payload sent to get frequent addresses: {'clientID': '12345', 'affiliateID': '21', 'bIncludeClientAddress': '', 'bGetAddressDataOnly': '', 'bGetCompletedHistoricRides': '', 'responseJSON': '', 'responseCode': 100}
+2025-10-15 15:07:27 - ivr_bot.side_functions - DEBUG - Response from FrequentDataAPI: {"clientID":"12345","affiliateID":"21","bIncludeClientAddress":"","bGetAddressDataOnly":"","bGetCompletedHistoricRides":"","responseJSON":"{\"message\":\"No record found.\"}","responseCode":204}
+2025-10-15 15:07:27 - ivr_bot.side_functions - ERROR - ❌ [HISTORIC_TRIPS] Response validation failed: models.HistoricTrip() argument after ** must be a mapping, not str
+2025-10-15 15:07:27 - ivr_bot.side_functions - DEBUG - Payload sent to get frequent addresses: {'clientID': 'invalid', 'affiliateID': '21', 'bIncludeClientAddress': '', 'bGetAddressDataOnly': '', 'bGetCompletedHistoricRides': '', 'responseJSON': '', 'responseCode': 100}
+2025-10-15 15:07:28 - ivr_bot.side_functions - DEBUG - Response from FrequentDataAPI: {"clientID":"invalid","affiliateID":"21","bIncludeClientAddress":"","bGetAddressDataOnly":"","bGetCompletedHistoricRides":"","responseJSON":"{\"message\":\"Input string was not in a correct format.\"}","responseCode":417}
+2025-10-15 15:07:28 - ivr_bot.side_functions - ERROR - ❌ [HISTORIC_TRIPS] Response validation failed: models.HistoricTrip() argument after ** must be a mapping, not str
+2025-10-15 15:08:04 - ivr_bot.side_functions - DEBUG - Payload sent to get frequent addresses: {'clientID': '12345', 'affiliateID': '21', 'bIncludeClientAddress': '', 'bGetAddressDataOnly': '', 'bGetCompletedHistoricRides': '', 'responseJSON': '', 'responseCode': 100}
+2025-10-15 15:08:05 - ivr_bot.side_functions - DEBUG - Response from FrequentDataAPI: {"clientID":"12345","affiliateID":"21","bIncludeClientAddress":"","bGetAddressDataOnly":"","bGetCompletedHistoricRides":"","responseJSON":"{\"message\":\"No record found.\"}","responseCode":204}
+2025-10-15 15:08:05 - ivr_bot.side_functions - ERROR - ❌ [HISTORIC_TRIPS] Response validation failed: 'str' object has no attribute 'get'
+2025-10-15 15:08:05 - ivr_bot.side_functions - DEBUG - Payload sent to get frequent addresses: {'clientID': 'invalid', 'affiliateID': '21', 'bIncludeClientAddress': '', 'bGetAddressDataOnly': '', 'bGetCompletedHistoricRides': '', 'responseJSON': '', 'responseCode': 100}
+2025-10-15 15:08:06 - ivr_bot.side_functions - DEBUG - Response from FrequentDataAPI: {"clientID":"invalid","affiliateID":"21","bIncludeClientAddress":"","bGetAddressDataOnly":"","bGetCompletedHistoricRides":"","responseJSON":"{\"message\":\"Input string was not in a correct format.\"}","responseCode":417}
+2025-10-15 15:08:06 - ivr_bot.side_functions - ERROR - ❌ [HISTORIC_TRIPS] Response validation failed: 'str' object has no attribute 'get'
+2025-10-15 15:09:07 - ivr_bot.side_functions - DEBUG - Payload sent to get frequent addresses: {'clientID': '12345', 'affiliateID': '21', 'bIncludeClientAddress': '', 'bGetAddressDataOnly': '', 'bGetCompletedHistoricRides': '', 'responseJSON': '', 'responseCode': 100}
+2025-10-15 15:09:08 - ivr_bot.side_functions - DEBUG - Response from FrequentDataAPI: {"clientID":"12345","affiliateID":"21","bIncludeClientAddress":"","bGetAddressDataOnly":"","bGetCompletedHistoricRides":"","responseJSON":"{\"message\":\"No record found.\"}","responseCode":204}
+2025-10-15 15:09:08 - ivr_bot.side_functions - DEBUG - ⚠️ [HISTORIC_TRIPS] address_data_json is not a list: <class 'dict'>
+2025-10-15 15:09:08 - ivr_bot.side_functions - DEBUG - Payload sent to get frequent addresses: {'clientID': 'invalid', 'affiliateID': '21', 'bIncludeClientAddress': '', 'bGetAddressDataOnly': '', 'bGetCompletedHistoricRides': '', 'responseJSON': '', 'responseCode': 100}
+2025-10-15 15:09:09 - ivr_bot.side_functions - DEBUG - Response from FrequentDataAPI: {"clientID":"invalid","affiliateID":"21","bIncludeClientAddress":"","bGetAddressDataOnly":"","bGetCompletedHistoricRides":"","responseJSON":"{\"message\":\"Input string was not in a correct format.\"}","responseCode":417}
+2025-10-15 15:09:09 - ivr_bot.side_functions - DEBUG - ⚠️ [HISTORIC_TRIPS] address_data_json is not a list: <class 'dict'>
+2025-10-15 15:11:50 - ivr_bot.helper_functions - INFO - ✅ Valid phone number set: +13854156545
+2025-10-15 15:11:50 - ivr_bot.helper_functions - INFO - Client ID None
+2025-10-15 15:11:50 - ivr_bot.helper_functions - WARNING - ❌ Client ID not available (received: None) - self.client_id will be None
+2025-10-15 15:11:50 - ivr_bot.helper_functions - INFO - ✅ [ASSISTANT_INIT] Validated initialization parameters
+2025-10-15 15:11:50 - ivr_bot.helper_functions - WARNING - Failed to initialize Agent with increased function call limits
+2025-10-15 15:11:50 - ivr_bot.helper_functions - INFO - Called get_Trip_Stats function
+2025-10-15 15:11:50 - ivr_bot.helper_functions - DEBUG - ✅ Using stored client_id get_Trip_Stats: 12345
+2025-10-15 15:11:50 - ivr_bot.helper_functions - DEBUG - Payload Sent for trip stats: {'iclientid': '12345'}
+2025-10-15 15:11:52 - ivr_bot.helper_functions - DEBUG - Status: 200
+2025-10-15 15:11:52 - ivr_bot.helper_functions - DEBUG - Headers: <CIMultiDictProxy('Transfer-Encoding': 'chunked', 'Content-Type': 'text/plain; charset=utf-8', 'Content-Encoding': 'gzip', 'Vary': 'Accept-Encoding', 'Server': 'Microsoft-IIS/10.0', 'X-Powered-By': 'ASP.NET', 'Date': 'Wed, 15 Oct 2025 10:11:52 GMT')>
+2025-10-15 15:11:52 - ivr_bot.helper_functions - DEBUG - Response: [{'TripsCompletedLastYear': 0, 'TripsCancelledLastYear': 0, 'TripsNoShowLastYear': 0, 'LastTimeRiderBooked': None}]
+2025-10-15 15:11:52 - ivr_bot.helper_functions - ERROR - ❌ [TRIP_STATS] Response validation failed: models.TripStatsResponse() argument after ** must be a mapping, not list
+2025-10-15 15:11:52 - ivr_bot.helper_functions - INFO - Called get_Trip_Stats function
+2025-10-15 15:11:52 - ivr_bot.helper_functions - DEBUG - ✅ Using stored client_id get_Trip_Stats: invalid
+2025-10-15 15:11:52 - ivr_bot.helper_functions - DEBUG - Payload Sent for trip stats: {'iclientid': 'invalid'}
+2025-10-15 15:11:53 - ivr_bot.helper_functions - DEBUG - Status: 400
+2025-10-15 15:11:53 - ivr_bot.helper_functions - DEBUG - Headers: <CIMultiDictProxy('Transfer-Encoding': 'chunked', 'Content-Type': 'application/problem+json; charset=utf-8', 'Server': 'Microsoft-IIS/10.0', 'X-Powered-By': 'ASP.NET', 'Date': 'Wed, 15 Oct 2025 10:11:53 GMT')>
+2025-10-15 15:11:53 - ivr_bot.helper_functions - DEBUG - Response: {'type': 'https://tools.ietf.org/html/rfc7231#section-6.5.1', 'title': 'One or more validation errors occurred.', 'status': 400, 'traceId': '|94af8076-42f6be3087621337.', 'errors': {'request': ['The request field is required.'], '$.iclientid': ['The JSON value could not be converted to System.Int32. Path: $.iclientid | LineNumber: 0 | BytePositionInLine: 23.']}}
+2025-10-15 15:11:53 - ivr_bot.helper_functions - ERROR - ❌ [TRIP_STATS] Response validation failed: 3 validation errors for TripStatsResponse
+total_trips
+  Field required [type=missing, input_value={'type': 'https://tools.i...ePositionInLine: 23.']}}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.10/v/missing
+completed_trips
+  Field required [type=missing, input_value={'type': 'https://tools.i...ePositionInLine: 23.']}}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.10/v/missing
+cancelled_trips
+  Field required [type=missing, input_value={'type': 'https://tools.i...ePositionInLine: 23.']}}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.10/v/missing
+2025-10-15 15:19:33 - ivr_bot.helper_functions - INFO - ✅ Valid phone number set: +13854156545
+2025-10-15 15:19:33 - ivr_bot.helper_functions - INFO - Client ID None
+2025-10-15 15:19:33 - ivr_bot.helper_functions - WARNING - ❌ Client ID not available (received: None) - self.client_id will be None
+2025-10-15 15:19:33 - ivr_bot.helper_functions - INFO - ✅ [ASSISTANT_INIT] Validated initialization parameters
+2025-10-15 15:19:33 - ivr_bot.helper_functions - WARNING - Failed to initialize Agent with increased function call limits
+2025-10-15 15:19:33 - ivr_bot.helper_functions - INFO - Called get_distance_duration_fare function
+2025-10-15 15:19:33 - ivr_bot.helper_functions - DEBUG - Payload Sent for distance and duration retrieval: {'origin': '39.1438,-77.2014', 'destination': '39.1438,-77.2014', 'AppType': 'FCSTService'}
+2025-10-15 15:19:34 - ivr_bot.helper_functions - DEBUG - Response for distance and duration retrieval: {'geocoded_waypoints': None, 'routes': [{'bounds': None, 'copyrights': None, 'legs': [{'distance': {'text': None, 'value': 0}, 'duration': {'text': None, 'value': 0}, 'duration_in_traffic': None, 'end_address': None, 'end_location': {'lat': 39.1438, 'lng': -77.2014}, 'start_address': None, 'start_location': {'lat': 39.1438, 'lng': -77.2014}, 'steps': None, 'traffic_speed_entry': None, 'via_waypoint': None}], 'overview_polyline': {'points': 'ug|mFzkevM??'}, 'summary': None, 'warnings': None, 'waypoint_order': None, 'source': 'OSRM'}], 'status': 'OK', 'mapSource': 'OSRM'}
+2025-10-15 15:19:34 - ivr_bot.helper_functions - DEBUG - Distance: 0
+2025-10-15 15:19:34 - ivr_bot.helper_functions - DEBUG - Duration: 0
+2025-10-15 15:19:34 - ivr_bot.helper_functions - DEBUG - Payload for fare estimation: {'distance': 0.0, 'travelTime': 0.0, 'fundingSourceID': 1, 'copy': 0, 'numberOfWheelchairs': 0, 'numberOfPassengers': 1, 'classOfServiceID': 1, 'affiliateID': 21, 'pickupLatitude': 39.1438, 'pickupLongitude': -77.2014, 'copyFundingSourceID': -1, 'riderID': '12345', 'authorizedStaff': 'string', 'startFareZone': 'string', 'endFareZone': 'string', 'tspid': 'string', 'httpResponseCode': 100}
+2025-10-15 15:19:37 - ivr_bot.helper_functions - DEBUG - Response for fare estimation: {'totalCost': 4, 'copay': 0, 'fillCopay': '0', 'riderVerificationStatus': ' Not Qualified', 'name': '', 'displayMessage': '', 'promoCode': '', 'verifyStatus': 'false', 'riderType': '', 'street': '', 'city': '', 'state': '', 'unit': '', 'noOfPassengers': '', 'noOfWheelChairs': '', 'specialRequirement': '', 'disabilityCode': '', 'billableAmount': 4, 'fareAttr': 'FA1 FA1 ', 'additionalPassengerCost': 0, 'initialCharges': 0, 'perUnitCharges': 0, 'eaaSRiderWalletMode': '-1', 'eaaSPreauthPercentage': '0.00', 'walletMode': '0', 'eaaSWalletFSID': '1', 'vJSON': '', 'copayPrice': 0, 'programBalance': 'N/A', 'copayBalance': 'N/A', 'copayBalanceCaption': 'Rider Balance', 'mobility': '', 'tripInstructions': '', 'eaasPCAApproved': False, 'httpResponseCode': 200}
+2025-10-15 15:19:37 - ivr_bot.helper_functions - DEBUG - ✅ [FARE_RESPONSE] Response validated: $4
+2025-10-15 15:19:37 - ivr_bot.helper_functions - DEBUG - Total Cost: 4
+2025-10-15 15:19:37 - ivr_bot.helper_functions - DEBUG - Copay Cost: 0
+2025-10-15 15:19:37 - ivr_bot.helper_functions - INFO - Called get_distance_duration_fare function
+2025-10-15 15:22:27 - ivr_bot.helper_functions - INFO - ✅ Valid phone number set: +13854156545
+2025-10-15 15:22:27 - ivr_bot.helper_functions - INFO - Client ID None
+2025-10-15 15:22:27 - ivr_bot.helper_functions - WARNING - ❌ Client ID not available (received: None) - self.client_id will be None
+2025-10-15 15:22:27 - ivr_bot.helper_functions - INFO - ✅ [ASSISTANT_INIT] Validated initialization parameters
+2025-10-15 15:22:27 - ivr_bot.helper_functions - WARNING - Failed to initialize Agent with increased function call limits
+2025-10-15 15:22:27 - ivr_bot.helper_functions - INFO - Called get_distance_duration_fare function
+2025-10-15 15:22:27 - ivr_bot.helper_functions - DEBUG - Payload Sent for distance and duration retrieval: {'origin': '39.1438,-77.2014', 'destination': '39.1438,-77.2014', 'AppType': 'FCSTService'}
+2025-10-15 15:22:28 - ivr_bot.helper_functions - DEBUG - Response for distance and duration retrieval: {'geocoded_waypoints': None, 'routes': [{'bounds': None, 'copyrights': None, 'legs': [{'distance': {'text': None, 'value': 0}, 'duration': {'text': None, 'value': 0}, 'duration_in_traffic': None, 'end_address': None, 'end_location': {'lat': 39.1438, 'lng': -77.2014}, 'start_address': None, 'start_location': {'lat': 39.1438, 'lng': -77.2014}, 'steps': None, 'traffic_speed_entry': None, 'via_waypoint': None}], 'overview_polyline': {'points': 'ug|mFzkevM??'}, 'summary': None, 'warnings': None, 'waypoint_order': None, 'source': 'OSRM'}], 'status': 'OK', 'mapSource': 'OSRM'}
+2025-10-15 15:22:28 - ivr_bot.helper_functions - DEBUG - Distance: 0
+2025-10-15 15:22:28 - ivr_bot.helper_functions - DEBUG - Duration: 0
+2025-10-15 15:22:28 - ivr_bot.helper_functions - DEBUG - Payload for fare estimation: {'distance': 0.0, 'travelTime': 0.0, 'fundingSourceID': 1, 'copy': 0, 'numberOfWheelchairs': 0, 'numberOfPassengers': 1, 'classOfServiceID': 1, 'affiliateID': 21, 'pickupLatitude': 39.1438, 'pickupLongitude': -77.2014, 'copyFundingSourceID': -1, 'riderID': '12345', 'authorizedStaff': 'string', 'startFareZone': 'string', 'endFareZone': 'string', 'tspid': 'string', 'httpResponseCode': 100}
+2025-10-15 15:22:29 - ivr_bot.helper_functions - DEBUG - Response for fare estimation: {'totalCost': 4, 'copay': 0, 'fillCopay': '0', 'riderVerificationStatus': ' Not Qualified', 'name': '', 'displayMessage': '', 'promoCode': '', 'verifyStatus': 'false', 'riderType': '', 'street': '', 'city': '', 'state': '', 'unit': '', 'noOfPassengers': '', 'noOfWheelChairs': '', 'specialRequirement': '', 'disabilityCode': '', 'billableAmount': 4, 'fareAttr': 'FA1 FA1 ', 'additionalPassengerCost': 0, 'initialCharges': 0, 'perUnitCharges': 0, 'eaaSRiderWalletMode': '-1', 'eaaSPreauthPercentage': '0.00', 'walletMode': '0', 'eaaSWalletFSID': '1', 'vJSON': '', 'copayPrice': 0, 'programBalance': 'N/A', 'copayBalance': 'N/A', 'copayBalanceCaption': 'Rider Balance', 'mobility': '', 'tripInstructions': '', 'eaasPCAApproved': False, 'httpResponseCode': 200}
+2025-10-15 15:22:29 - ivr_bot.helper_functions - DEBUG - ✅ [FARE_RESPONSE] Response validated: $4
+2025-10-15 15:22:29 - ivr_bot.helper_functions - DEBUG - Total Cost: 4
+2025-10-15 15:22:29 - ivr_bot.helper_functions - DEBUG - Copay Cost: 0
+2025-10-15 15:22:29 - ivr_bot.helper_functions - INFO - Called get_distance_duration_fare function
+2025-10-15 15:22:31 - ivr_bot.side_functions - INFO - Called get_Existing_Trips_Number function
+2025-10-15 15:22:31 - ivr_bot.side_functions - DEBUG - Payload Sent for existing trips: {'searchCriteria': 'CustomerID', 'searchText': '12345', 'bActiveRecords': True, 'iATSPID': 21, 'responseJSON': 'string', 'responseCode': 100}
+2025-10-15 15:22:32 - ivr_bot.side_functions - INFO - No trip ETA Found for the rider
+2025-10-15 15:22:32 - ivr_bot.side_functions - INFO - Called get_Existing_Trips_Number function
+2025-10-15 15:22:32 - ivr_bot.side_functions - DEBUG - Payload Sent for existing trips: {'searchCriteria': 'CustomerID', 'searchText': 'invalid', 'bActiveRecords': True, 'iATSPID': 21, 'responseJSON': 'string', 'responseCode': 100}
+2025-10-15 15:22:33 - ivr_bot.side_functions - INFO - No trip ETA Found for the rider
+2025-10-15 15:22:35 - ivr_bot.side_functions - DEBUG - Payload sent to get frequent addresses: {'clientID': '12345', 'affiliateID': '21', 'bIncludeClientAddress': '', 'bGetAddressDataOnly': '', 'bGetCompletedHistoricRides': '', 'responseJSON': '', 'responseCode': 100}
+2025-10-15 15:22:36 - ivr_bot.side_functions - DEBUG - Response from FrequentDataAPI: {"clientID":"12345","affiliateID":"21","bIncludeClientAddress":"","bGetAddressDataOnly":"","bGetCompletedHistoricRides":"","responseJSON":"{\"message\":\"No record found.\"}","responseCode":204}
+2025-10-15 15:22:36 - ivr_bot.side_functions - DEBUG - ⚠️ [HISTORIC_TRIPS] address_data_json is not a list: <class 'dict'>
+2025-10-15 15:22:36 - ivr_bot.side_functions - DEBUG - Payload sent to get frequent addresses: {'clientID': 'invalid', 'affiliateID': '21', 'bIncludeClientAddress': '', 'bGetAddressDataOnly': '', 'bGetCompletedHistoricRides': '', 'responseJSON': '', 'responseCode': 100}
+2025-10-15 15:22:37 - ivr_bot.side_functions - DEBUG - Response from FrequentDataAPI: {"clientID":"invalid","affiliateID":"21","bIncludeClientAddress":"","bGetAddressDataOnly":"","bGetCompletedHistoricRides":"","responseJSON":"{\"message\":\"Input string was not in a correct format.\"}","responseCode":417}
+2025-10-15 15:22:37 - ivr_bot.side_functions - DEBUG - ⚠️ [HISTORIC_TRIPS] address_data_json is not a list: <class 'dict'>
+2025-10-15 15:22:39 - ivr_bot.helper_functions - INFO - ✅ Valid phone number set: +13854156545
+2025-10-15 15:22:39 - ivr_bot.helper_functions - INFO - Client ID None
+2025-10-15 15:22:39 - ivr_bot.helper_functions - WARNING - ❌ Client ID not available (received: None) - self.client_id will be None
+2025-10-15 15:22:39 - ivr_bot.helper_functions - INFO - ✅ [ASSISTANT_INIT] Validated initialization parameters
+2025-10-15 15:22:39 - ivr_bot.helper_functions - WARNING - Failed to initialize Agent with increased function call limits
+2025-10-15 15:22:39 - ivr_bot.helper_functions - INFO - Called get_Trip_Stats function
+2025-10-15 15:22:39 - ivr_bot.helper_functions - DEBUG - ✅ Using stored client_id get_Trip_Stats: 12345
+2025-10-15 15:22:39 - ivr_bot.helper_functions - DEBUG - Payload Sent for trip stats: {'iclientid': '12345'}
+2025-10-15 15:22:41 - ivr_bot.helper_functions - DEBUG - Status: 200
+2025-10-15 15:22:41 - ivr_bot.helper_functions - DEBUG - Headers: <CIMultiDictProxy('Transfer-Encoding': 'chunked', 'Content-Type': 'text/plain; charset=utf-8', 'Content-Encoding': 'gzip', 'Vary': 'Accept-Encoding', 'Server': 'Microsoft-IIS/10.0', 'X-Powered-By': 'ASP.NET', 'Date': 'Wed, 15 Oct 2025 10:22:40 GMT')>
+2025-10-15 15:22:41 - ivr_bot.helper_functions - DEBUG - Response: [{'TripsCompletedLastYear': 0, 'TripsCancelledLastYear': 0, 'TripsNoShowLastYear': 0, 'LastTimeRiderBooked': None}]
+2025-10-15 15:22:41 - ivr_bot.helper_functions - ERROR - ❌ [TRIP_STATS] Response validation failed: models.TripStatsResponse() argument after ** must be a mapping, not list
+2025-10-15 15:22:41 - ivr_bot.helper_functions - INFO - Called get_Trip_Stats function
+2025-10-15 15:22:41 - ivr_bot.helper_functions - DEBUG - ✅ Using stored client_id get_Trip_Stats: invalid
+2025-10-15 15:22:41 - ivr_bot.helper_functions - DEBUG - Payload Sent for trip stats: {'iclientid': 'invalid'}
+2025-10-15 15:22:42 - ivr_bot.helper_functions - DEBUG - Status: 400
+2025-10-15 15:22:42 - ivr_bot.helper_functions - DEBUG - Headers: <CIMultiDictProxy('Transfer-Encoding': 'chunked', 'Content-Type': 'application/problem+json; charset=utf-8', 'Server': 'Microsoft-IIS/10.0', 'X-Powered-By': 'ASP.NET', 'Date': 'Wed, 15 Oct 2025 10:22:42 GMT')>
+2025-10-15 15:22:42 - ivr_bot.helper_functions - DEBUG - Response: {'type': 'https://tools.ietf.org/html/rfc7231#section-6.5.1', 'title': 'One or more validation errors occurred.', 'status': 400, 'traceId': '|94af807e-42f6be3087621337.', 'errors': {'request': ['The request field is required.'], '$.iclientid': ['The JSON value could not be converted to System.Int32. Path: $.iclientid | LineNumber: 0 | BytePositionInLine: 23.']}}
+2025-10-15 15:22:42 - ivr_bot.helper_functions - ERROR - ❌ [TRIP_STATS] Response validation failed: 3 validation errors for TripStatsResponse
+total_trips
+  Field required [type=missing, input_value={'type': 'https://tools.i...ePositionInLine: 23.']}}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.10/v/missing
+completed_trips
+  Field required [type=missing, input_value={'type': 'https://tools.i...ePositionInLine: 23.']}}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.10/v/missing
+cancelled_trips
+  Field required [type=missing, input_value={'type': 'https://tools.i...ePositionInLine: 23.']}}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.10/v/missing
+2025-10-15 18:16:49 - ivr_bot.helper_functions - WARNING - Invalid phone number format: +13854156545
+2025-10-15 18:17:04 - ivr_bot.side_functions - INFO - Called get_Existing_Trips_Number function
+2025-10-15 18:17:04 - ivr_bot.side_functions - DEBUG - Payload Sent for existing trips: {'searchCriteria': 'CustomerID', 'searchText': '12345', 'bActiveRecords': True, 'iATSPID': 21, 'responseJSON': 'string', 'responseCode': 100}
+2025-10-15 18:17:05 - ivr_bot.side_functions - INFO - No trip ETA Found for the rider
+2025-10-15 18:17:05 - ivr_bot.side_functions - INFO - Called get_Existing_Trips_Number function
+2025-10-15 18:17:05 - ivr_bot.side_functions - DEBUG - Payload Sent for existing trips: {'searchCriteria': 'CustomerID', 'searchText': 'invalid', 'bActiveRecords': True, 'iATSPID': 21, 'responseJSON': 'string', 'responseCode': 100}
+2025-10-15 18:17:06 - ivr_bot.side_functions - INFO - No trip ETA Found for the rider
+2025-10-15 18:17:10 - ivr_bot.side_functions - DEBUG - Payload sent to get frequent addresses: {'clientID': '12345', 'affiliateID': '21', 'bIncludeClientAddress': '', 'bGetAddressDataOnly': '', 'bGetCompletedHistoricRides': '', 'responseJSON': '', 'responseCode': 100}
+2025-10-15 18:17:12 - ivr_bot.side_functions - DEBUG - Response from FrequentDataAPI: {"clientID":"12345","affiliateID":"21","bIncludeClientAddress":"","bGetAddressDataOnly":"","bGetCompletedHistoricRides":"","responseJSON":"{\"message\":\"No record found.\"}","responseCode":204}
+2025-10-15 18:17:12 - ivr_bot.side_functions - DEBUG - Payload sent to get frequent addresses: {'clientID': 'invalid', 'affiliateID': '21', 'bIncludeClientAddress': '', 'bGetAddressDataOnly': '', 'bGetCompletedHistoricRides': '', 'responseJSON': '', 'responseCode': 100}
+2025-10-15 18:17:13 - ivr_bot.side_functions - DEBUG - Response from FrequentDataAPI: {"clientID":"invalid","affiliateID":"21","bIncludeClientAddress":"","bGetAddressDataOnly":"","bGetCompletedHistoricRides":"","responseJSON":"{\"message\":\"Input string was not in a correct format.\"}","responseCode":417}
+2025-10-15 18:17:22 - ivr_bot.helper_functions - WARNING - Invalid phone number format: +13854156545

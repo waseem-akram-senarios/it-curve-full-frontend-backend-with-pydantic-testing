@@ -1,0 +1,29 @@
+services:
+  # Backend for Development
+  backend:
+    build:
+      context: ./VoiceAgent3/IT_Curves_Bot
+      dockerfile: Dockerfile
+    volumes:
+      - ./VoiceAgent3/IT_Curves_Bot:/app
+      - ./VoiceAgent3/IT_Curves_Bot/logs:/app/logs
+    environment:
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+    command: ["python", "main.py", "dev"]
+    ports:
+      - "11000:11000"
+
+  # Frontend for Development
+  frontend:
+    build:
+      context: ./ncs_pvt-virtual-agent-frontend-741b6d813bd5
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./ncs_pvt-virtual-agent-frontend-741b6d813bd5:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    command: ["pnpm", "dev"]
+    ports:
+      - "3000:3000"

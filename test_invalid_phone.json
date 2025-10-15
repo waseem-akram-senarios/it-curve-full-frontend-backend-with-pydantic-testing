@@ -1,0 +1,19 @@
+{
+  "payload": {
+    "generalInfo": {
+      "CompleteUserName": "John Doe",
+      "CreatedByAppID": 1
+    },
+    "riderInfo": {
+      "PhoneNo": "123",
+      "DateOfBirth": "2024-01-01"
+    },
+    "insuranceInfo": {
+      "InsuranceID": 0
+    },
+    "routeSettingInfo": {
+      "MinRideTime": 30,
+      "MaxRideTime": 20
+    }
+  }
+}

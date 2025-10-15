@@ -1,0 +1,257 @@
+2025-10-14 20:58:15 - ivr_bot.cache_manager - INFO - [no-session] - Loaded affiliate cache with 1 entries
+2025-10-14 20:58:15 - ivr_bot.cache_manager - INFO - [no-session] - Loaded client cache with 0 entries
+2025-10-14 20:58:15 - ivr_bot.cache_manager - INFO - [no-session] - Loaded client cache keys: []
+2025-10-14 20:58:15 - ivr_bot.cache_manager - INFO - [no-session] - Loaded affiliate cache keys: ['ids:1:21']
+2025-10-14 20:58:16,186 - [36mDEBUG[0m asyncio - Using selector: EpollSelector [90m[0m
+2025-10-14 20:58:16,188 - [35mDEV [0m livekit.agents - Watching /home/senarios/VoiceAgent5withFeNew/VoiceAgent3/IT_Curves_Bot [90m[0m
+2025-10-14 20:58:21 - ivr_bot.cache_manager - INFO - [no-session] - Loaded affiliate cache with 1 entries
+2025-10-14 20:58:21 - ivr_bot.cache_manager - INFO - [no-session] - Loaded client cache with 0 entries
+2025-10-14 20:58:21 - ivr_bot.cache_manager - INFO - [no-session] - Loaded client cache keys: []
+2025-10-14 20:58:21 - ivr_bot.cache_manager - INFO - [no-session] - Loaded affiliate cache keys: ['ids:1:21']
+2025-10-14 20:58:21,384 - [36mDEBUG[0m asyncio - Using selector: EpollSelector [90m[0m
+2025-10-14 20:58:21,397 - [32mINFO[0m livekit.agents - starting worker [90m{"version": "1.0.23", "rtc-version": "1.0.16"}[0m
+2025-10-14 20:58:21,397 - [32mINFO[0m livekit.agents - preloading plugins [90m{"packages": ["livekit.plugins.openai", "livekit.plugins.deepgram", "livekit.plugins.silero", "livekit.plugins.turn_detector"]}[0m
+2025-10-14 20:58:21,408 - [32mINFO[0m livekit.agents - starting inference executor [90m[0m
+2025-10-14 20:58:25,092 - [32mINFO[0m livekit.agents - initializing process [90m{"pid": 40393, "inference": true}[0m
+2025-10-14 20:58:26 - ivr_bot.cache_manager - INFO - [no-session] - Loaded affiliate cache with 1 entries
+2025-10-14 20:58:26 - ivr_bot.cache_manager - INFO - [no-session] - Loaded client cache with 0 entries
+2025-10-14 20:58:26 - ivr_bot.cache_manager - INFO - [no-session] - Loaded client cache keys: []
+2025-10-14 20:58:26 - ivr_bot.cache_manager - INFO - [no-session] - Loaded affiliate cache keys: ['ids:1:21']
+2025-10-14 20:58:26,741 - [36mDEBUG[0m livekit.agents - initializing inference runner [90m{"runner": "lk_end_of_utterance_en", "pid": 40393, "inference": true}[0m
+2025-10-14 20:58:36,582 - [36mDEBUG[0m livekit.agents - inference runner initialized [90m{"runner": "lk_end_of_utterance_en", "elapsed_time": 9.840805473000728, "pid": 40393, "inference": true}[0m
+2025-10-14 20:58:36,582 - [36mDEBUG[0m livekit.agents - initializing inference runner [90m{"runner": "lk_end_of_utterance_multilingual", "pid": 40393, "inference": true}[0m
+2025-10-14 20:58:39,404 - [32mINFO[0m livekit.agents - process initialized [90m{"pid": 40393, "inference": true, "elapsed_time": 14.31}[0m
+2025-10-14 20:58:39,403 - [36mDEBUG[0m livekit.agents - inference runner initialized [90m{"runner": "lk_end_of_utterance_multilingual", "elapsed_time": 2.820484378000401, "pid": 40393, "inference": true}[0m
+2025-10-14 20:58:39,403 - [36mDEBUG[0m asyncio - Using selector: EpollSelector [90m{"pid": 40393, "inference": true}[0m
+2025-10-14 20:58:39,407 - [32mINFO[0m livekit.agents - [1msee tracing information at http://localhost:11000/debug[0m [90m[0m
+2025-10-14 20:58:40,896 - [32mINFO[0m livekit.agents - registered worker [90m{"id": "AW_5ETjfcEwPD4X", "url": "wss://itcurvedev-8eikcg0z.livekit.cloud", "region": "India West", "protocol": 16}[0m
+2025-10-14 20:58:41,325 - [32mINFO[0m livekit.agents - received job request [90m{"job_id": "AJ_725SjyvuH2dw", "dispatch_id": "", "room_name": "both-21-1-BARWOOD & REGENCY TAXI-st5fD", "agent_name": "", "resuming": false}[0m
+2025-10-14 20:58:41,650 - [32mINFO[0m livekit.agents - initializing process [90m{"pid": 40453}[0m
+2025-10-14 20:58:42 - ivr_bot.cache_manager - INFO - [no-session] - Loaded affiliate cache with 1 entries
+2025-10-14 20:58:42 - ivr_bot.cache_manager - INFO - [no-session] - Loaded client cache with 0 entries
+2025-10-14 20:58:42 - ivr_bot.cache_manager - INFO - [no-session] - Loaded client cache keys: []
+2025-10-14 20:58:42 - ivr_bot.cache_manager - INFO - [no-session] - Loaded affiliate cache keys: ['ids:1:21']
+2025-10-14 20:58:43,500 - [32mINFO[0m livekit.agents - process initialized [90m{"pid": 40453, "elapsed_time": 1.85}[0m
+2025-10-14 20:58:43,499 - [36mDEBUG[0m asyncio - Using selector: EpollSelector [90m{"pid": 40453, "job_id": "AJ_725SjyvuH2dw"}[0m
+VAAPI is supported.
+2025-10-14 20:58:45 - ivr_bot.main - INFO - [no-session] - Call SID: chat-5a447f03-0f66-48a3-bc1b-18c114a0af8b
+2025-10-14 20:58:45 - ivr_bot.main - INFO - [no-session] - Call SID: chat-5a447f03-0f66-48a3-bc1b-18c114a0af8b
+2025-10-14 20:58:45,404 - [32mINFO[0m ivr_bot.main - Call SID: chat-5a447f03-0f66-48a3-bc1b-18c114a0af8b [90m{"session_id": "no-session", "pid": 40453, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:58:45 - ivr_bot.helper_functions - INFO - [chat-5a447f03-0f66-48a3-bc1b-18c114a0af8b] - Client ID None
+2025-10-14 20:58:45 - ivr_bot.helper_functions - WARNING - [chat-5a447f03-0f66-48a3-bc1b-18c114a0af8b] - ❌ Client ID not available (received: None) - self.client_id will be None
+2025-10-14 20:58:45 - ivr_bot.helper_functions - INFO - [chat-5a447f03-0f66-48a3-bc1b-18c114a0af8b] - ✅ [ASSISTANT_INIT] Validated initialization parameters
+2025-10-14 20:58:45 - ivr_bot.helper_functions - INFO - [no-session] - Client ID None
+2025-10-14 20:58:45,671 - [32mINFO[0m ivr_bot.helper_functions - Client ID None [90m{"session_id": "no-session", "pid": 40453, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:58:45 - ivr_bot.helper_functions - WARNING - [chat-5a447f03-0f66-48a3-bc1b-18c114a0af8b] - Failed to initialize Agent with increased function call limits
+2025-10-14 20:58:45 - ivr_bot.helper_functions - WARNING - [no-session] - ❌ Client ID not available (received: None) - self.client_id will be None
+2025-10-14 20:58:45,671 - [33mWARNING[0m ivr_bot.helper_functions - ❌ Client ID not available (received: None) - self.client_id will be None [90m{"session_id": "no-session", "pid": 40453, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:58:45 - ivr_bot.helper_functions - INFO - [no-session] - ✅ [ASSISTANT_INIT] Validated initialization parameters
+2025-10-14 20:58:45,671 - [32mINFO[0m ivr_bot.helper_functions - ✅ [ASSISTANT_INIT] Validated initialization parameters [90m{"session_id": "no-session", "pid": 40453, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:58:45 - ivr_bot.main - INFO - [chat-5a447f03-0f66-48a3-bc1b-18c114a0af8b] - Using pre-configured background audio player for typing sounds
+2025-10-14 20:58:45 - ivr_bot.helper_functions - WARNING - [no-session] - Failed to initialize Agent with increased function call limits
+2025-10-14 20:58:45,671 - [33mWARNING[0m ivr_bot.helper_functions - Failed to initialize Agent with increased function call limits [90m{"session_id": "no-session", "pid": 40453, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:58:45 - ivr_bot.main - INFO - [no-session] - Using pre-configured background audio player for typing sounds
+2025-10-14 20:58:45,672 - [32mINFO[0m ivr_bot.main - Using pre-configured background audio player for typing sounds [90m{"session_id": "no-session", "pid": 40453, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:58:45,677 - [36mDEBUG[0m livekit.agents - http_session(): creating a new httpclient ctx [90m{"pid": 40453, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:58:47,840 - [32mINFO[0m livekit.agents - shutting down worker [90m{"id": "AW_5ETjfcEwPD4X"}[0m
+2025-10-14 20:58:47,842 - [32mINFO[0m livekit.agents - process exiting [90m{"reason": "", "pid": 40453, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:58:47,842 - [36mDEBUG[0m livekit.agents - shutting down job task [90m{"reason": "", "user_initiated": false, "pid": 40453, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:58:48,084 - [33mWARNING[0m livekit.agents - failed to publish transcription
+Traceback (most recent call last):
+  File "/home/senarios/.local/lib/python3.10/site-packages/livekit/agents/voice/room_io/_output.py", line 232, in _publish_transcription
+    await self._room.local_participant.publish_transcription(transcription)
+  File "/home/senarios/.local/lib/python3.10/site-packages/livekit/rtc/participant.py", line 285, in publish_transcription
+    raise PublishTranscriptionError(cb.publish_transcription.error)
+livekit.rtc.participant.PublishTranscriptionError: engine: connection error: engine is closed [90m{"pid": 40453, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:58:48,085 - [33mWARNING[0m livekit.agents - failed to publish transcription
+Traceback (most recent call last):
+  File "/home/senarios/.local/lib/python3.10/site-packages/livekit/agents/voice/room_io/_output.py", line 356, in capture_text
+    self._writer = await self._create_text_writer()
+  File "/home/senarios/.local/lib/python3.10/site-packages/livekit/agents/voice/room_io/_output.py", line 332, in _create_text_writer
+    return await self._room.local_participant.stream_text(
+  File "/home/senarios/.local/lib/python3.10/site-packages/livekit/rtc/participant.py", line 578, in stream_text
+    await writer._send_header()
+  File "/home/senarios/.local/lib/python3.10/site-packages/livekit/rtc/data_stream.py", line 189, in _send_header
+    raise ConnectionError(cb.send_stream_header.error)
+ConnectionError: engine: connection error: engine is closed [90m{"pid": 40453, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:58:48,213 - [36mDEBUG[0m livekit.agents - http_session(): closing the httpclient ctx [90m{"pid": 40453, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:58:48,232 - [32mINFO[0m livekit.agents - process exiting [90m{"reason": "", "pid": 40393, "inference": true}[0m
+2025-10-14 20:58:53 - ivr_bot.cache_manager - INFO - [no-session] - Loaded affiliate cache with 1 entries
+2025-10-14 20:58:53 - ivr_bot.cache_manager - INFO - [no-session] - Loaded client cache with 0 entries
+2025-10-14 20:58:53 - ivr_bot.cache_manager - INFO - [no-session] - Loaded client cache keys: []
+2025-10-14 20:58:53 - ivr_bot.cache_manager - INFO - [no-session] - Loaded affiliate cache keys: ['ids:1:21']
+2025-10-14 20:58:53,755 - [36mDEBUG[0m asyncio - Using selector: EpollSelector [90m[0m
+2025-10-14 20:58:53,764 - [32mINFO[0m livekit.agents - starting worker [90m{"version": "1.0.23", "rtc-version": "1.0.16"}[0m
+2025-10-14 20:58:53,764 - [32mINFO[0m livekit.agents - preloading plugins [90m{"packages": ["livekit.plugins.openai", "livekit.plugins.deepgram", "livekit.plugins.silero", "livekit.plugins.turn_detector"]}[0m
+2025-10-14 20:58:53,772 - [32mINFO[0m livekit.agents - starting inference executor [90m[0m
+2025-10-14 20:58:53,773 - [35mDEV [0m livekit.agents - reloading job [90m{"job_id": "AJ_725SjyvuH2dw", "agent_name": ""}[0m
+2025-10-14 20:58:56,820 - [32mINFO[0m livekit.agents - initializing process [90m{"pid": 40694, "inference": true}[0m
+2025-10-14 20:58:56,824 - [32mINFO[0m livekit.agents - initializing process [90m{"pid": 40696}[0m
+2025-10-14 20:58:58 - ivr_bot.cache_manager - INFO - [no-session] - Loaded affiliate cache with 1 entries
+2025-10-14 20:58:58 - ivr_bot.cache_manager - INFO - [no-session] - Loaded client cache with 0 entries
+2025-10-14 20:58:58 - ivr_bot.cache_manager - INFO - [no-session] - Loaded client cache keys: []
+2025-10-14 20:58:58 - ivr_bot.cache_manager - INFO - [no-session] - Loaded affiliate cache keys: ['ids:1:21']
+2025-10-14 20:58:58 - ivr_bot.cache_manager - INFO - [no-session] - Loaded affiliate cache with 1 entries
+2025-10-14 20:58:58 - ivr_bot.cache_manager - INFO - [no-session] - Loaded client cache with 0 entries
+2025-10-14 20:58:58 - ivr_bot.cache_manager - INFO - [no-session] - Loaded client cache keys: []
+2025-10-14 20:58:58 - ivr_bot.cache_manager - INFO - [no-session] - Loaded affiliate cache keys: ['ids:1:21']
+2025-10-14 20:58:58,650 - [36mDEBUG[0m livekit.agents - initializing inference runner [90m{"runner": "lk_end_of_utterance_en", "pid": 40694, "inference": true}[0m
+2025-10-14 20:58:58,695 - [32mINFO[0m livekit.agents - process initialized [90m{"pid": 40696, "elapsed_time": 1.87}[0m
+2025-10-14 20:58:58,695 - [36mDEBUG[0m asyncio - Using selector: EpollSelector [90m{"pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+VAAPI is supported.
+2025-10-14 20:59:00 - ivr_bot.main - INFO - [no-session] - Call SID: chat-2748529f-4f04-4f31-8426-e12e3146ffd8
+2025-10-14 20:59:00 - ivr_bot.main - INFO - [no-session] - Call SID: chat-2748529f-4f04-4f31-8426-e12e3146ffd8
+2025-10-14 20:59:00,856 - [32mINFO[0m ivr_bot.main - Call SID: chat-2748529f-4f04-4f31-8426-e12e3146ffd8 [90m{"session_id": "no-session", "pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:01 - ivr_bot.helper_functions - INFO - [chat-2748529f-4f04-4f31-8426-e12e3146ffd8] - Client ID None
+2025-10-14 20:59:01 - ivr_bot.helper_functions - WARNING - [chat-2748529f-4f04-4f31-8426-e12e3146ffd8] - ❌ Client ID not available (received: None) - self.client_id will be None
+2025-10-14 20:59:01 - ivr_bot.helper_functions - INFO - [chat-2748529f-4f04-4f31-8426-e12e3146ffd8] - ✅ [ASSISTANT_INIT] Validated initialization parameters
+2025-10-14 20:59:01 - ivr_bot.helper_functions - WARNING - [chat-2748529f-4f04-4f31-8426-e12e3146ffd8] - Failed to initialize Agent with increased function call limits
+2025-10-14 20:59:01 - ivr_bot.main - INFO - [chat-2748529f-4f04-4f31-8426-e12e3146ffd8] - Using pre-configured background audio player for typing sounds
+2025-10-14 20:59:01 - ivr_bot.helper_functions - INFO - [no-session] - Client ID None
+2025-10-14 20:59:01,359 - [32mINFO[0m ivr_bot.helper_functions - Client ID None [90m{"session_id": "no-session", "pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:01 - ivr_bot.helper_functions - WARNING - [no-session] - ❌ Client ID not available (received: None) - self.client_id will be None
+2025-10-14 20:59:01,359 - [33mWARNING[0m ivr_bot.helper_functions - ❌ Client ID not available (received: None) - self.client_id will be None [90m{"session_id": "no-session", "pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:01 - ivr_bot.helper_functions - INFO - [no-session] - ✅ [ASSISTANT_INIT] Validated initialization parameters
+2025-10-14 20:59:01,360 - [32mINFO[0m ivr_bot.helper_functions - ✅ [ASSISTANT_INIT] Validated initialization parameters [90m{"session_id": "no-session", "pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:01 - ivr_bot.helper_functions - WARNING - [no-session] - Failed to initialize Agent with increased function call limits
+2025-10-14 20:59:01,360 - [33mWARNING[0m ivr_bot.helper_functions - Failed to initialize Agent with increased function call limits [90m{"session_id": "no-session", "pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:01 - ivr_bot.main - INFO - [no-session] - Using pre-configured background audio player for typing sounds
+2025-10-14 20:59:01,361 - [32mINFO[0m ivr_bot.main - Using pre-configured background audio player for typing sounds [90m{"session_id": "no-session", "pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:01,384 - [36mDEBUG[0m livekit.agents - http_session(): creating a new httpclient ctx [90m{"pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:07,945 - [36mDEBUG[0m livekit.agents - inference runner initialized [90m{"runner": "lk_end_of_utterance_en", "elapsed_time": 9.29471646499951, "pid": 40694, "inference": true}[0m
+2025-10-14 20:59:07,945 - [36mDEBUG[0m livekit.agents - initializing inference runner [90m{"runner": "lk_end_of_utterance_multilingual", "pid": 40694, "inference": true}[0m
+2025-10-14 20:59:10,389 - [36mDEBUG[0m livekit.agents - inference runner initialized [90m{"runner": "lk_end_of_utterance_multilingual", "elapsed_time": 2.4445757220000814, "pid": 40694, "inference": true}[0m
+2025-10-14 20:59:10,390 - [32mINFO[0m livekit.agents - process initialized [90m{"pid": 40694, "inference": true, "elapsed_time": 13.57}[0m
+2025-10-14 20:59:10,390 - [36mDEBUG[0m asyncio - Using selector: EpollSelector [90m{"pid": 40694, "inference": true}[0m
+2025-10-14 20:59:10,392 - [31mERROR[0m livekit.agents - worker failed [90m[0m
+Traceback (most recent call last):
+  File "/home/senarios/.local/lib/python3.10/site-packages/livekit/agents/cli/_run.py", line 88, in _worker_run
+    await worker.run()
+  File "/home/senarios/.local/lib/python3.10/site-packages/livekit/agents/worker.py", line 418, in run
+    await self._http_server.start()
+  File "/home/senarios/.local/lib/python3.10/site-packages/livekit/agents/http_server.py", line 27, in start
+    self._server = await self._loop.create_server(handler, self._host, self._port)
+  File "/usr/lib/python3.10/asyncio/base_events.py", line 1519, in create_server
+    raise OSError(err.errno, 'error while attempting '
+OSError: [Errno 98] error while attempting to bind on address ('0.0.0.0', 11000): address already in use
+2025-10-14 20:59:10,394 - [32mINFO[0m livekit.agents - shutting down worker [90m{"id": "unregistered"}[0m
+2025-10-14 20:59:10,395 - [32mINFO[0m livekit.agents - process exiting [90m{"reason": "", "pid": 40694, "inference": true}[0m
+2025-10-14 20:59:18 - ivr_bot.main - INFO - [chat-2748529f-4f04-4f31-8426-e12e3146ffd8] - Interruptions ENABLED after first greeting - user can interrupt the bot now
+2025-10-14 20:59:18 - ivr_bot.main - INFO - [chat-2748529f-4f04-4f31-8426-e12e3146ffd8] - Audio input DISABLED - agent will not process any speech during API calls
+2025-10-14 20:59:18 - ivr_bot.main - INFO - [no-session] - Interruptions ENABLED after first greeting - user can interrupt the bot now
+2025-10-14 20:59:18,010 - [32mINFO[0m ivr_bot.main - Interruptions ENABLED after first greeting - user can interrupt the bot now [90m{"session_id": "no-session", "pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:18,012 - [36mDEBUG[0m livekit.agents - input stream detached [90m{"participant": "BARWOOD & REGENCY TAXI", "source": "SOURCE_UNKNOWN", "accepted_sources": ["SOURCE_MICROPHONE"], "pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:18 - ivr_bot.main - INFO - [no-session] - Audio input DISABLED - agent will not process any speech during API calls
+2025-10-14 20:59:18,013 - [32mINFO[0m ivr_bot.main - Audio input DISABLED - agent will not process any speech during API calls [90m{"session_id": "no-session", "pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:18 - ivr_bot.main - INFO - [chat-2748529f-4f04-4f31-8426-e12e3146ffd8] - Initialized background audio player
+2025-10-14 20:59:18 - ivr_bot.main - INFO - [no-session] - Initialized background audio player
+2025-10-14 20:59:18,521 - [32mINFO[0m ivr_bot.main - Initialized background audio player [90m{"session_id": "no-session", "pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:18 - ivr_bot.main - INFO - [chat-2748529f-4f04-4f31-8426-e12e3146ffd8] - Started typing sounds for API fetching phase
+2025-10-14 20:59:18 - ivr_bot.main - INFO - [no-session] - Started typing sounds for API fetching phase
+2025-10-14 20:59:18,523 - [32mINFO[0m ivr_bot.main - Started typing sounds for API fetching phase [90m{"session_id": "no-session", "pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:18 - ivr_bot.main - INFO - [chat-2748529f-4f04-4f31-8426-e12e3146ffd8] - Room Name: both-21-1-BARWOOD & REGENCY TAXI-st5fD
+2025-10-14 20:59:18 - ivr_bot.main - INFO - [chat-2748529f-4f04-4f31-8426-e12e3146ffd8] - {}
+2025-10-14 20:59:18,567 - [36mDEBUG[0m ivr_bot.main - Metadata: {'phoneNo': '', 'clientID': '', 'userID': '', 'affiliateId': '21', 'familyId': '1', 'affiliateName': 'BARWOOD & REGENCY TAXI'} [90m{"pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:18 - ivr_bot.main - INFO - [no-session] - Room Name: both-21-1-BARWOOD & REGENCY TAXI-st5fD
+2025-10-14 20:59:18,568 - [32mINFO[0m ivr_bot.main - Room Name: both-21-1-BARWOOD & REGENCY TAXI-st5fD [90m{"session_id": "no-session", "pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:18 - ivr_bot.main - ERROR - [chat-2748529f-4f04-4f31-8426-e12e3146ffd8] - Error in recognizing affiliate from number: 'sip.phoneNumber'
+2025-10-14 20:59:18 - ivr_bot.main - INFO - [no-session] - {}
+2025-10-14 20:59:18,568 - [32mINFO[0m ivr_bot.main - {} [90m{"session_id": "no-session", "pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:18 - ivr_bot.cache_manager - INFO - [chat-2748529f-4f04-4f31-8426-e12e3146ffd8] - Cache HIT for affiliate: ids:1:21
+2025-10-14 20:59:18 - ivr_bot.main - ERROR - [no-session] - Error in recognizing affiliate from number: 'sip.phoneNumber'
+2025-10-14 20:59:18,568 - [31mERROR[0m ivr_bot.main - Error in recognizing affiliate from number: 'sip.phoneNumber' [90m{"session_id": "no-session", "pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:18 - ivr_bot.main - INFO - [chat-2748529f-4f04-4f31-8426-e12e3146ffd8] - Using cached affiliate for IDs 1:21
+2025-10-14 20:59:18 - ivr_bot.cache_manager - INFO - [no-session] - Cache HIT for affiliate: ids:1:21
+2025-10-14 20:59:18,568 - [32mINFO[0m ivr_bot.cache_manager - Cache HIT for affiliate: ids:1:21 [90m{"session_id": "no-session", "pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:18,569 - [36mDEBUG[0m ivr_bot.main - cached_affiliate: {'AffiliateID': 21, 'AffiliateName': 'Barwood and Regency Taxi ', 'AffiliateFamilyID': 1, 'TwillioPhoneNumber': '3019005009', 'TypeForIVRAI': 'BOTH'} [90m{"pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:18 - ivr_bot.main - INFO - [no-session] - Using cached affiliate for IDs 1:21
+2025-10-14 20:59:18,569 - [32mINFO[0m ivr_bot.main - Using cached affiliate for IDs 1:21 [90m{"session_id": "no-session", "pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:18 - ivr_bot.main - INFO - [chat-2748529f-4f04-4f31-8426-e12e3146ffd8] - Widget Flow chatbot Selected
+2025-10-14 20:59:18,569 - [36mDEBUG[0m ivr_bot.main - AFFILIATE: {'AffiliateID': 21, 'AffiliateName': 'Barwood and Regency Taxi ', 'AffiliateFamilyID': 1, 'TwillioPhoneNumber': '3019005009', 'TypeForIVRAI': 'BOTH'} [90m{"pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:18,569 - [36mDEBUG[0m ivr_bot.main - Rider: {'number_of_riders': 1, 'rider_1': {'name': 'Unknown', 'client_id': '-1', 'city': 'Unknown', 'state': 'Unknown', 'current_location': 'Unknown', 'rider_id': '-1'}} [90m{"pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:18,569 - [36mDEBUG[0m ivr_bot.main - Affiliate: {'AffiliateID': 21, 'AffiliateName': 'Barwood and Regency Taxi ', 'AffiliateFamilyID': 1, 'TwillioPhoneNumber': '3019005009', 'TypeForIVRAI': 'BOTH'} [90m{"pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:18 - ivr_bot.main - INFO - [no-session] - Widget Flow chatbot Selected
+2025-10-14 20:59:18,570 - [32mINFO[0m ivr_bot.main - Widget Flow chatbot Selected [90m{"session_id": "no-session", "pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:18,570 - [36mDEBUG[0m ivr_bot.main - Started typing sounds for conversation API call: fetch_affiliate_details [90m{"pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:18,571 - [36mDEBUG[0m ivr_bot.side_functions - Payload Sent for Affiliate Information: {'iaffiliateid': 21} [90m{"pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:21 - ivr_bot.side_functions - INFO - [chat-2748529f-4f04-4f31-8426-e12e3146ffd8] - Called search_web_manual function with prompt: What are the counties that lies within these coordinates {'x1': '37.175108867393085', 'y1': '-80.56370227557687', 'x2': '40.03477876450898', 'y2': '-76.28661650301018'}. Only return names of the counties separated by commas. 
+        Do not add name of the states. Do not add any other line or comment. I just need the name of the counties
+        Sample response would be 'county_1, county_2, ......, county_n'
+        DO NOT RETURN MORE THAN 10 COUNTY NAMES
+        
+2025-10-14 20:59:21,764 - [36mDEBUG[0m ivr_bot.main - Stopped typing sounds for conversation API call: fetch_affiliate_details [90m{"pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:21,765 - [36mDEBUG[0m ivr_bot.main - Started typing sounds for conversation API call: search_web_manual [90m{"pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:21 - ivr_bot.side_functions - INFO - [no-session] - Called search_web_manual function with prompt: What are the counties that lies within these coordinates {'x1': '37.175108867393085', 'y1': '-80.56370227557687', 'x2': '40.03477876450898', 'y2': '-76.28661650301018'}. Only return names of the counties separated by commas. 
+        Do not add name of the states. Do not add any other line or comment. I just need the name of the counties
+        Sample response would be 'county_1, county_2, ......, county_n'
+        DO NOT RETURN MORE THAN 10 COUNTY NAMES
+        
+2025-10-14 20:59:21,765 - [32mINFO[0m ivr_bot.side_functions - Called search_web_manual function with prompt: What are the counties that lies within these coordinates {'x1': '37.175108867393085', 'y1': '-80.56370227557687', 'x2': '40.03477876450898', 'y2': '-76.28661650301018'}. Only return names of the counties separated by commas. 
+        Do not add name of the states. Do not add any other line or comment. I just need the name of the counties
+        Sample response would be 'county_1, county_2, ......, county_n'
+        DO NOT RETURN MORE THAN 10 COUNTY NAMES
+         [90m{"session_id": "no-session", "pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:35 - ivr_bot.helper_functions - INFO - [chat-2748529f-4f04-4f31-8426-e12e3146ffd8] - Client ID -1
+2025-10-14 20:59:35 - ivr_bot.helper_functions - WARNING - [chat-2748529f-4f04-4f31-8426-e12e3146ffd8] - ❌ Client ID not available (received: -1) - self.client_id will be None
+2025-10-14 20:59:35,028 - [36mDEBUG[0m ivr_bot.main - Stopped typing sounds for conversation API call: search_web_manual [90m{"pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:35 - ivr_bot.helper_functions - INFO - [no-session] - Client ID -1
+2025-10-14 20:59:35,028 - [32mINFO[0m ivr_bot.helper_functions - Client ID -1 [90m{"session_id": "no-session", "pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:35 - ivr_bot.helper_functions - WARNING - [no-session] - ❌ Client ID not available (received: -1) - self.client_id will be None
+2025-10-14 20:59:35,028 - [33mWARNING[0m ivr_bot.helper_functions - ❌ Client ID not available (received: -1) - self.client_id will be None [90m{"session_id": "no-session", "pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:35,029 - [36mDEBUG[0m ivr_bot.main - Started typing sounds for conversation API call: get_frequnt_addresses_manual [90m{"pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:35,029 - [36mDEBUG[0m ivr_bot.side_functions - Payload sent to get frequent addresses: {'clientID': '-1', 'affiliateID': '21', 'bIncludeClientAddress': '', 'bGetAddressDataOnly': '', 'bGetCompletedHistoricRides': '', 'responseJSON': '', 'responseCode': 100} [90m{"pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:39 - ivr_bot.side_functions - ERROR - [chat-2748529f-4f04-4f31-8426-e12e3146ffd8] - Failed to parse response as JSON. Raw Response: Please provide valid Client ID.
+2025-10-14 20:59:39,047 - [36mDEBUG[0m ivr_bot.side_functions - Response from FrequentDataAPI: Please provide valid Client ID. [90m{"pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:39 - ivr_bot.side_functions - ERROR - [no-session] - Failed to parse response as JSON. Raw Response: Please provide valid Client ID.
+2025-10-14 20:59:39,048 - [31mERROR[0m ivr_bot.side_functions - Failed to parse response as JSON. Raw Response: Please provide valid Client ID. [90m{"session_id": "no-session", "pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:39,050 - [36mDEBUG[0m ivr_bot.main - Stopped typing sounds for conversation API call: get_frequnt_addresses_manual [90m{"pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:40 - ivr_bot.main - INFO - [chat-2748529f-4f04-4f31-8426-e12e3146ffd8] - Building user context information
+2025-10-14 20:59:40 - ivr_bot.main - INFO - [chat-2748529f-4f04-4f31-8426-e12e3146ffd8] - User context built successfully
+2025-10-14 20:59:40 - ivr_bot.main - INFO - [no-session] - Building user context information
+2025-10-14 20:59:40 - ivr_bot.helper_functions - INFO - [chat-2748529f-4f04-4f31-8426-e12e3146ffd8] - Client ID -1
+2025-10-14 20:59:40,052 - [32mINFO[0m ivr_bot.main - Building user context information [90m{"session_id": "no-session", "pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:40 - ivr_bot.helper_functions - WARNING - [chat-2748529f-4f04-4f31-8426-e12e3146ffd8] - ❌ Client ID not available (received: -1) - self.client_id will be None
+2025-10-14 20:59:40 - ivr_bot.helper_functions - INFO - [chat-2748529f-4f04-4f31-8426-e12e3146ffd8] - ✅ [ASSISTANT_INIT] Validated initialization parameters
+2025-10-14 20:59:40 - ivr_bot.main - INFO - [no-session] - User context built successfully
+2025-10-14 20:59:40,052 - [32mINFO[0m ivr_bot.main - User context built successfully [90m{"session_id": "no-session", "pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:40 - ivr_bot.helper_functions - WARNING - [chat-2748529f-4f04-4f31-8426-e12e3146ffd8] - Failed to initialize Agent with increased function call limits
+2025-10-14 20:59:40 - ivr_bot.helper_functions - INFO - [no-session] - Client ID -1
+2025-10-14 20:59:40,053 - [32mINFO[0m ivr_bot.helper_functions - Client ID -1 [90m{"session_id": "no-session", "pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:40 - ivr_bot.helper_functions - WARNING - [no-session] - ❌ Client ID not available (received: -1) - self.client_id will be None
+2025-10-14 20:59:40,053 - [33mWARNING[0m ivr_bot.helper_functions - ❌ Client ID not available (received: -1) - self.client_id will be None [90m{"session_id": "no-session", "pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:40 - ivr_bot.helper_functions - INFO - [no-session] - ✅ [ASSISTANT_INIT] Validated initialization parameters
+2025-10-14 20:59:40,053 - [32mINFO[0m ivr_bot.helper_functions - ✅ [ASSISTANT_INIT] Validated initialization parameters [90m{"session_id": "no-session", "pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:40 - ivr_bot.helper_functions - WARNING - [no-session] - Failed to initialize Agent with increased function call limits
+2025-10-14 20:59:40,053 - [33mWARNING[0m ivr_bot.helper_functions - Failed to initialize Agent with increased function call limits [90m{"session_id": "no-session", "pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:40 - ivr_bot.main - INFO - [chat-2748529f-4f04-4f31-8426-e12e3146ffd8] - Successfully updated initial_agent with enhanced context
+2025-10-14 20:59:40 - ivr_bot.main - INFO - [no-session] - Successfully updated initial_agent with enhanced context
+2025-10-14 20:59:40,054 - [32mINFO[0m ivr_bot.main - Successfully updated initial_agent with enhanced context [90m{"session_id": "no-session", "pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:40 - ivr_bot.main - INFO - [chat-2748529f-4f04-4f31-8426-e12e3146ffd8] - Stopped typing sounds - API fetching complete
+2025-10-14 20:59:40 - ivr_bot.main - INFO - [chat-2748529f-4f04-4f31-8426-e12e3146ffd8] - Preparing to deliver personalized follow-up message
+2025-10-14 20:59:40 - ivr_bot.main - INFO - [no-session] - Stopped typing sounds - API fetching complete
+2025-10-14 20:59:40,166 - [32mINFO[0m ivr_bot.main - Stopped typing sounds - API fetching complete [90m{"session_id": "no-session", "pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:40 - ivr_bot.main - INFO - [no-session] - Preparing to deliver personalized follow-up message
+2025-10-14 20:59:40,166 - [32mINFO[0m ivr_bot.main - Preparing to deliver personalized follow-up message [90m{"session_id": "no-session", "pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:54 - ivr_bot.main - INFO - [chat-2748529f-4f04-4f31-8426-e12e3146ffd8] - APIs fetched and processing complete. Audio input RE-ENABLED.
+2025-10-14 20:59:54,716 - [36mDEBUG[0m ivr_bot.main - Conversation item added from assistant: I now have your information from Barwood and Regency Taxi  agency. Can I have your phone number please?. interrupted: False [90m{"pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:54,719 - [36mDEBUG[0m livekit.agents - input stream attached [90m{"participant": "BARWOOD & REGENCY TAXI", "source": "SOURCE_UNKNOWN", "accepted_sources": ["SOURCE_MICROPHONE"], "pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:54 - ivr_bot.main - INFO - [chat-2748529f-4f04-4f31-8426-e12e3146ffd8] - Started phone number collection
+2025-10-14 20:59:54 - ivr_bot.main - INFO - [no-session] - APIs fetched and processing complete. Audio input RE-ENABLED.
+2025-10-14 20:59:54,719 - [32mINFO[0m ivr_bot.main - APIs fetched and processing complete. Audio input RE-ENABLED. [90m{"session_id": "no-session", "pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+2025-10-14 20:59:54 - ivr_bot.main - INFO - [no-session] - Started phone number collection
+2025-10-14 20:59:54,721 - [32mINFO[0m ivr_bot.main - Started phone number collection [90m{"session_id": "no-session", "pid": 40696, "job_id": "AJ_725SjyvuH2dw"}[0m
+worker process is not responding.. worker crashed?
+Process SpawnProcess-2:
+Traceback (most recent call last):
+  File "/usr/lib/python3.10/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/usr/lib/python3.10/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/senarios/.local/lib/python3.10/site-packages/livekit/agents/cli/_run.py", line 110, in run_worker
+    loop.run_until_complete(worker.aclose())
+  File "/usr/lib/python3.10/asyncio/base_events.py", line 649, in run_until_complete
+    return future.result()
+  File "/home/senarios/.local/lib/python3.10/site-packages/livekit/agents/worker.py", line 604, in aclose
+    await self._http_session.close()
+AttributeError: 'NoneType' object has no attribute 'close'
+2025-10-14 21:02:13,114 - [33mWARNING[0m watchfiles.main - received signal Signals.SIGTERM, raising KeyboardInterrupt [90m[0m

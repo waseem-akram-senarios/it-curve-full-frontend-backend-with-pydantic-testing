@@ -1,0 +1,44 @@
+2025-10-14 21:26:50 - ivr_bot.cache_manager - INFO - [no-session] - Loaded affiliate cache with 1 entries
+2025-10-14 21:26:50 - ivr_bot.cache_manager - INFO - [no-session] - Loaded client cache with 0 entries
+2025-10-14 21:26:50 - ivr_bot.cache_manager - INFO - [no-session] - Loaded client cache keys: []
+2025-10-14 21:26:50 - ivr_bot.cache_manager - INFO - [no-session] - Loaded affiliate cache keys: ['ids:1:21']
+2025-10-14 21:26:50,813 - [36mDEBUG[0m asyncio - Using selector: EpollSelector [90m[0m
+2025-10-14 21:26:50,814 - [35mDEV [0m livekit.agents - Watching /home/senarios/VoiceAgent5withFeNew/VoiceAgent3/IT_Curves_Bot [90m[0m
+2025-10-14 21:26:53 - ivr_bot.cache_manager - INFO - [no-session] - Loaded affiliate cache with 1 entries
+2025-10-14 21:26:53 - ivr_bot.cache_manager - INFO - [no-session] - Loaded client cache with 0 entries
+2025-10-14 21:26:53 - ivr_bot.cache_manager - INFO - [no-session] - Loaded client cache keys: []
+2025-10-14 21:26:53 - ivr_bot.cache_manager - INFO - [no-session] - Loaded affiliate cache keys: ['ids:1:21']
+2025-10-14 21:26:53,053 - [36mDEBUG[0m asyncio - Using selector: EpollSelector [90m[0m
+2025-10-14 21:26:53,058 - [32mINFO[0m livekit.agents - starting worker [90m{"version": "1.0.23", "rtc-version": "1.0.16"}[0m
+2025-10-14 21:26:53,058 - [32mINFO[0m livekit.agents - preloading plugins [90m{"packages": ["livekit.plugins.openai", "livekit.plugins.deepgram", "livekit.plugins.silero", "livekit.plugins.turn_detector"]}[0m
+2025-10-14 21:26:53,059 - [32mINFO[0m livekit.agents - starting inference executor [90m[0m
+2025-10-14 21:26:54,292 - [32mINFO[0m livekit.agents - initializing process [90m{"pid": 47348, "inference": true}[0m
+2025-10-14 21:26:54 - ivr_bot.cache_manager - INFO - [no-session] - Loaded affiliate cache with 1 entries
+2025-10-14 21:26:54 - ivr_bot.cache_manager - INFO - [no-session] - Loaded client cache with 0 entries
+2025-10-14 21:26:54 - ivr_bot.cache_manager - INFO - [no-session] - Loaded client cache keys: []
+2025-10-14 21:26:54 - ivr_bot.cache_manager - INFO - [no-session] - Loaded affiliate cache keys: ['ids:1:21']
+2025-10-14 21:26:54,808 - [36mDEBUG[0m livekit.agents - initializing inference runner [90m{"runner": "lk_end_of_utterance_en", "pid": 47348, "inference": true}[0m
+2025-10-14 21:26:58,047 - [36mDEBUG[0m livekit.agents - inference runner initialized [90m{"runner": "lk_end_of_utterance_en", "elapsed_time": 3.2386400689993025, "pid": 47348, "inference": true}[0m
+2025-10-14 21:26:58,047 - [36mDEBUG[0m livekit.agents - initializing inference runner [90m{"runner": "lk_end_of_utterance_multilingual", "pid": 47348, "inference": true}[0m
+2025-10-14 21:26:59,714 - [32mINFO[0m livekit.agents - process initialized [90m{"pid": 47348, "inference": true, "elapsed_time": 5.42}[0m
+2025-10-14 21:26:59,713 - [36mDEBUG[0m livekit.agents - inference runner initialized [90m{"runner": "lk_end_of_utterance_multilingual", "elapsed_time": 1.6663302090000798, "pid": 47348, "inference": true}[0m
+2025-10-14 21:26:59,714 - [36mDEBUG[0m asyncio - Using selector: EpollSelector [90m{"pid": 47348, "inference": true}[0m
+2025-10-14 21:26:59,716 - [32mINFO[0m livekit.agents - [1msee tracing information at http://localhost:11000/debug[0m [90m[0m
+2025-10-14 21:27:01,621 - [32mINFO[0m livekit.agents - registered worker [90m{"id": "AW_uaqu224m2SXo", "url": "wss://itcurvedev-8eikcg0z.livekit.cloud", "region": "India West", "protocol": 16}[0m
+2025-10-14 21:33:57,689 - [33mWARNING[0m watchfiles.main - received signal Signals.SIGTERM, raising KeyboardInterrupt [90m[0m
+2025-10-14 21:37:28,577 - [33mWARNING[0m watchfiles.main - received signal Signals.SIGTERM, raising KeyboardInterrupt [90m[0m
+Exception ignored in atexit callback: <function _exit_function at 0x7d1155d13f40>
+Traceback (most recent call last):
+  File "/usr/lib/python3.10/multiprocessing/util.py", line 357, in _exit_function
+    p.join()
+  File "/usr/lib/python3.10/multiprocessing/process.py", line 149, in join
+    res = self._popen.wait(timeout)
+  File "/usr/lib/python3.10/multiprocessing/popen_fork.py", line 43, in wait
+    return self.poll(os.WNOHANG if timeout == 0.0 else 0)
+  File "/usr/lib/python3.10/multiprocessing/popen_fork.py", line 27, in poll
+    pid, sts = os.waitpid(self.pid, flag)
+  File "/home/senarios/.local/lib/python3.10/site-packages/watchfiles/run.py", line 427, in raise_keyboard_interrupt
+    raise KeyboardInterrupt
+KeyboardInterrupt: 
+2025-10-14 21:48:28,359 - [32mINFO[0m livekit.agents - shutting down worker [90m{"id": "AW_uaqu224m2SXo"}[0m
+2025-10-14 21:48:28,670 - [31mERROR[0m livekit.agents - process exited with non-zero exit code 255 [90m{"pid": 47348, "inference": true}[0m

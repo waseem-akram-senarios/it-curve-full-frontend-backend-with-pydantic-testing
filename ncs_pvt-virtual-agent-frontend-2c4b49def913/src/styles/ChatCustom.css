@@ -1,0 +1,76 @@
+/* Custom Chat Styles */
+.chat-custom .flex-col.gap-1 {
+  width: 100%;
+  display: flex;
+  margin-bottom: 10px;
+}
+
+/* For the user's (self) messages */
+.chat-custom .flex-col.gap-1:has(div[class*="text-gray-300"]) {
+  align-items: flex-end;
+}
+
+/* For agent messages */
+.chat-custom .flex-col.gap-1:not(:has(div[class*="text-gray-300"])) {
+  align-items: flex-start;
+}
+
+/* Style for the message bubbles */
+.chat-custom .whitespace-pre-line {
+  max-width: 80%;
+  padding: 10px 14px;
+  border-radius: 15px;
+  position: relative;
+  margin-top: 4px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  overflow: hidden;
+}
+
+/* Agent message bubble style */
+.chat-custom .whitespace-pre-line:not([class*="text-gray-300"]) {
+  background-color: #1e1e1e;
+  color: #4caf50 !important;
+  border-top-left-radius: 5px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  border: 1px solid #333;
+}
+
+/* User message bubble style */
+.chat-custom .whitespace-pre-line[class*="text-gray-300"] {
+  background-color: #4caf50;
+  color: white !important;
+  border-top-right-radius: 5px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Adjust the name label position and style */
+.chat-custom div[class*="uppercase"] {
+  font-size: 0.7rem;
+  margin-left: 10px;
+  font-weight: bold;
+  color: #4caf50 !important;
+}
+
+/* Override any text shadows or drop shadows */
+.chat-custom [class*="drop-shadow-"] {
+  text-shadow: none !important;
+  filter: none !important;
+}
+
+/* Customize the chat container */
+.chat-custom .overflow-y-auto {
+  background-color: #121212;
+  border-radius: 10px;
+  padding: 15px;
+  border: 1px solid #333;
+}
+
+/* Message input area styling */
+.chat-custom-input {
+  border-top: 1px solid #333;
+  background-color: #1e1e1e;
+  padding: 10px;
+  border-radius: 0 0 10px 10px;
+} 

@@ -1,0 +1,41 @@
+2025-10-14 20:26:41 - ivr_bot.cache_manager - INFO - [no-session] - Loaded affiliate cache with 1 entries
+2025-10-14 20:26:41 - ivr_bot.cache_manager - INFO - [no-session] - Loaded client cache with 0 entries
+2025-10-14 20:26:41 - ivr_bot.cache_manager - INFO - [no-session] - Loaded client cache keys: []
+2025-10-14 20:26:41 - ivr_bot.cache_manager - INFO - [no-session] - Loaded affiliate cache keys: ['ids:1:21']
+{"message": "starting worker", "level": "INFO", "name": "livekit.agents", "version": "1.0.23", "rtc-version": "1.0.16", "timestamp": "2025-10-14T15:26:41.602909+00:00"}
+{"message": "preloading plugins", "level": "INFO", "name": "livekit.agents", "packages": ["livekit.plugins.openai", "livekit.plugins.deepgram", "livekit.plugins.silero", "livekit.plugins.turn_detector"], "timestamp": "2025-10-14T15:26:41.603072+00:00"}
+{"message": "starting inference executor", "level": "INFO", "name": "livekit.agents", "timestamp": "2025-10-14T15:26:41.618944+00:00"}
+{"message": "initializing process", "level": "INFO", "name": "livekit.agents", "pid": 34378, "inference": true, "timestamp": "2025-10-14T15:26:44.625437+00:00"}
+2025-10-14 20:26:45 - ivr_bot.cache_manager - INFO - [no-session] - Loaded affiliate cache with 1 entries
+2025-10-14 20:26:45 - ivr_bot.cache_manager - INFO - [no-session] - Loaded client cache with 0 entries
+2025-10-14 20:26:45 - ivr_bot.cache_manager - INFO - [no-session] - Loaded client cache keys: []
+2025-10-14 20:26:45 - ivr_bot.cache_manager - INFO - [no-session] - Loaded affiliate cache keys: ['ids:1:21']
+{"message": "process initialized", "level": "INFO", "name": "livekit.agents", "pid": 34378, "inference": true, "elapsed_time": 13.24, "timestamp": "2025-10-14T15:26:57.869443+00:00"}
+{"message": "worker failed", "level": "ERROR", "name": "livekit.agents", "exc_info": "Traceback (most recent call last):\n  File \"/home/senarios/.local/lib/python3.10/site-packages/livekit/agents/cli/_run.py\", line 88, in _worker_run\n    await worker.run()\n  File \"/home/senarios/.local/lib/python3.10/site-packages/livekit/agents/worker.py\", line 418, in run\n    await self._http_server.start()\n  File \"/home/senarios/.local/lib/python3.10/site-packages/livekit/agents/http_server.py\", line 27, in start\n    self._server = await self._loop.create_server(handler, self._host, self._port)\n  File \"/usr/lib/python3.10/asyncio/base_events.py\", line 1519, in create_server\n    raise OSError(err.errno, 'error while attempting '\nOSError: [Errno 98] error while attempting to bind on address ('::', 11000, 0, 0): address already in use", "timestamp": "2025-10-14T15:26:57.871195+00:00"}
+{"message": "draining worker", "level": "INFO", "name": "livekit.agents", "id": "unregistered", "timeout": 1800, "timestamp": "2025-10-14T15:26:57.872853+00:00"}
+{"message": "shutting down worker", "level": "INFO", "name": "livekit.agents", "id": "unregistered", "timestamp": "2025-10-14T15:26:57.873160+00:00"}
+{"message": "process exiting", "level": "INFO", "name": "livekit.agents", "reason": "", "pid": 34378, "inference": true, "timestamp": "2025-10-14T15:26:57.873726+00:00"}
+Traceback (most recent call last):
+  File "/home/senarios/VoiceAgent5withFeNew/VoiceAgent3/IT_Curves_Bot/main.py", line 1024, in <module>
+    agents.cli.run_app(agents.WorkerOptions(entrypoint_fnc=entrypoint, port=int(os.getenv("PORT"))))
+  File "/home/senarios/.local/lib/python3.10/site-packages/livekit/agents/cli/cli.py", line 248, in run_app
+    cli()
+  File "/home/senarios/.local/lib/python3.10/site-packages/click/core.py", line 1161, in __call__
+    return self.main(*args, **kwargs)
+  File "/home/senarios/.local/lib/python3.10/site-packages/click/core.py", line 1082, in main
+    rv = self.invoke(ctx)
+  File "/home/senarios/.local/lib/python3.10/site-packages/click/core.py", line 1697, in invoke
+    return _process_result(sub_ctx.command.invoke(sub_ctx))
+  File "/home/senarios/.local/lib/python3.10/site-packages/click/core.py", line 1443, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+  File "/home/senarios/.local/lib/python3.10/site-packages/click/core.py", line 788, in invoke
+    return __callback(*args, **kwargs)
+  File "/home/senarios/.local/lib/python3.10/site-packages/livekit/agents/cli/cli.py", line 73, in start
+    _run.run_worker(args)
+  File "/home/senarios/.local/lib/python3.10/site-packages/livekit/agents/cli/_run.py", line 110, in run_worker
+    loop.run_until_complete(worker.aclose())
+  File "/usr/lib/python3.10/asyncio/base_events.py", line 649, in run_until_complete
+    return future.result()
+  File "/home/senarios/.local/lib/python3.10/site-packages/livekit/agents/worker.py", line 604, in aclose
+    await self._http_session.close()
+AttributeError: 'NoneType' object has no attribute 'close'

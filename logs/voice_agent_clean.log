@@ -1,0 +1,52 @@
+2025-10-14 21:25:00 - ivr_bot.cache_manager - INFO - [no-session] - Loaded affiliate cache with 1 entries
+2025-10-14 21:25:00 - ivr_bot.cache_manager - INFO - [no-session] - Loaded client cache with 0 entries
+2025-10-14 21:25:00 - ivr_bot.cache_manager - INFO - [no-session] - Loaded client cache keys: []
+2025-10-14 21:25:00 - ivr_bot.cache_manager - INFO - [no-session] - Loaded affiliate cache keys: ['ids:1:21']
+2025-10-14 21:25:00,714 - [36mDEBUG[0m asyncio - Using selector: EpollSelector [90m[0m
+2025-10-14 21:25:00,716 - [35mDEV [0m livekit.agents - Watching /home/senarios/VoiceAgent5withFeNew/VoiceAgent3/IT_Curves_Bot [90m[0m
+2025-10-14 21:25:02 - ivr_bot.cache_manager - INFO - [no-session] - Loaded affiliate cache with 1 entries
+2025-10-14 21:25:02 - ivr_bot.cache_manager - INFO - [no-session] - Loaded client cache with 0 entries
+2025-10-14 21:25:02 - ivr_bot.cache_manager - INFO - [no-session] - Loaded client cache keys: []
+2025-10-14 21:25:02 - ivr_bot.cache_manager - INFO - [no-session] - Loaded affiliate cache keys: ['ids:1:21']
+2025-10-14 21:25:02,538 - [36mDEBUG[0m asyncio - Using selector: EpollSelector [90m[0m
+2025-10-14 21:25:02,543 - [32mINFO[0m livekit.agents - starting worker [90m{"version": "1.0.23", "rtc-version": "1.0.16"}[0m
+2025-10-14 21:25:02,544 - [32mINFO[0m livekit.agents - preloading plugins [90m{"packages": ["livekit.plugins.openai", "livekit.plugins.deepgram", "livekit.plugins.silero", "livekit.plugins.turn_detector"]}[0m
+2025-10-14 21:25:02,545 - [32mINFO[0m livekit.agents - starting inference executor [90m[0m
+2025-10-14 21:25:03,827 - [32mINFO[0m livekit.agents - initializing process [90m{"pid": 46892, "inference": true}[0m
+2025-10-14 21:25:04 - ivr_bot.cache_manager - INFO - [no-session] - Loaded affiliate cache with 1 entries
+2025-10-14 21:25:04 - ivr_bot.cache_manager - INFO - [no-session] - Loaded client cache with 0 entries
+2025-10-14 21:25:04 - ivr_bot.cache_manager - INFO - [no-session] - Loaded client cache keys: []
+2025-10-14 21:25:04 - ivr_bot.cache_manager - INFO - [no-session] - Loaded affiliate cache keys: ['ids:1:21']
+2025-10-14 21:25:04,561 - [36mDEBUG[0m livekit.agents - initializing inference runner [90m{"runner": "lk_end_of_utterance_en", "pid": 46892, "inference": true}[0m
+2025-10-14 21:25:07,732 - [36mDEBUG[0m livekit.agents - inference runner initialized [90m{"runner": "lk_end_of_utterance_en", "elapsed_time": 3.1709004109998205, "pid": 46892, "inference": true}[0m
+2025-10-14 21:25:07,732 - [36mDEBUG[0m livekit.agents - initializing inference runner [90m{"runner": "lk_end_of_utterance_multilingual", "pid": 46892, "inference": true}[0m
+2025-10-14 21:25:09,484 - [32mINFO[0m livekit.agents - process initialized [90m{"pid": 46892, "inference": true, "elapsed_time": 5.66}[0m
+2025-10-14 21:25:09,484 - [36mDEBUG[0m livekit.agents - inference runner initialized [90m{"runner": "lk_end_of_utterance_multilingual", "elapsed_time": 1.7513386600003287, "pid": 46892, "inference": true}[0m
+2025-10-14 21:25:09,484 - [36mDEBUG[0m asyncio - Using selector: EpollSelector [90m{"pid": 46892, "inference": true}[0m
+2025-10-14 21:25:09,486 - [31mERROR[0m livekit.agents - worker failed [90m[0m
+Traceback (most recent call last):
+  File "/home/senarios/.local/lib/python3.10/site-packages/livekit/agents/cli/_run.py", line 88, in _worker_run
+    await worker.run()
+  File "/home/senarios/.local/lib/python3.10/site-packages/livekit/agents/worker.py", line 418, in run
+    await self._http_server.start()
+  File "/home/senarios/.local/lib/python3.10/site-packages/livekit/agents/http_server.py", line 27, in start
+    self._server = await self._loop.create_server(handler, self._host, self._port)
+  File "/usr/lib/python3.10/asyncio/base_events.py", line 1519, in create_server
+    raise OSError(err.errno, 'error while attempting '
+OSError: [Errno 98] error while attempting to bind on address ('0.0.0.0', 11000): address already in use
+2025-10-14 21:25:09,488 - [32mINFO[0m livekit.agents - shutting down worker [90m{"id": "unregistered"}[0m
+2025-10-14 21:25:52,364 - [33mWARNING[0m watchfiles.main - received signal Signals.SIGTERM, raising KeyboardInterrupt [90m[0m
+worker process is not responding.. worker crashed?
+Process SpawnProcess-1:
+Traceback (most recent call last):
+  File "/usr/lib/python3.10/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/usr/lib/python3.10/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/senarios/.local/lib/python3.10/site-packages/livekit/agents/cli/_run.py", line 110, in run_worker
+    loop.run_until_complete(worker.aclose())
+  File "/usr/lib/python3.10/asyncio/base_events.py", line 649, in run_until_complete
+    return future.result()
+  File "/home/senarios/.local/lib/python3.10/site-packages/livekit/agents/worker.py", line 587, in aclose
+    assert self._close_future is not None
+AssertionError
