@@ -1,28 +1,22 @@
-.env
-.env.local
-.env.production
-venv/
+# --- Python ---
 __pycache__/
-*.pyc
+*.py[cod]
+*.so
+*.pyd
+*.pyo
+
+# --- Environments ---
 .env
 .env.*
-.venv
+.venv/
 venv/
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
+
+# --- Tools / IDE ---
 *.DS_Store
 .idea/
 .vscode/
-.env
-.env.*
-.venv
-venv/
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-*.DS_Store
-.idea/
-.vscode/
+
+# --- Logs / caches ---
+*.log
+.cache/
+.pytest_cache/
