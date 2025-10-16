@@ -31,7 +31,7 @@ import copy
 from supervisor import Supervisor
 from universal_stt_detector import detect_any_stt_error
 import cache_manager
-from logging_config import get_logger, set_session_id, set_x_call_id
+from logging_config import get_logger, set_session_id, set_x_call_id, set_call_sid, cleanup_call_logs
 from recordings.recording_utils import generate_recording_url
 load_dotenv()
 
@@ -258,6 +258,12 @@ async def entrypoint(ctx: agents.JobContext):
     
     # Set up per-call logging
     session_id = set_session_id(call_sid)
+    set_call_sid(call_sid)  # Set call_sid for automatic per-call logging
+    
+    logger.info(f"📞 CALL STARTED - Call SID: {call_sid}")
+    logger.info(f"📞 Session ID: {session_id}")
+    logger.info(f"📞 Room: {ctx.room.name}")
+    logger.info(f"📞 Participant: {participant.identity if participant else 'Unknown'}")
     
     # Set up the session and background audio early to prepare for immediate greeting
     background_audio = BackgroundAudioPlayer(thinking_sound=[
@@ -472,6 +478,8 @@ async def entrypoint(ctx: agents.JobContext):
             
             logger.info(f"Caller & Recipient from Asterisk: {caller}, {recipient}")
             logger.info(f"***************Caller & Recipient from Asterisk: {caller} {recipient}")
+            logger.info(f"📞 Caller: {caller}")
+            logger.info(f"📞 Recipient: {recipient}")
             # Try to get affiliate from cache
             cached_affiliate = cache_manager.get_affiliate_from_cache(recipient)
             logger.debug(f"cached_affiliate: {cached_affiliate}")
@@ -985,6 +993,9 @@ async def entrypoint(ctx: agents.JobContext):
             logger.info("🔴[ROOM DISCONNECT] Initiated background audio cleanup")
         except Exception as e:
             logger.warning(f"🔴[ROOM DISCONNECT] Warning during background audio cleanup: {e}")
+        
+        # Log disconnect event
+        logger.warning(f"🔴 ROOM DISCONNECTED - Connection lost or terminated")
 
     @ctx.room.on("participant_disconnected")
     def on_participant_disconnected(participant):
@@ -1010,6 +1021,9 @@ async def entrypoint(ctx: agents.JobContext):
                 logger.info("🔴[ALL PARTICIPANTS LEFT] Initiated background audio cleanup")
             except Exception as e:
                 logger.warning(f"🔴[ALL PARTICIPANTS LEFT] Warning during background audio cleanup: {e}")
+            
+            # Log participants left event
+            logger.warning(f"🔴 ALL PARTICIPANTS LEFT - Call ending")
 
     @ctx.room.on("participant_connected")
     def on_participant_connected(participant):
@@ -1233,6 +1247,16 @@ async def entrypoint(ctx: agents.JobContext):
         # Clean up call-specific cost tracker
         cleanup_call_tracker(call_sid)
         logger.info(f"Cleaned up cost tracker for call: {call_sid}")
+        
+        # Log call end and cleanup call-specific logs
+        try:
+            duration = datetime.now() - datetime.strptime(starting_time, '%Y-%m-%d %H:%M:%S')
+            logger.info(f"📞 CALL ENDED - Total duration: {duration}")
+            logger.info(f"📞 Final cleanup completed")
+            cleanup_call_logs(call_sid)
+            logger.info(f"Cleaned up call-specific logs for: {call_sid}")
+        except Exception as e:
+            logger.warning(f"Warning during call end logging: {e}")
     
     ctx.add_shutdown_callback(cleanup_and_log)
 
