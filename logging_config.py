@@ -24,6 +24,14 @@ class SessionContextFilter(logging.Filter):
         # Add session_id to the log record if available
         session_id = getattr(_local, 'session_id', 'no-session')
         record.session_id = session_id
+        
+        # Add x_call_id to the log record if available
+        x_call_id = getattr(_local, 'x_call_id', None)
+        record.x_call_id = x_call_id
+        
+        # Add transfer_status to the log record if available
+        transfer_status = getattr(_local, 'transfer_status', None)
+        record.transfer_status = transfer_status
         return True
 
 class CallSpecificHandler(logging.Handler):
@@ -125,11 +133,27 @@ class IVRLogger:
         # Clear any existing handlers
         self.main_logger.handlers.clear()
         
-        # Create formatter
-        formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - [%(session_id)s] - %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S'
-        )
+        # Create formatter with X-Call-ID and Transfer Status support
+        def format_with_context(record):
+            x_call_id_part = f" | X-Call-ID: {record.x_call_id}" if getattr(record, 'x_call_id', None) else ""
+            
+            # Add transfer status indicator
+            transfer_status = getattr(record, 'transfer_status', None)
+            if transfer_status == 'ENABLED':
+                transfer_part = " | 🟢 TRANSFER-ON"
+            elif transfer_status == 'DISABLED':
+                transfer_part = " | 🔴 TRANSFER-OFF"
+            else:
+                transfer_part = ""
+            
+            return f"{record.asctime} - {record.name} - {record.levelname} - [{record.session_id}]{x_call_id_part}{transfer_part} - {record.getMessage()}"
+        
+        class CustomFormatter(logging.Formatter):
+            def format(self, record):
+                record.asctime = self.formatTime(record, self.datefmt)
+                return format_with_context(record)
+        
+        formatter = CustomFormatter(datefmt='%Y-%m-%d %H:%M:%S')
         
         # Create simple formatter without session_id for main logs
         simple_formatter = logging.Formatter(
@@ -180,6 +204,24 @@ class IVRLogger:
     def get_session_id(self) -> str:
         """Get the current session ID."""
         return getattr(_local, 'session_id', 'no-session')
+    
+    def set_x_call_id(self, x_call_id: Optional[str] = None):
+        """Set the X-Call-ID for the current thread."""
+        _local.x_call_id = x_call_id
+        return x_call_id
+    
+    def get_x_call_id(self) -> Optional[str]:
+        """Get the current X-Call-ID."""
+        return getattr(_local, 'x_call_id', None)
+    
+    def set_transfer_status(self, status: Optional[str] = None):
+        """Set the transfer status for the current thread."""
+        _local.transfer_status = status
+        return status
+    
+    def get_transfer_status(self) -> Optional[str]:
+        """Get the current transfer status."""
+        return getattr(_local, 'transfer_status', None)
     
     def create_call_logger(self, call_id: str) -> logging.Logger:
         """Create a dedicated logger for a specific call."""
@@ -267,6 +309,22 @@ def set_session_id(session_id: Optional[str] = None) -> str:
 def get_session_id() -> str:
     """Convenience function to get current session ID."""
     return get_logger_instance().get_session_id()
+
+def set_x_call_id(x_call_id: Optional[str] = None) -> Optional[str]:
+    """Convenience function to set X-Call-ID."""
+    return get_logger_instance().set_x_call_id(x_call_id)
+
+def get_x_call_id() -> Optional[str]:
+    """Convenience function to get current X-Call-ID."""
+    return get_logger_instance().get_x_call_id()
+
+def set_transfer_status(status: Optional[str] = None) -> Optional[str]:
+    """Convenience function to set transfer status."""
+    return get_logger_instance().set_transfer_status(status)
+
+def get_transfer_status() -> Optional[str]:
+    """Convenience function to get current transfer status."""
+    return get_logger_instance().get_transfer_status()
 
 def create_call_logger(call_id: str) -> logging.Logger:
     """Convenience function to create a call logger."""

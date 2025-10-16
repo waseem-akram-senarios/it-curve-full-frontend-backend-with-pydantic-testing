@@ -1,0 +1,20 @@
+[Unit]
+Description=IVR Recording Server
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/home/devlab/ivr-directory/temp/recordings
+ExecStart=/home/devlab/anaconda3/bin/python3 /home/devlab/ivr-directory/temp/recordings/recording_server.py
+Restart=always
+RestartSec=10
+Environment=PYTHONPATH=/home/devlab/ivr-directory/temp:/home/devlab/ivr-directory/temp/recordings
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=recording-server
+
+[Install]
+WantedBy=multi-user.target

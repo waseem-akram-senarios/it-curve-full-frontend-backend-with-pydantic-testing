@@ -26,14 +26,13 @@ from livekit.rtc import SipDTMF
 from livekit.protocol.sip import TransferSIPParticipantRequest
 from livekit.plugins.turn_detector.english import EnglishModel
 from helper_functions import *
-from side_functions import *
 from cost_tracker import get_cost_tracker, reset_cost_tracker, add_agent_usage, add_supervisor_usage, add_stt_usage, add_tts_usage, set_call_context, cleanup_call_tracker
 import copy
 from supervisor import Supervisor
 from universal_stt_detector import detect_any_stt_error
 import cache_manager
-from logging_config import get_logger, set_session_id
-
+from logging_config import get_logger, set_session_id, set_x_call_id
+from recordings.recording_utils import generate_recording_url
 load_dotenv()
 
 # Initialize logger using our centralized logging system
@@ -457,6 +456,17 @@ async def entrypoint(ctx: agents.JobContext):
             # metadata = participant.metadata
             caller = participant.attributes['sip.phoneNumber']
             recipient = participant.attributes['sip.trunkPhoneNumber']
+            
+            # Extract X-Call-ID from SIP headers
+            x_call_id = extract_x_call_id(participant.attributes)
+            if x_call_id:
+                logger.info(f"✅ [SIP HEADER] X-Call-ID extracted: {x_call_id}")
+                # Set X-Call-ID in logging context for all subsequent logs
+                from logging_config import set_x_call_id
+                set_x_call_id(x_call_id)
+            else:
+                logger.warning(f"❌ [SIP HEADER] X-Call-ID not found in headers")
+            
             logger.info(f"Caller & Recipient from Asterisk: {caller}, {recipient}")
             logger.info(f"***************Caller & Recipient from Asterisk: {caller} {recipient}")
             # Try to get affiliate from cache
@@ -751,7 +761,7 @@ async def entrypoint(ctx: agents.JobContext):
             # Include user context in the final prompt to ensure the agent remembers it
             final_prompt = user_context + "\n\n" + prompt
             
-            agent = Assistant(call_sid=call_sid, context=ctx, room=ctx.room, instructions=final_prompt, affiliate_id=affiliate_id, rider_phone=phone_number, client_id=client_id)
+            agent = Assistant(call_sid=call_sid, context=ctx, room=ctx.room, instructions=final_prompt, affiliate_id=affiliate_id, rider_phone=phone_number, client_id=client_id, x_call_id=x_call_id)
             # Set the family_id that's needed for various functions
             agent.update_affliate_id_and_family(affiliate_id, family_id)
             session.update_agent(agent)
@@ -763,12 +773,12 @@ async def entrypoint(ctx: agents.JobContext):
             
         except Exception as e:
             logger.error(f"Error updating agent instructions: {e}")
-            agent = Assistant(call_sid=call_sid, context=ctx, room=ctx.room, instructions=prompt, affiliate_id=affiliate_id, rider_phone=phone_number, client_id=client_id)
+            agent = Assistant(call_sid=call_sid, context=ctx, room=ctx.room, instructions=prompt, affiliate_id=affiliate_id, rider_phone=phone_number, client_id=client_id, x_call_id=x_call_id)
             session.update_agent(agent) 
             with open(f"logs/prompt/final_prompt_{call_sid}.txt","w") as f:
                 f.write(final_prompt)       
     except Exception as e:
-        agent = Assistant(call_sid=call_sid, context=ctx, room=ctx.room, instructions=prompt, affiliate_id=affiliate_id, rider_phone=phone_number, client_id=client_id)
+        agent = Assistant(call_sid=call_sid, context=ctx, room=ctx.room, instructions=prompt, affiliate_id=affiliate_id, rider_phone=phone_number, client_id=client_id, x_call_id=x_call_id)
         session.update_agent(agent)
         logger.info("Updated initial_agent with basic prompt as fallback")
         with open(f"logs/prompt/final_prompt_{call_sid}.txt","w") as f:
@@ -956,37 +966,37 @@ async def entrypoint(ctx: agents.JobContext):
     # Room and participant disconnect event handlers
     @ctx.room.on("disconnected")
     def on_room_disconnected():
-        logger.info(f"[ROOM DISCONNECT] Room {ctx.room.name} disconnected for call {call_sid}")
-        logger.info(f"[ROOM DISCONNECT] Disconnect reason: Connection lost or terminated")
+        logger.info(f"🔴[ROOM DISCONNECT] Room {ctx.room.name} disconnected for call {call_sid}")
+        logger.info(f"🔴[ROOM DISCONNECT] Disconnect reason: Connection lost or terminated")
 
     @ctx.room.on("participant_disconnected")
     def on_participant_disconnected(participant):
-        logger.info(f"[PARTICIPANT DISCONNECT] Participant {participant.identity} disconnected from call {call_sid}")
-        logger.info(f"[PARTICIPANT DISCONNECT] Participant SID: {participant.sid}")
-        logger.info(f"[PARTICIPANT DISCONNECT] Remaining participants: {len(ctx.room.remote_participants)}")
+        logger.info(f"🔴[PARTICIPANT DISCONNECT] Participant {participant.identity} disconnected from call {call_sid}")
+        logger.info(f"🔴[PARTICIPANT DISCONNECT] Participant SID: {participant.sid}")
+        logger.info(f"🔴[PARTICIPANT DISCONNECT] Remaining participants: {len(ctx.room.remote_participants)}")
         
         # Check if all participants have left
         if len(ctx.room.remote_participants) == 0:
-            logger.info(f"[ALL PARTICIPANTS LEFT] No participants remaining in call {call_sid}")
-            logger.info(f"[ALL PARTICIPANTS LEFT] Call session ending")
+            logger.info(f"🔴[ALL PARTICIPANTS LEFT] No participants remaining in call {call_sid}")
+            logger.info(f"🔴[ALL PARTICIPANTS LEFT] Call session ending")
 
     @ctx.room.on("participant_connected")
     def on_participant_connected(participant):
-        logger.info(f"[PARTICIPANT CONNECT] Participant {participant.identity} connected to call {call_sid}")
-        logger.info(f"[PARTICIPANT CONNECT] Participant SID: {participant.sid}")
-        logger.info(f"[PARTICIPANT CONNECT] Total participants: {len(ctx.room.remote_participants) + 1}")  # +1 for agent
+        logger.info(f"🟢[PARTICIPANT CONNECT] Participant {participant.identity} connected to call {call_sid}")
+        logger.info(f"🟢[PARTICIPANT CONNECT] Participant SID: {participant.sid}")
+        logger.info(f"🟢[PARTICIPANT CONNECT] Total participants: {len(ctx.room.remote_participants) + 1}")  # +1 for agent
 
     @ctx.room.on("connection_state_changed")
     def on_connection_state_changed(state):
-        logger.info(f"[CONNECTION STATE] Room connection state changed to: {state} for call {call_sid}")
+        logger.info(f"🔴[CONNECTION STATE] Room connection state changed to: {state} for call {call_sid}")
         if state == rtc.ConnectionState.DISCONNECTED:
-            logger.info(f"[CONNECTION STATE] Room fully disconnected for call {call_sid}")
+            logger.info(f"🔴[CONNECTION STATE] Room fully disconnected for call {call_sid}")
         elif state == rtc.ConnectionState.FAILED:
-            logger.info(f"[CONNECTION STATE] Room connection failed for call {call_sid}")
+            logger.info(f"🔴[CONNECTION STATE] Room connection failed for call {call_sid}")
         elif state == rtc.ConnectionState.CONNECTED:
-            logger.info(f"[CONNECTION STATE] Room successfully connected for call {call_sid}")
+            logger.info(f"🔴[CONNECTION STATE] Room successfully connected for call {call_sid}")
         elif state == rtc.ConnectionState.RECONNECTING:
-            logger.info(f"[CONNECTION STATE] Room reconnecting for call {call_sid}")
+            logger.info(f"🔴[CONNECTION STATE] Room reconnecting for call {call_sid}")
 
     phone_collector = PhoneNumberCollector()
     phone_collector.start_collection()
@@ -1089,6 +1099,8 @@ async def entrypoint(ctx: agents.JobContext):
             "call_sid": f"{call_sid} , (Phone number: {phone_number})",
             "phone_number": phone_number,
             "call_sid_new": call_sid,
+            "x_call_id": x_call_id,  # SIP X-Call-ID for correlation with external systems
+            "recording_url": generate_reording_path(x_call_id, phone_number),
             "start_time": datetime.strptime(starting_time, "%Y-%m-%d %H:%M:%S"),
             "end_time": datetime.strptime(ending_time, "%Y-%m-%d %H:%M:%S"),
             "duration_seconds": elapsed_time,

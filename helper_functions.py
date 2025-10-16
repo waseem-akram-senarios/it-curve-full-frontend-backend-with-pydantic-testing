@@ -42,8 +42,54 @@ MUSIC_PATH = os.path.join(App_Directory, "music.wav")
 openai_client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
+def extract_x_call_id(participant_attributes):
+    """
+    Extract X-Call-ID from SIP headers in participant attributes.
+    
+    Args:
+        participant_attributes (dict): The participant.attributes dictionary containing SIP headers
+        
+    Returns:
+        str: The X-Call-ID value if found, None otherwise
+    """
+    try:
+        # Check for various possible SIP header formats for X-Call-ID
+        possible_keys = [
+            'sip.X-Call-ID',
+            'sip.x-call-id', 
+            'X-Call-ID',
+            'x-call-id',
+            'sip.header.X-Call-ID',
+            'sip.header.x-call-id',
+            'sip.h.X-Call-ID',
+            'sip.h.x-call-id',
+            
+        ]
+        
+        logger.debug(f"Searching for X-Call-ID in participant attributes: {participant_attributes}")
+        
+        for key in possible_keys:
+            if key in participant_attributes:
+                x_call_id = participant_attributes[key]
+                logger.info(f"✅ Found X-Call-ID: {x_call_id} (key: {key})")
+                return x_call_id
+        
+        # If not found in standard locations, search through all attributes for X-Call-ID pattern
+        for key, value in participant_attributes.items():
+            if 'call-id' in key.lower() or 'callid' in key.lower():
+                logger.info(f"✅ Found potential X-Call-ID: {value} (key: {key})")
+                return value
+                
+        logger.warning("❌ X-Call-ID not found in SIP headers")
+        return None
+        
+    except Exception as e:
+        logger.error(f"Error extracting X-Call-ID from SIP headers: {e}")
+        return None
+
+
 class Assistant(Agent):
-    def __init__(self, call_sid=None, context=None, room=None, affiliate_id=None, instructions=None, main_leg=None, return_leg=None, rider_phone=None, client_id=None):
+    def __init__(self, call_sid=None, context=None, room=None, affiliate_id=None, instructions=None, main_leg=None, return_leg=None, rider_phone=None, client_id=None, x_call_id=None):
         self.function_call_count = 0
         self.max_function_calls = 50
         self.failed_function_calls = {}
@@ -54,9 +100,16 @@ class Assistant(Agent):
         self.affiliate_id = affiliate_id
         self.main_leg = main_leg
         self.return_leg = return_leg
+        self.x_call_id = x_call_id  # Store the X-Call-ID from SIP headers
         self.update_rider_phone(rider_phone)
         self.update_client_id(client_id)
         self.context = context
+        
+        # Log the X-Call-ID if provided
+        if self.x_call_id:
+            logger.info(f"🆔 [ASSISTANT] X-Call-ID initialized: {self.x_call_id}")
+        else:
+            logger.debug("🆔 [ASSISTANT] No X-Call-ID provided during initialization")
         
         # Try to initialize Agent with increased function call limits if supported
         try:
@@ -1640,6 +1693,17 @@ class Assistant(Agent):
         Returns:
             str: Confirmation message or error message.
         """
+        
+        # Enable transfers when main trip booking process starts
+        try:
+            if hasattr(self, "session") and self.session is not None:
+                setattr(self.session, "should_allow_transfer", True)
+                # Set transfer status in logging context for visual indicator
+                from logging_config import set_transfer_status
+                set_transfer_status("ENABLED")
+                logger.info("🟢 TRANSFER ENABLED: Main trip booking process started - user can get help")
+        except Exception as e:
+            logger.warning(f"❌ Failed to enable transfers for main trip booking: {e}")
         # Extract all payload fields to local variables for minimal refactor impact
         pickup_street_address = payload.pickup_street_address
         dropoff_street_address = payload.dropoff_street_address
@@ -1954,18 +2018,22 @@ class Assistant(Agent):
     @function_tool()
     async def return_trip_started(self) -> str:
         """
-        When user says or intents to book a return trip, immediately call this tool
-         to enable transfers for return trip.
+        Call this function when user expresses intent to book a return trip,
+        BEFORE collecting any return trip information. This enables transfers
+        so user can get help during the return trip information collection process.
         """
-        # Disable further supervisor transfers for this call after a successful booking
+        # Enable transfers when return trip process starts (before information collection)
         try:
             if hasattr(self, "session") and self.session is not None:
                 setattr(self.session, "should_allow_transfer", True)
-                logger.info("Enabled transfers for return trip")
+                # Set transfer status in logging context for visual indicator
+                from logging_config import set_transfer_status
+                set_transfer_status("ENABLED")
+                logger.info("🟢 TRANSFER ENABLED: Return trip process started - user can get help during information collection")
         except Exception as e:
-            logger.warning(f"Failed to enable transfers for return trip: {e}")
+            logger.warning(f"❌ Failed to enable transfers for return trip process: {e}")
 
-        return "Return trip has started!"
+        return "Return trip process started! Transfers enabled for user assistance during information collection."
 
     @function_tool()
     async def collect_return_trip_payload(self, payload: ReturnTripPayload) -> str:
@@ -1976,7 +2044,10 @@ class Assistant(Agent):
         Returns:
             str: Confirmation message or error message.
         """
-
+        
+        # Note: Transfers should already be enabled by return_trip_started() function
+        # This function is called after information collection is complete
+        
         # Extract all payload fields to local variables for minimal refactor impact
         pickup_street_address = payload.pickup_street_address
         dropoff_street_address = payload.dropoff_street_address
@@ -2392,14 +2463,29 @@ class Assistant(Agent):
                             except Exception as e:
                                 logger.error(f"Error occurred in book a trip function: {e}")
 
+                        # Determine what type of booking was made to decide on transfer logic
+                        booking_type = "unknown"
+                        if self.return_leg and self.main_leg:
+                            booking_type = "round_trip"
+                        elif self.main_leg:
+                            booking_type = "main_trip_only"
+                        elif self.return_leg:
+                            booking_type = "return_trip_only"
+                        
+                        logger.info(f"Booking completed for: {booking_type}")
+                        
                         self.main_leg = None
                         self.return_leg = None
 
-                        # Disable further supervisor transfers for this call after a successful booking
+                        # Transfer disable logic: Disable transfers after ANY successful booking completion
+                        # This prevents unnecessary escalations after successful bookings
                         try:
                             if hasattr(self, "session") and self.session is not None:
                                 setattr(self.session, "should_allow_transfer", False)
-                                logger.info("Disabled transfers after successful booking for this session")
+                                # Set transfer status in logging context for visual indicator
+                                from logging_config import set_transfer_status
+                                set_transfer_status("DISABLED")
+                                logger.info(f"🔴 TRANSFER DISABLED: {booking_type} booking completed successfully - no more escalations needed")
                         except Exception as e:
                             logger.warning(f"Unable to disable transfers after booking: {e}")
 
