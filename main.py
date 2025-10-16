@@ -324,8 +324,11 @@ async def entrypoint(ctx: agents.JobContext):
     logger.info("Audio input DISABLED - agent will not process any speech during API calls")
     
     # Start the background audio player for continuous typing sounds
-    await background_audio.start(room=ctx.room, agent_session=session)
-    logger.info("Initialized background audio player")
+    try:
+        await background_audio.start(room=ctx.room, agent_session=session)
+        logger.info("Initialized background audio player")
+    except Exception as e:
+        logger.warning(f"Warning: Couldn't initialize background audio player: {e}")
     
     # Start a single typing sound that will continue throughout all API calls
     typing_handle = None
@@ -968,6 +971,20 @@ async def entrypoint(ctx: agents.JobContext):
     def on_room_disconnected():
         logger.info(f"🔴[ROOM DISCONNECT] Room {ctx.room.name} disconnected for call {call_sid}")
         logger.info(f"🔴[ROOM DISCONNECT] Disconnect reason: Connection lost or terminated")
+        
+        # Clean up background audio to prevent generator issues
+        try:
+            if typing_handle is not None:
+                typing_handle.stop()
+                logger.info("🔴[ROOM DISCONNECT] Stopped typing sounds")
+        except Exception as e:
+            logger.warning(f"🔴[ROOM DISCONNECT] Warning during typing sound cleanup: {e}")
+        
+        try:
+            asyncio.create_task(background_audio.stop())
+            logger.info("🔴[ROOM DISCONNECT] Initiated background audio cleanup")
+        except Exception as e:
+            logger.warning(f"🔴[ROOM DISCONNECT] Warning during background audio cleanup: {e}")
 
     @ctx.room.on("participant_disconnected")
     def on_participant_disconnected(participant):
@@ -979,6 +996,20 @@ async def entrypoint(ctx: agents.JobContext):
         if len(ctx.room.remote_participants) == 0:
             logger.info(f"🔴[ALL PARTICIPANTS LEFT] No participants remaining in call {call_sid}")
             logger.info(f"🔴[ALL PARTICIPANTS LEFT] Call session ending")
+            
+            # Clean up background audio when all participants leave
+            try:
+                if typing_handle is not None:
+                    typing_handle.stop()
+                    logger.info("🔴[ALL PARTICIPANTS LEFT] Stopped typing sounds")
+            except Exception as e:
+                logger.warning(f"🔴[ALL PARTICIPANTS LEFT] Warning during typing sound cleanup: {e}")
+            
+            try:
+                asyncio.create_task(background_audio.stop())
+                logger.info("🔴[ALL PARTICIPANTS LEFT] Initiated background audio cleanup")
+            except Exception as e:
+                logger.warning(f"🔴[ALL PARTICIPANTS LEFT] Warning during background audio cleanup: {e}")
 
     @ctx.room.on("participant_connected")
     def on_participant_connected(participant):
@@ -1184,6 +1215,20 @@ async def entrypoint(ctx: agents.JobContext):
 
     # At shutdown, generate and log the summary from the usage collector
     async def cleanup_and_log():
+        # Stop background audio first to prevent generator cleanup issues
+        try:
+            if typing_handle is not None:
+                typing_handle.stop()
+                logger.info("Stopped typing sounds during cleanup")
+        except Exception as e:
+            logger.warning(f"Warning during typing sound cleanup: {e}")
+        
+        try:
+            await background_audio.stop()
+            logger.info("Stopped background audio player during cleanup")
+        except Exception as e:
+            logger.warning(f"Warning during background audio cleanup: {e}")
+        
         await log_usage(starting_time, call_sid, conversation_history)
         # Clean up call-specific cost tracker
         cleanup_call_tracker(call_sid)

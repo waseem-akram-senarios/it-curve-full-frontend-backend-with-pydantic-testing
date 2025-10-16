@@ -101,7 +101,7 @@ class CostTracker:
                     "stt_cost_per_minute": 0.0077,  # Nova-3 Monolingual streaming
                     "tts_cost_per_million_character": 15.0
                 },
-                "nova-3-phonecall": {
+                "nova-3-aura-asteria-en": {
                     "stt_cost_per_minute": 0.0077,  # Nova-3 Monolingual streaming
                     "tts_cost_per_million_character": 15.0
                 },
@@ -235,6 +235,8 @@ class CostTracker:
         """Get pricing for audio provider and model, with fallback to legacy pricing."""
         if provider in self.audio_pricing and model in self.audio_pricing[provider]:
             return self.audio_pricing[provider][model]
+        elif provider in self.audio_pricing and model == "aura-asteria-en":
+            return self.audio_pricing[provider]["nova-3-aura-asteria-en"]
         else:
             # Fallback to legacy pricing
             logger.warning(f"No pricing found for {provider} {model}, using legacy pricing")

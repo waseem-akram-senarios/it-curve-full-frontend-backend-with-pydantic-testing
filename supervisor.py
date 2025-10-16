@@ -418,7 +418,7 @@ class Supervisor:
             self.repetition_count = 0
 
         # Condition 2: Good score - reset issue counter
-        if avg_score > 0.7:
+        if avg_score > 0.6:
             self.nth_issue = 0
             return
 

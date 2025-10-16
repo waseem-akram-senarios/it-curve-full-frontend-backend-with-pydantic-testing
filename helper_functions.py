@@ -445,6 +445,12 @@ class Assistant(Agent):
                             break
                     # If profile name doesn't match any existing profile, return error only
                     if not name_exists:
+                        self.client_id = -1
+                        logger.info(f"Client ID {self.client_id}")
+                        if self.client_id not in [ "0", "None", "none"]:
+                            logger.info(f"✅ Client ID set to: {self.client_id}")
+                        else:            
+                            logger.warning(f"❌ Client ID not available (received: {client_id}) - self.client_id will be None")
                         return """That profile does not exist in our system. However, if you want to create a new profile you have to book a trip with us first."""
                 
                 # Check if the requested profile number exists
