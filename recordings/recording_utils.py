@@ -27,7 +27,7 @@ RECORDINGS_BASE_PATH = os.getenv("RECORDINGS_BASE_PATH")
 logger.info(f"Recording API Base URL loaded from environment: {RECORDING_API_BASE_URL}")
 logger.info(f"Recording Base Path loaded from environment: {RECORDINGS_BASE_PATH}")
 
-def generate_reording_path(x_call_id, caller):
+def generate_reording_path(x_call_id, caller, recipient):
     """
     Generate recording path for a given X-Call-ID and optional caller
     
@@ -40,8 +40,8 @@ def generate_reording_path(x_call_id, caller):
     """
     try:
         # First check if recording exists
-        if recording_exists(x_call_id, caller):
-            path = f"{RECORDINGS_BASE_PATH}/recordings-{caller}/CALLIN-{x_call_id}-{caller}.gsm"
+        if recording_exists(x_call_id, caller, recipient):
+            path = f"{RECORDINGS_BASE_PATH}/recordings-{recipient}/CALLIN-{x_call_id}-{caller}.gsm"
             logger.info(f"Generated recording path: {path} for X-Call-ID: {x_call_id}")
             return path
         else:
@@ -52,7 +52,7 @@ def generate_reording_path(x_call_id, caller):
         logger.error(f"Error generating recording path for X-Call-ID {x_call_id}: {e}")
         return None
 
-def generate_recording_url(x_call_id, caller):
+def generate_recording_url(x_call_id, caller, recipient):
     """
     Generate recording URL for a given X-Call-ID and optional caller
     
@@ -65,8 +65,8 @@ def generate_recording_url(x_call_id, caller):
     """
     try:
         # First check if recording exists
-        if recording_exists(x_call_id, caller):
-            url = f"{RECORDING_API_BASE_URL}/recordings-{caller}/CALLIN-{x_call_id}-{caller}.gsm"
+        if recording_exists(x_call_id, caller, recipient):
+            url = f"{RECORDING_API_BASE_URL}/recordings-{recipient}/CALLIN-{x_call_id}-{caller}.gsm"
             logger.info(f"Generated recording URL: {url} for X-Call-ID: {x_call_id}")
             return url
         else:
@@ -77,7 +77,7 @@ def generate_recording_url(x_call_id, caller):
         logger.error(f"Error generating recording URL for X-Call-ID {x_call_id}: {e}")
         return None
 
-def recording_exists(x_call_id, caller):
+def recording_exists(x_call_id, caller, recipient):
     """
     Check if recording file exists for given X-Call-ID and optional caller
     
