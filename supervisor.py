@@ -33,6 +33,7 @@ class Supervisor:
     def __init__(self,
                  session: AgentSession,
                  room,
+                 assistant = None,
                  llm = None,
                  history_window: int = 6,
                  min_turns_for_repetition: int = 6,
@@ -40,6 +41,7 @@ class Supervisor:
         self.session = session
         self.llm = llm if llm else openai.LLM(model="gpt-4o-mini")
         self.room = room
+        self.assistant = assistant
 
         # Configuration
         self.history_window = history_window
@@ -445,10 +447,17 @@ class Supervisor:
             "I notice we might be going in circles. Let me transfer you to a live agent who can better assist you.",
             allow_interruptions=False
         )
-        await self.transfer_call_voice()
+        # Use the Assistant's transfer_call method which includes context transfer
+        if self.assistant:
+            await self.assistant.transfer_call()
+        else:
+            # Fallback to basic transfer if no assistant available
+            logger.warning("No assistant available, using basic transfer")
+            await self._basic_transfer()
 
-    async def transfer_call_voice(self):
-        logger.info("transfer_call_voice function called...")
+    async def _basic_transfer(self):
+        """Basic transfer method without context (fallback)"""
+        logger.info("_basic_transfer function called...")
         logger.info(f"Transfer Reason: {self.transfer_reason}")
         
         try:

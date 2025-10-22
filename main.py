@@ -317,8 +317,83 @@ async def entrypoint(ctx: agents.JobContext):
         # allow_interruptions is set on the session object, not the start method
     )
     
+    # Define the conversation history collection function before we have the session reference
+    conversation_history = []
+    def setup_conversation_listeners(current_session):
+        @current_session.on("conversation_item_added")
+        def on_conversation_item_added(event: ConversationItemAddedEvent):
+            logger.debug(f"Conversation item added from {event.item.role}: {event.item.text_content}. interrupted: {event.item.interrupted}")
+            if event.item.text_content != '':
+                if event.item.role == 'assistant':
+                    message_data = {
+                    'speaker': 'Agent',
+                    'transcription': event.item.text_content,
+                    'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    }
+                    conversation_history.append(message_data)
+                    # Also store in the Assistant instance for context generation
+                    if hasattr(initial_agent, 'conversation_history'):
+                        initial_agent.conversation_history = conversation_history.copy()
+                    logger.info(f"Agent transcript captured: {event.item.text_content}")
+                    
+                elif event.item.role == 'user':
+                    logger.info(f"User transcript received: {event.item.text_content}")
+                    
+                    # Universal STT Error Detection - handles ANY possible transcription error
+                    recent_context = [item['transcription'] for item in conversation_history[-6:]]
+                    
+                    # Get the most recent bot response for analysis
+                    recent_bot_response = ""
+                    for item in reversed(conversation_history):
+                        if item.get('speaker') == 'Agent':
+                            recent_bot_response = item.get('transcription', '')
+                            break
+                    
+                    # Universal STT validation
+                    universal_validation = detect_any_stt_error(
+                        user_input=event.item.text_content,
+                        bot_response=recent_bot_response,
+                        conversation_history=recent_context,
+                        confidence=None  # LiveKit doesn't expose STT confidence by default
+                    )
+                    
+                    # Log validation results
+                    if universal_validation.get('likely_error', False):
+                        logger.warning(f" STT Error Detected: {universal_validation.get('error_type', 'Unknown')}")
+                        if 'suggested_correction' in universal_validation:
+                            logger.info(f" Suggested correction: '{universal_validation['suggested_correction']}'")
+                        if 'clarification_message' in universal_validation:
+                            logger.info(f" Clarification: {universal_validation['clarification_message']}")
+                    else:
+                        logger.debug(" STT validation passed - no errors detected")
+                        
+                    # Log mismatch analysis if present
+                    if 'mismatch_analysis' in universal_validation:
+                        if universal_validation['mismatch_analysis'].get('has_mismatch', False):
+                            mismatch = universal_validation['mismatch_analysis']
+                            logger.info(f"Intent mismatch: {mismatch.get('mismatch_reason', 'Unknown')}")
+                    
+                    # Store universal validation metadata with conversation history
+                    user_message_data = {
+                    'speaker': 'User',
+                    'transcription': event.item.text_content,
+                    'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    'universal_stt_validation': universal_validation
+                    }
+                    conversation_history.append(user_message_data)
+                    # Also store in the Assistant instance for context generation
+                    if hasattr(initial_agent, 'conversation_history'):
+                        initial_agent.conversation_history = conversation_history.copy()
+    
+    # Setup conversation listeners BEFORE the initial greeting to capture everything
+    setup_conversation_listeners(session)
+    
     # Provide immediate generic greeting with interruptions disabled
-    await session.say(f"Hello! My name is Alina, your digital agent. I'm retrieving your information. Please wait", allow_interruptions=False)
+    initial_greeting = "Hello! My name is Alina, your digital agent. I'm retrieving your information. Please wait"
+    await session.say(initial_greeting, allow_interruptions=False)
+    
+    # The conversation listeners will automatically capture this message, no need to manually add it
+    logger.info(f"📝 Initial greeting sent: {initial_greeting}")
     
     # Enable interruptions for the rest of the conversation after first greeting
     # session.allow_interruptions = True
@@ -794,67 +869,7 @@ async def entrypoint(ctx: agents.JobContext):
         logger.info("Updated initial_agent with basic prompt as fallback")
         with open(f"logs/prompt/final_prompt_{call_sid}.txt","w") as f:
             f.write(final_prompt)
-    # Define the conversation history collection function before we have the session reference
-    conversation_history = []
-    def setup_conversation_listeners(current_session):
-        @current_session.on("conversation_item_added")
-        def on_conversation_item_added(event: ConversationItemAddedEvent):
-            logger.debug(f"Conversation item added from {event.item.role}: {event.item.text_content}. interrupted: {event.item.interrupted}")
-            if event.item.text_content != '':
-                if event.item.role == 'assistant':
-                    conversation_history.append({
-                    'speaker': 'Agent',
-                    'transcription': event.item.text_content,
-                    'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                    })
-                if event.item.role == 'user':
-                    # Log user transcript for debugging
-                    logger.info(f"User transcript received: {event.item.text_content}")
-                    
-                    # Universal STT Error Detection - handles ANY possible transcription error
-                    recent_context = [item['transcription'] for item in conversation_history[-6:]]
-                    
-                    # Get the most recent bot response for analysis
-                    recent_bot_response = ""
-                    for item in reversed(conversation_history):
-                        if item.get('speaker') == 'Agent':
-                            recent_bot_response = item.get('transcription', '')
-                            break
-                    
-                    # Universal STT validation
-                    universal_validation = detect_any_stt_error(
-                        user_input=event.item.text_content,
-                        bot_response=recent_bot_response,
-                        conversation_history=recent_context,
-                        confidence=None  # LiveKit doesn't expose STT confidence by default
-                    )
-                    
-                    # Log universal validation results
-                    if universal_validation['is_likely_stt_error']:
-                        confidence_score = universal_validation['confidence_score']
-                        error_indicators = universal_validation['error_indicators']
-                        
-                        logger.warning(f"Universal STT error detected (confidence: {confidence_score:.2f}) - '{event.item.text_content}'")
-                        logger.info(f"Error indicators: {error_indicators}")
-                        
-                        if universal_validation['suggested_corrections']:
-                            for correction in universal_validation['suggested_corrections'][:2]:
-                                logger.info(f"Suggested: '{correction['corrected_sentence']}' (confidence: {correction['confidence']:.2f}) - {correction['reason']}")
-                        
-                        if universal_validation['mismatch_analysis'].get('mismatch_detected'):
-                            mismatch = universal_validation['mismatch_analysis']
-                            logger.info(f"Intent mismatch: {mismatch.get('mismatch_reason', 'Unknown')}")
-                    
-                    # Store universal validation metadata with conversation history
-                    conversation_history.append({
-                    'speaker': 'User',
-                    'transcription': event.item.text_content,
-                    'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                    'universal_stt_validation': universal_validation
-                    })
-    
-    # Setup initial conversation listeners
-    setup_conversation_listeners(session)
+    # Conversation listeners are now defined earlier in the code
     
     # Add additional listeners for debugging interruptions
     @session.on("agent_speech_started")
@@ -876,6 +891,7 @@ async def entrypoint(ctx: agents.JobContext):
     # Setup supervisor with the final session
     supervisor = Supervisor(session=session,
                           room=initial_agent.room,
+                          assistant=initial_agent,
                           llm=openai.LLM(model="gpt-4o-mini"))
     await supervisor.start()
 
@@ -927,6 +943,9 @@ async def entrypoint(ctx: agents.JobContext):
         if personalized_message:
             # Deliver the personalized message with interruptions enabled
             await session.say(personalized_message, allow_interruptions=True)
+            
+            # The conversation listeners will automatically capture this message, no need to manually add it
+            logger.info(f"📝 Personalized message sent: {personalized_message[:100]}...")
             
         # Now that all API fetching and personalized greeting is done, re-enable audio input
         # This happens regardless of whether we had a personalized message or not
@@ -1278,6 +1297,7 @@ async def entrypoint(ctx: agents.JobContext):
         # Clean up call-specific cost tracker
         cleanup_call_tracker(call_sid)
         logger.info(f"Cleaned up cost tracker for call: {call_sid}")
+        
         
         # Log call end and cleanup call-specific logs
         try:

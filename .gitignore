@@ -27,5 +27,6 @@ logs/analytics/*.log
 logs/calls/*.log
 logs/prompt/*.txt
 logs/trip_book_payload/*.txt
+logs/context_transfer_payload/*.txt
 logs/*.log
 logs/*.log.*

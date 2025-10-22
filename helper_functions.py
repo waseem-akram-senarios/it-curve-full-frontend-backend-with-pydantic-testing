@@ -3,6 +3,7 @@ import asyncio
 import os
 import re
 import wave
+import os
 from twilio.rest import Client
 from livekit import rtc
 from pathlib import Path
@@ -23,6 +24,10 @@ from side_functions import *
 from pydantic import Field, BaseModel
 from models import ReturnTripPayload, MainTripPayload, RiderVerificationParams, ClientNameParams, DistanceFareParams, AccountParams
 from logging_config import get_logger, set_session_id
+from context_manager import (
+    ContextGenerator, 
+    ContextTransferManager
+)
 
 # Load variables from .env file
 load_dotenv()
@@ -104,6 +109,7 @@ class Assistant(Agent):
         self.update_rider_phone(rider_phone)
         self.update_client_id(client_id)
         self.context = context
+        self.conversation_history = []  # Will be populated from main.py event handlers
         
         # Log the X-Call-ID if provided
         if self.x_call_id:
@@ -152,6 +158,148 @@ class Assistant(Agent):
     def update_affliate_id_and_family(self,affiliate_id,family_id):
         self.affiliate_id=affiliate_id
         self.family_id=family_id
+    
+    def update_conversation_history(self, conversation_history):
+        """
+        Manually update the Assistant's conversation history.
+        This should be called from main.py to ensure the Assistant has the latest conversation.
+        
+        Args:
+            conversation_history: List of conversation messages from main.py
+        """
+        if conversation_history:
+            self.conversation_history = conversation_history.copy()
+            logger.info(f"🔄 Updated Assistant conversation history: {len(self.conversation_history)} messages")
+        else:
+            logger.warning("⚠️ Attempted to update conversation history with empty data")
+    
+    def ensure_conversation_history_updated(self, global_conversation_history):
+        """
+        Ensure the Assistant's conversation history is up to date before operations like transfer.
+        This is a safety method to be called before transfer_call or other context-dependent operations.
+        
+        Args:
+            global_conversation_history: The main conversation history from main.py
+        """
+        if not self.conversation_history and global_conversation_history:
+            logger.warning("⚠️ Assistant conversation_history was empty, updating from global history")
+            self.update_conversation_history(global_conversation_history)
+        elif len(self.conversation_history) < len(global_conversation_history):
+            logger.info(f"🔄 Assistant conversation_history ({len(self.conversation_history)}) is behind global ({len(global_conversation_history)}), updating")
+            self.update_conversation_history(global_conversation_history)
+    
+    
+    def get_conversation_context(self, conversation_history=None) -> dict:
+        """Get conversation context for transfers using existing conversation_history"""
+        # Use provided conversation_history or fall back to Assistant's own history
+        history_to_use = conversation_history if conversation_history else self.conversation_history
+        
+        # If Assistant's conversation_history is empty, try to get it from the global scope
+        # This is a fallback for when the conversation listeners haven't updated the Assistant instance
+        if not history_to_use and hasattr(self, '_get_global_conversation_history'):
+            try:
+                global_history = self._get_global_conversation_history()
+                if global_history:
+                    logger.info(f"🔄 Using global conversation history as fallback ({len(global_history)} items)")
+                    history_to_use = global_history
+            except Exception as e:
+                logger.warning(f"⚠️ Could not access global conversation history: {e}")
+        
+        # Debug logging to understand why context is empty
+        logger.info(f"🔍 Context generation debug:")
+        logger.info(f"   - Provided conversation_history: {conversation_history is not None}")
+        logger.info(f"   - self.conversation_history exists: {hasattr(self, 'conversation_history')}")
+        logger.info(f"   - self.conversation_history length: {len(self.conversation_history) if hasattr(self, 'conversation_history') else 'N/A'}")
+        logger.info(f"   - history_to_use length: {len(history_to_use) if history_to_use else 0}")
+        
+        # If we still don't have conversation history, log the first few items for debugging
+        if history_to_use:
+            logger.info(f"   - First conversation item: {history_to_use[0] if len(history_to_use) > 0 else 'None'}")
+            logger.info(f"   - Last conversation item: {history_to_use[-1] if len(history_to_use) > 0 else 'None'}")
+        
+        if not history_to_use:
+            logger.warning("❌ No conversation history available for context generation")
+            logger.warning("💡 This usually means:")
+            logger.warning("   1. The conversation listeners in main.py are not working properly")
+            logger.warning("   2. The Assistant.conversation_history is not being updated")
+            logger.warning("   3. The transfer_call is being called too early in the conversation")
+            return {}
+            
+        # Convert existing conversation_history format to context manager format
+        formatted_history = []
+        for item in history_to_use:
+            role = 'agent' if item.get('speaker') == 'Agent' else 'customer'
+            formatted_history.append({
+                'role': role,
+                'content': item.get('transcription', ''),
+                'timestamp': item.get('timestamp', '')
+            })
+        
+        # Generate context information
+        context_title = ContextGenerator.generate_context_call_title(formatted_history)
+        context_summary = ContextGenerator.generate_context_call_summary(formatted_history)
+        context_detail = ContextGenerator.generate_context_call_detail(formatted_history)
+        
+        # Generate JSON call history
+        json_call_history = self._generate_json_call_history(formatted_history)
+        
+        return {
+            'ContextCallTitle': context_title,
+            'ContextCallSummary': context_summary,
+            'ContextCallDetail': context_detail,
+            'JsonCallHistory': json_call_history
+        }
+    
+    def _generate_json_call_history(self, formatted_history):
+        """Generate JSON formatted call history"""
+        import json
+        from datetime import datetime
+        
+        try:
+            # Create structured call history
+            call_history = {
+                "call_metadata": {
+                    "call_id": getattr(self, 'call_sid', 'unknown'),
+                    "generated_at": datetime.now().isoformat(),
+                    "total_messages": len(formatted_history),
+                    "participants": ["agent", "customer"]
+                },
+                "conversation": []
+            }
+            
+            # Add each message to the conversation
+            for i, message in enumerate(formatted_history):
+                conversation_item = {
+                    "sequence": i + 1,
+                    "role": message.get('role', 'unknown'),
+                    "content": message.get('content', ''),
+                    "timestamp": message.get('timestamp', ''),
+                    "character_count": len(message.get('content', ''))
+                }
+                call_history["conversation"].append(conversation_item)
+            
+            # Add summary statistics
+            agent_messages = [msg for msg in formatted_history if msg.get('role') == 'agent']
+            customer_messages = [msg for msg in formatted_history if msg.get('role') == 'customer']
+            
+            call_history["statistics"] = {
+                "agent_message_count": len(agent_messages),
+                "customer_message_count": len(customer_messages),
+                "total_agent_characters": sum(len(msg.get('content', '')) for msg in agent_messages),
+                "total_customer_characters": sum(len(msg.get('content', '')) for msg in customer_messages),
+                "conversation_turns": len(formatted_history)
+            }
+            
+            # Return as JSON string
+            return json.dumps(call_history, indent=2)
+            
+        except Exception as e:
+            logger.error(f"Error generating JSON call history: {e}")
+            return json.dumps({
+                "error": "Failed to generate call history",
+                "message": str(e),
+                "call_id": getattr(self, 'call_sid', 'unknown')
+            })
     
     async def Play_Music(self) -> str:
         """Function to publish an audio track in the LiveKit room with stoppable music."""
@@ -2557,10 +2705,141 @@ class Assistant(Agent):
     async def transfer_call(self) -> str:
         """
         Function to transfer the call to a live agent using LiveKit and Asterisk SIP transfer.
+        Also sends context information to CONTEXT_TRANSFER_API if configured.
+        
         Returns:
             str: Success message or error message if transfer fails.
         """
         logger.info("transfer_call_voice function called...")
+        
+        # Step 1: Send complete booking payload with context to transfer API if available
+        try:
+            context_data = self.get_conversation_context()
+            logger.info(f"🔍 Transfer context debug:")
+            logger.info(f"   - context_data type: {type(context_data)}")
+            logger.info(f"   - context_data keys: {list(context_data.keys()) if context_data else 'None'}")
+            logger.info(f"   - context_data has values: {any(context_data.values()) if context_data else False}")
+            
+            # Prepare the complete booking payload (same as book_trips function)
+            complete_transfer_payload = None
+            
+            # Check for main_leg and return_leg separately
+            main_leg = getattr(self, 'main_leg', None)
+            return_leg = getattr(self, 'return_leg', None)
+            
+            logger.debug(f"Checking for booking payload:")
+            logger.debug(f"  main_leg exists: {main_leg is not None}")
+            logger.debug(f"  return_leg exists: {return_leg is not None}")
+            
+            if return_leg and main_leg:
+                complete_transfer_payload = await combine_payload(main_leg, return_leg)
+                logger.debug("  Using combined payload (main + return)")
+            elif main_leg:
+                complete_transfer_payload = main_leg
+                logger.debug("  Using main_leg payload")
+            elif return_leg:
+                complete_transfer_payload = return_leg
+                logger.debug("  Using return_leg payload")
+            
+            # Log transfer condition check
+            logger.info(f"Transfer payload check: complete_payload={complete_transfer_payload is not None}, context_data={context_data is not None}, main_leg={main_leg is not None}, return_leg={return_leg is not None}")
+            
+            # Always try to add context information if we have context data
+            if complete_transfer_payload and context_data and any(context_data.values()):
+                logger.info("✅ Adding context information to existing booking payload")
+                # Add context information to the complete booking payload
+                for trip in complete_transfer_payload.get('addressInfo', {}).get('Trips', []):
+                    for detail in trip.get('Details', []):
+                        if 'tripInfo' in detail:
+                            # Add context parameters to tripInfo (TRANSFER SCENARIOS ONLY)
+                            detail['tripInfo']['ContextCallTitle'] = context_data.get('ContextCallTitle', '')
+                            # detail['tripInfo']['ContextCallSummary'] = context_data.get('ContextCallSummary', '')
+                            detail['tripInfo']['ContextCallSummary'] = "None"
+                            detail['tripInfo']['ContextCallDetail'] = context_data.get('JsonCallHistory', '')
+                            logger.debug(f"Added context to {detail.get('StopType', 'unknown')} tripInfo in existing payload")
+                
+                # Log the complete transfer payload
+                logger.debug(f"Complete transfer payload with context: {complete_transfer_payload}")
+            
+            # If no complete payload exists, load default and add context
+            if not complete_transfer_payload:
+                # Load default payload from JSON file and update with current rider info
+                logger.info("Loading default payload from trip_book_payload.json and updating with current rider info")
+                try:
+                    # Load the default payload
+                    with open("/home/devlab/ivr-directory/temp/trip_book_payload.json", "r") as f:
+                        default_payload = json.load(f)
+                    
+                    # Update rider information with current values
+                    if hasattr(self, 'rider_phone') and self.rider_phone:
+                        default_payload['riderInfo']['PhoneNo'] = self.rider_phone
+                    
+                    if hasattr(self, 'client_id') and self.client_id:
+                        if self.client_id == "None":
+                            default_payload['riderInfo']['ID'] = "-1"
+                        else:
+                            default_payload['riderInfo']['ID'] = self.client_id
+                    
+                    # Update rider name in pickup person and dropoff name if available
+                    rider_name = getattr(self, 'rider_name', '') or getattr(self, 'pickup_person', '') or "Customer"
+                    default_payload['riderInfo']['PickupPerson'] = rider_name
+                    
+                    # Update names in trip details
+                    for trip in default_payload.get('addressInfo', {}).get('Trips', []):
+                        for detail in trip.get('Details', []):
+                            if detail.get('StopType') == 'pickup':
+                                detail['Name'] = rider_name
+                            elif detail.get('StopType') == 'dropoff':
+                                detail['Name'] = rider_name
+                    
+                    # Add context information if available (TRANSFER ONLY)
+                    logger.debug(f"Transfer context check: context_data={context_data is not None}, has_values={any(context_data.values()) if context_data else False}")
+                    if context_data and any(context_data.values()):
+                        logger.info("✅ Adding context information to transfer payload")
+                        for trip in default_payload.get('addressInfo', {}).get('Trips', []):
+                            for detail in trip.get('Details', []):
+                                if 'tripInfo' in detail:
+                                    # Add context parameters to tripInfo (TRANSFER SCENARIOS ONLY)
+                                    detail['tripInfo']['ContextCallTitle'] = context_data.get('ContextCallTitle', '')
+                                    # detail['tripInfo']['ContextCallSummary'] = context_data.get('ContextCallSummary', '')
+                                    detail['tripInfo']['ContextCallSummary'] = "None"
+                                    detail['tripInfo']['ContextCallDetail'] = context_data.get('JsonCallHistory', '')
+                                    logger.debug(f"Added context to {detail.get('StopType', 'unknown')} tripInfo")
+                    else:
+                        logger.warning("❌ No context data available for transfer payload")
+                    
+                    # Log the updated default payload
+                    complete_transfer_payload = default_payload
+                    logger.debug(f"Updated transfer payload: {complete_transfer_payload}")
+                except Exception as e:
+                    logger.error(f"Error loading or updating default payload: {e}")
+                    logger.info("No complete booking payload or conversation context available for transfer")
+            
+            payload_call_id = self.call_sid
+            try:
+                # Create directory if it doesn't exist
+                os.makedirs("logs/context_transfer_payload", exist_ok=True)
+                
+                # Store the updated payload
+                with open(f"logs/context_transfer_payload/context_transfer_{payload_call_id}.txt", "w") as f:
+                    f.write(json.dumps(complete_transfer_payload, indent=4))
+                logger.info(f"📄 Updated transfer payload saved to logs/context_transfer_payload/context_transfer_{payload_call_id}.txt")
+            except Exception as e:
+                logger.warning(f"Warning: Could not save updated transfer payload to file: {e}")
+            
+            # Send updated payload to transfer API
+            context_manager = ContextTransferManager(self.call_sid)
+            context_sent = await context_manager.send_context_to_api(complete_transfer_payload)
+            if context_sent:
+                logger.info("✅ Updated booking payload with context sent to transfer API successfully")
+            else:
+                logger.warning("⚠️ Failed to send updated booking payload to transfer API")
+
+        except Exception as e:
+            logger.error(f"Error sending context to transfer API: {e}")
+            # Continue with transfer even if context sending fails
+        
+        # Step 2: Perform the actual SIP transfer
         try:
             async with api.LiveKitAPI() as livekit_api:
                 asterisk_ip = os.getenv("ASTERISK_SERVER_IP")
@@ -2582,8 +2861,14 @@ class Assistant(Agent):
                 # Transfer caller
                 await livekit_api.sip.transfer_sip_participant(transfer_request)
                 logger.info(f"Successfully transferred participant {participant_identity} to {transfer_to}")
+                
+                # Clean up conversation tracker after successful transfer
+                self.cleanup_conversation()
+                
+                return "Call successfully transferred to human agent"
+                
         except Exception as e:
-            logger.info(e)
+            logger.error(f"Error during SIP transfer: {e}")
             return "Issue with call transfer"
 
     @function_tool()
