@@ -23,6 +23,7 @@ from livekit.plugins import (
 )
 from livekit import api
 from livekit.rtc import SipDTMF
+from livekit import rtc
 from livekit.protocol.sip import TransferSIPParticipantRequest
 from livekit.plugins.turn_detector.english import EnglishModel
 from helper_functions import *
@@ -1059,14 +1060,23 @@ async def entrypoint(ctx: agents.JobContext):
     @ctx.room.on("connection_state_changed")
     def on_connection_state_changed(state):
         logger.info(f"🔴[CONNECTION STATE] Room connection state changed to: {state} for call {call_sid}")
-        if state == rtc.ConnectionState.DISCONNECTED:
-            logger.info(f"🔴[CONNECTION STATE] Room fully disconnected for call {call_sid}")
-        elif state == rtc.ConnectionState.FAILED:
-            logger.info(f"🔴[CONNECTION STATE] Room connection failed for call {call_sid}")
-        elif state == rtc.ConnectionState.CONNECTED:
-            logger.info(f"🔴[CONNECTION STATE] Room successfully connected for call {call_sid}")
-        elif state == rtc.ConnectionState.RECONNECTING:
-            logger.info(f"🔴[CONNECTION STATE] Room reconnecting for call {call_sid}")
+        try:
+            # Handle different connection states safely
+            if hasattr(rtc.ConnectionState, 'DISCONNECTED') and state == rtc.ConnectionState.DISCONNECTED:
+                logger.info(f"🔴[CONNECTION STATE] Room fully disconnected for call {call_sid}")
+            elif hasattr(rtc.ConnectionState, 'FAILED') and state == rtc.ConnectionState.FAILED:
+                logger.info(f"🔴[CONNECTION STATE] Room connection failed for call {call_sid}")
+            elif hasattr(rtc.ConnectionState, 'CONNECTED') and state == rtc.ConnectionState.CONNECTED:
+                logger.info(f"🔴[CONNECTION STATE] Room successfully connected for call {call_sid}")
+            elif hasattr(rtc.ConnectionState, 'RECONNECTING') and state == rtc.ConnectionState.RECONNECTING:
+                logger.info(f"🔴[CONNECTION STATE] Room reconnecting for call {call_sid}")
+            else:
+                # Handle numeric states or unknown states
+                state_name = getattr(state, 'name', str(state))
+                logger.info(f"🔴[CONNECTION STATE] Room connection state: {state_name} for call {call_sid}")
+        except Exception as e:
+            logger.error(f"🔴[CONNECTION STATE] Error handling connection state {state}: {e}")
+            logger.info(f"🔴[CONNECTION STATE] Raw state value: {state} for call {call_sid}")
 
     phone_collector = PhoneNumberCollector()
     phone_collector.start_collection()
