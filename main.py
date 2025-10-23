@@ -6,6 +6,7 @@ from bson.objectid import ObjectId
 from pathlib import Path
 from dotenv import load_dotenv
 from timezone_utils import now_eastern, format_eastern_timestamp, format_eastern_date, format_eastern_time_12h, parse_eastern_datetime
+from InitAssistant import InitAssistant
 from livekit import agents
 from livekit.agents import (
     AgentSession,
@@ -319,34 +320,33 @@ async def entrypoint(ctx: agents.JobContext):
         # allow_interruptions is set on the session object, not the start method
     )
     
-    # Define the conversation history collection function before we have the session reference
-    conversation_history = []
+    # Conversation history is now managed by InitAssistant - no local list needed
     def setup_conversation_listeners(current_session):
         @current_session.on("conversation_item_added")
         def on_conversation_item_added(event: ConversationItemAddedEvent):
             logger.debug(f"Conversation item added from {event.item.role}: {event.item.text_content}. interrupted: {event.item.interrupted}")
             if event.item.text_content != '':
                 if event.item.role == 'assistant':
-                    message_data = {
-                    'speaker': 'Agent',
-                    'transcription': event.item.text_content,
-                    'timestamp': format_eastern_timestamp()
-                    }
-                    conversation_history.append(message_data)
-                    # Also store in the Assistant instance for context generation
-                    if hasattr(initial_agent, 'conversation_history'):
-                        initial_agent.conversation_history = conversation_history.copy()
+                    # Store the message using InitAssistant (clean approach)
+                    InitAssistant.set_transcription(
+                        call_sid=call_sid,
+                        speaker='Agent', 
+                        transcription=event.item.text_content,
+                        timestamp=format_eastern_timestamp()
+                    )
                     logger.info(f"Agent transcript captured: {event.item.text_content}")
                     
                 elif event.item.role == 'user':
                     logger.info(f"User transcript received: {event.item.text_content}")
                     
                     # Universal STT Error Detection - handles ANY possible transcription error
-                    recent_context = [item['transcription'] for item in conversation_history[-6:]]
+                    # Get conversation history from InitAssistant for STT validation
+                    current_history = InitAssistant.get_conversation_history(call_sid)
+                    recent_context = [item['transcription'] for item in current_history[-6:]]
                     
                     # Get the most recent bot response for analysis
                     recent_bot_response = ""
-                    for item in reversed(conversation_history):
+                    for item in reversed(current_history):
                         if item.get('speaker') == 'Agent':
                             recent_bot_response = item.get('transcription', '')
                             break
@@ -376,16 +376,13 @@ async def entrypoint(ctx: agents.JobContext):
                             logger.info(f"Intent mismatch: {mismatch.get('mismatch_reason', 'Unknown')}")
                     
                     # Store universal validation metadata with conversation history
-                    user_message_data = {
-                    'speaker': 'User',
-                    'transcription': event.item.text_content,
-                    'timestamp': format_eastern_timestamp(),
-                    'universal_stt_validation': universal_validation
-                    }
-                    conversation_history.append(user_message_data)
-                    # Also store in the Assistant instance for context generation
-                    if hasattr(initial_agent, 'conversation_history'):
-                        initial_agent.conversation_history = conversation_history.copy()
+                    # Store user message using InitAssistant (clean approach)
+                    InitAssistant.set_transcription(
+                        call_sid=call_sid,
+                        speaker='User',
+                        transcription=event.item.text_content, 
+                        timestamp=format_eastern_timestamp()
+                    )
     
     # Setup conversation listeners BEFORE the initial greeting to capture everything
     setup_conversation_listeners(session)
@@ -997,8 +994,11 @@ async def entrypoint(ctx: agents.JobContext):
     # Room and participant disconnect event handlers
     @ctx.room.on("disconnected")
     def on_room_disconnected():
-        logger.info(f"🔴[ROOM DISCONNECT] Room {ctx.room.name} disconnected for call {call_sid}")
-        logger.info(f"🔴[ROOM DISCONNECT] Disconnect reason: Connection lost or terminated")
+        logger.info(f"[ROOM DISCONNECT] Room {ctx.room.name} disconnected for call {call_sid}")
+        # Clean up conversation history when call ends
+        InitAssistant.clear_conversation(call_sid)
+        logger.info(f" Cleaned up conversation history for call {call_sid}")
+        logger.info(f"[ROOM DISCONNECT] Disconnect reason: Connection lost or terminated")
         
         # Clean up background audio to prevent generator issues
         try:
@@ -1091,7 +1091,7 @@ async def entrypoint(ctx: agents.JobContext):
         #     asyncio.create_task(handle_regular_dtmf(digit, session, agent))
 
     # Log aggregated summary of usage metrics generated by usage collector
-    async def log_usage(starting_time, call_sid, conversation_history, phone_number, x_call_id):
+    async def log_usage(starting_time, call_sid, phone_number, x_call_id):
         # Get agent usage from main usage collector
         agent_summary = usage_collector.get_summary()
         agent_input_tokens = int(agent_summary.llm_prompt_tokens)
@@ -1151,6 +1151,8 @@ async def entrypoint(ctx: agents.JobContext):
         formatted_history = []
         score_history = iter(supervisor.score_history)
         default_score = { "relevance": 'N/A', "completeness": 'N/A', "groundedness": 'N/A', "average": 'N/A' }
+        # Get conversation history from InitAssistant
+        conversation_history = InitAssistant.get_conversation_history(call_sid)
         for i, entry in enumerate(conversation_history):
             if i == 0:
                 score = None
@@ -1248,7 +1250,7 @@ async def entrypoint(ctx: agents.JobContext):
             "end_time": ending_time,
             "call_sid": call_sid,
             "cost": total_cost,
-            "conversation_history": conversation_history
+            "conversation_history": InitAssistant.get_conversation_history(call_sid)
         }
         logger.debug(f"Payload Sent: {data}")
 
@@ -1295,11 +1297,11 @@ async def entrypoint(ctx: agents.JobContext):
         # Use variables from outer scope (they should be accessible due to closure)
         try:
             logger.info(f"🧹 Calling log_usage with caller: {caller}, x_call_id: {x_call_id}")
-            await log_usage(starting_time, call_sid, conversation_history, caller, x_call_id)
+            await log_usage(starting_time, call_sid, caller, x_call_id)
         except NameError as e:
             logger.error(f"❌ Variable not accessible in cleanup: {e}")
             # Fallback with default values
-            await log_usage(starting_time, call_sid, conversation_history, "Unknown", None)
+            await log_usage(starting_time, call_sid, "Unknown", None)
         # Clean up call-specific cost tracker
         cleanup_call_tracker(call_sid)
         logger.info(f"Cleaned up cost tracker for call: {call_sid}")

@@ -2,16 +2,15 @@ from livekit.agents import llm  # type: ignore
 import asyncio
 import os
 import re
-import wave
-import os
 from twilio.rest import Client
 from livekit import rtc
+from livekit.agents import BackgroundAudioPlayer, BuiltinAudioClip, AudioConfig
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 import requests
 from typing import Annotated
-from timezone_utils import now_eastern, format_eastern_timestamp, format_eastern_datetime_iso
+from timezone_utils import now_eastern, format_eastern_timestamp, format_eastern_datetime_iso, parse_eastern_datetime
 import aiohttp
 from aiohttp import BasicAuth
 from openai import AsyncOpenAI
@@ -25,10 +24,7 @@ from side_functions import *
 from pydantic import Field, BaseModel
 from models import ReturnTripPayload, MainTripPayload, RiderVerificationParams, ClientNameParams, DistanceFareParams, AccountParams
 from logging_config import get_logger, set_session_id
-from context_manager import (
-    ContextGenerator, 
-    ContextTransferManager
-)
+from InitAssistant import InitAssistant
 
 # Load variables from .env file
 load_dotenv()
@@ -42,8 +38,6 @@ App_Directory = Path(__file__).parent
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 TWILIO_CLIENT = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
-
-MUSIC_PATH = os.path.join(App_Directory, "music.wav")
 
 openai_client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -103,6 +97,8 @@ class Assistant(Agent):
         self.call_sid = call_sid  # Store the call SID for music control
         self.room = room  # Store the LiveKit room instance
         self.stop_music = False  # Flag to stop music
+        self.music_handle = None  # Handle for background audio control
+        self.background_audio = None  # Background audio player instance
         self.affiliate_id = affiliate_id
         self.main_leg = main_leg
         self.return_leg = return_leg
@@ -111,6 +107,7 @@ class Assistant(Agent):
         self.update_client_id(client_id)
         self.context = context
         self.conversation_history = []  # Will be populated from main.py event handlers
+        self.suggested_return_time = None
         
         # Log the X-Call-ID if provided
         if self.x_call_id:
@@ -129,6 +126,106 @@ class Assistant(Agent):
             logger.warning("Failed to initialize Agent with increased function call limits")
             # If the parameters aren't supported, fall back to basic initialization
             super().__init__(instructions=instructions)
+
+    @function_tool()
+    async def compute_return_time_after_main(self, hours_after: int, payload: MainTripPayload, buffer_minutes: int = 0) -> str:
+        """
+        Compute return pickup time as: main pickup time + main travel duration + hours_after (+ optional buffer).
+        Args:
+        - hours_after (int): Number of hours after main pickup time to compute return pickup time.
+        - buffer_minutes (int): Optional buffer in minutes to add to the computed return pickup time.
+        Behavior:
+        - Reads main leg pickup datetime and its estimated duration (in minutes).
+        - Computes suggested return pickup datetime.
+        - If a return payload already exists in memory, updates its dateInfo.PickupDate.
+        - Otherwise stores the suggestion in self.suggested_return_time for later use.
+
+        Returns a human-readable string with the computed time (YYYY-MM-DD HH:MM).
+        """
+        logger.info(f"✅ [ASSISTANT] Computing return time after main trip with hours_after={hours_after} and buffer_minutes={buffer_minutes}")
+        
+        try:
+            # Get actual travel duration from directions API
+            url = os.getenv("GET_DIRECTION")
+            params = {
+                'origin': f'{payload.pickup_lat},{payload.pickup_lng}',
+                'destination': f'{payload.dropoff_lat},{payload.dropoff_lng}',
+                'AppType': 'FCSTService'
+            }
+
+            logger.debug(f"Payload sent for distance and duration retrieval: {params}")
+
+            auth = BasicAuth(os.getenv("GET_DIRECTION_USER"), os.getenv("GET_DIRECTION_PASSWORD"))
+            headers = {
+                'User-Agent': 'PostmanRuntime/7.43.4',
+                'Accept': '*/*',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'Connection': 'keep-alive'
+            }
+
+            # Fetch actual travel duration
+            duration_minutes = 0
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, params=params, headers=headers, auth=auth) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        logger.debug(f"Response for distance and duration retrieval: {data}")
+                        distance = int(data["routes"][0]["legs"][0]["distance"]["value"])
+                        duration = int(data["routes"][0]["legs"][0]["duration"]["value"])
+                        
+                        distance_miles = await meters_to_miles(distance)
+                        duration_minutes = await seconds_to_minutes(duration)
+                        
+                        logger.debug(f"Distance: {distance_miles} miles, Duration: {duration_minutes} minutes")
+                    else:
+                        logger.error(f"Failed to get direction data. Status: {response.status}")
+                        return "Could not get travel duration from directions API."
+
+        
+            # Extract main pickup datetime using utility function
+            main_pickup_str = payload.booking_time
+            
+            # Parse datetime using timezone utility function with flexible format handling
+            logger.debug(f"Attempting to parse booking_time: '{main_pickup_str}'")
+            dt = None
+            try:
+                # Try format with seconds first (YYYY-MM-DD HH:MM:SS)
+                dt = parse_eastern_datetime(main_pickup_str, "%Y-%m-%d %H:%M:%S")
+                logger.debug(f"Successfully parsed with seconds format: {dt}")
+            except ValueError:
+                try:
+                    # Try format without seconds (YYYY-MM-DD HH:MM)
+                    dt = parse_eastern_datetime(main_pickup_str, "%Y-%m-%d %H:%M")
+                    logger.debug(f"Successfully parsed without seconds format: {dt}")
+                except ValueError as e:
+                    logger.error(f"Could not parse datetime '{main_pickup_str}' with either format: {e}")
+                    return f"Could not parse main trip pickup time: {main_pickup_str}. Expected format: YYYY-MM-DD HH:MM or YYYY-MM-DD HH:MM:SS"
+            
+            if dt is None:
+                return f"Could not parse main trip pickup time: {main_pickup_str}"
+
+            # Calculate return time: pickup + travel duration + hours_after + buffer
+            computed = dt + timedelta(minutes=duration_minutes + int(buffer_minutes)) + timedelta(hours=int(hours_after))
+            
+            # Format using utility function (YYYY-MM-DD HH:MM format)
+            suggested_str = format_eastern_timestamp(computed, format_str="%Y-%m-%d %H:%M")
+
+            # Save suggestion for later use (do NOT modify payload yet)
+            self.suggested_return_time = suggested_str
+            logger.info(f"💾 Stored suggested return time: {suggested_str} (will be used later in collect_return_trip_payload)")
+
+            # Do NOT automatically update return_leg payload here
+            # The payload should only be set after user confirmation via collect_return_trip_payload()
+            
+            return f"Suggested return pickup time is {suggested_str} (based on {duration_minutes} min travel time) "
+            
+        except KeyError as e:
+            logger.error(f"Missing key while computing return time: {e}")
+            return "Could not compute return time due to missing data in the main trip."
+        except Exception as e:
+            logger.error(f"Unexpected error computing return time: {e}")
+            return "An error occurred while computing the return time."
+    
 
     def update_rider_phone(self, rider_phone):
         """
@@ -160,208 +257,117 @@ class Assistant(Agent):
         self.affiliate_id=affiliate_id
         self.family_id=family_id
     
-    def update_conversation_history(self, conversation_history):
-        """
-        Manually update the Assistant's conversation history.
-        This should be called from main.py to ensure the Assistant has the latest conversation.
-        
-        Args:
-            conversation_history: List of conversation messages from main.py
-        """
-        if conversation_history:
-            self.conversation_history = conversation_history.copy()
-            logger.info(f"🔄 Updated Assistant conversation history: {len(self.conversation_history)} messages")
-        else:
-            logger.warning("⚠️ Attempted to update conversation history with empty data")
+    # Old messy conversation history methods removed - now using clean InitAssistant approach
     
-    def ensure_conversation_history_updated(self, global_conversation_history):
-        """
-        Ensure the Assistant's conversation history is up to date before operations like transfer.
-        This is a safety method to be called before transfer_call or other context-dependent operations.
+    def get_conversation_context(self) -> dict:
+        """Get conversation context for transfers using InitAssistant (clean approach)"""
+        logger.info(f"🔄 Getting conversation context for call {self.call_sid}")
         
-        Args:
-            global_conversation_history: The main conversation history from main.py
-        """
-        if not self.conversation_history and global_conversation_history:
-            logger.warning("⚠️ Assistant conversation_history was empty, updating from global history")
-            self.update_conversation_history(global_conversation_history)
-        elif len(self.conversation_history) < len(global_conversation_history):
-            logger.info(f"🔄 Assistant conversation_history ({len(self.conversation_history)}) is behind global ({len(global_conversation_history)}), updating")
-            self.update_conversation_history(global_conversation_history)
-    
-    
-    def get_conversation_context(self, conversation_history=None) -> dict:
-        """Get conversation context for transfers using existing conversation_history"""
-        # Use provided conversation_history or fall back to Assistant's own history
-        history_to_use = conversation_history if conversation_history else self.conversation_history
+        # Use the clean InitAssistant to get context
+        context_data = InitAssistant.get_context_for_transfer(self.call_sid)
         
-        # If Assistant's conversation_history is empty, try to get it from the global scope
-        # This is a fallback for when the conversation listeners haven't updated the Assistant instance
-        if not history_to_use and hasattr(self, '_get_global_conversation_history'):
-            try:
-                global_history = self._get_global_conversation_history()
-                if global_history:
-                    logger.info(f"🔄 Using global conversation history as fallback ({len(global_history)} items)")
-                    history_to_use = global_history
-            except Exception as e:
-                logger.warning(f"⚠️ Could not access global conversation history: {e}")
-        
-        # Debug logging to understand why context is empty
-        logger.info(f"🔍 Context generation debug:")
-        logger.info(f"   - Provided conversation_history: {conversation_history is not None}")
-        logger.info(f"   - self.conversation_history exists: {hasattr(self, 'conversation_history')}")
-        logger.info(f"   - self.conversation_history length: {len(self.conversation_history) if hasattr(self, 'conversation_history') else 'N/A'}")
-        logger.info(f"   - history_to_use length: {len(history_to_use) if history_to_use else 0}")
-        
-        # If we still don't have conversation history, log the first few items for debugging
-        if history_to_use:
-            logger.info(f"   - First conversation item: {history_to_use[0] if len(history_to_use) > 0 else 'None'}")
-            logger.info(f"   - Last conversation item: {history_to_use[-1] if len(history_to_use) > 0 else 'None'}")
-        
-        if not history_to_use:
-            logger.warning("❌ No conversation history available for context generation")
-            logger.warning("💡 This usually means:")
-            logger.warning("   1. The conversation listeners in main.py are not working properly")
-            logger.warning("   2. The Assistant.conversation_history is not being updated")
-            logger.warning("   3. The transfer_call is being called too early in the conversation")
+        if not context_data:
+            logger.error(f"❌ No context data generated for call {self.call_sid}")
             return {}
-            
-        # Convert existing conversation_history format to context manager format
-        formatted_history = []
-        for item in history_to_use:
-            role = 'agent' if item.get('speaker') == 'Agent' else 'customer'
-            formatted_history.append({
-                'role': role,
-                'content': item.get('transcription', ''),
-                'timestamp': item.get('timestamp', '')
-            })
         
-        # Generate context information
-        context_title = ContextGenerator.generate_context_call_title(formatted_history)
-        context_summary = ContextGenerator.generate_context_call_summary(formatted_history)
-        context_detail = ContextGenerator.generate_context_call_detail(formatted_history)
-        
-        # Generate JSON call history
-        json_call_history = self._generate_json_call_history(formatted_history)
-        
-        return {
-            'ContextCallTitle': context_title,
-            'ContextCallSummary': context_summary,
-            'ContextCallDetail': context_detail,
-            'JsonCallHistory': json_call_history
-        }
+        logger.info(f"✅ Context retrieved successfully for call {self.call_sid}")
+        return context_data
     
-    def _generate_json_call_history(self, formatted_history):
-        """Generate JSON formatted call history"""
-        import json
-        from datetime import datetime
-        
+    async def _send_context_to_transfer_api(self, payload: dict) -> bool:
+        """Send context data to transfer API (clean approach)"""
         try:
-            # Create structured call history
-            call_history = {
-                "call_metadata": {
-                    "call_id": getattr(self, 'call_sid', 'unknown'),
-                    "generated_at": format_eastern_datetime_iso(),
-                    "total_messages": len(formatted_history),
-                    "participants": ["agent", "customer"]
-                },
-                "conversation": []
+            transfer_api_url = os.getenv('CONTEXT_TRANSFER_API')
+            if not transfer_api_url:
+                logger.info("📝 CONTEXT_TRANSFER_API not configured - skipping API call")
+                return True  # Not an error if not configured
+            
+            logger.info(f"🚀 Sending context to transfer API: {transfer_api_url}")
+            
+            # Prepare the payload with call metadata
+            api_payload = {
+                'call_sid': self.call_sid,
+                'timestamp': datetime.now().isoformat(),
+                'transfer_payload': payload
             }
             
-            # Add each message to the conversation
-            for i, message in enumerate(formatted_history):
-                conversation_item = {
-                    "sequence": i + 1,
-                    "role": message.get('role', 'unknown'),
-                    "content": message.get('content', ''),
-                    "timestamp": message.get('timestamp', ''),
-                    "character_count": len(message.get('content', ''))
-                }
-                call_history["conversation"].append(conversation_item)
-            
-            # Add summary statistics
-            agent_messages = [msg for msg in formatted_history if msg.get('role') == 'agent']
-            customer_messages = [msg for msg in formatted_history if msg.get('role') == 'customer']
-            
-            call_history["statistics"] = {
-                "agent_message_count": len(agent_messages),
-                "customer_message_count": len(customer_messages),
-                "total_agent_characters": sum(len(msg.get('content', '')) for msg in agent_messages),
-                "total_customer_characters": sum(len(msg.get('content', '')) for msg in customer_messages),
-                "conversation_turns": len(formatted_history)
+            headers = {
+                'Content-Type': 'application/json',
+                'User-Agent': 'IVR-Bot-Context-Transfer/1.0'
             }
             
-            # Return as JSON string
-            return json.dumps(call_history, indent=2)
-            
+            async with aiohttp.ClientSession() as session:
+                async with session.post(transfer_api_url, json=api_payload, headers=headers, timeout=10) as response:
+                    if response.status == 200:
+                        logger.info(f"✅ Context successfully sent to transfer API")
+                        return True
+                    else:
+                        logger.warning(f"⚠️ Transfer API returned status {response.status}")
+                        return False
+                        
         except Exception as e:
-            logger.error(f"Error generating JSON call history: {e}")
-            return json.dumps({
-                "error": "Failed to generate call history",
-                "message": str(e),
-                "call_id": getattr(self, 'call_sid', 'unknown')
-            })
+            logger.error(f"❌ Error sending context to transfer API: {e}")
+            return False
+    
+    # Removed unused _generate_json_call_history method - now using InitAssistant._generate_json_history()
     
     async def Play_Music(self) -> str:
-        """Function to publish an audio track in the LiveKit room with stoppable music."""
+        """Function to play background audio using LiveKit's built-in audio clips (same as main.py)."""
         if not self.room:
             return "No active room to play music."
 
         try:
-            logger.info(f"🎵 Publishing music track in the LiveKit room...")
-            self.stop_music = False  # Reset stop flag
-
-            # Open the WAV file
-            with wave.open(MUSIC_PATH, 'rb') as wav_file:
-                sample_rate = wav_file.getframerate()
-                num_channels = wav_file.getnchannels()
-                samples_per_channel = 480  # 10ms of audio at 48kHz
-
-                # Create an AudioSource
-                source = rtc.AudioSource(sample_rate, num_channels)
-                audio_track = rtc.LocalAudioTrack.create_audio_track("music", source)
-
-                # Publish the track to the room
-                await self.room.local_participant.publish_track(audio_track)
-
-                # Read and publish audio frames while checking stop condition
-                while not self.stop_music:
-                    frames = wav_file.readframes(samples_per_channel)
-                    if not frames:
-                        break  # Stop when no more frames
-
-                    # Create an AudioFrame
-                    audio_frame = rtc.AudioFrame(
-                        data=frames,
-                        sample_rate=sample_rate,
-                        num_channels=num_channels,
-                        samples_per_channel=len(frames) // (2 * num_channels)  # 2 bytes per sample (16-bit audio)
-                    )
-
-                    # Capture the frame
-                    await source.capture_frame(audio_frame)
-
-                    # Sleep to simulate real-time streaming
-                    await asyncio.sleep(samples_per_channel / sample_rate)
-
-            return "Music is now playing in the room."
+            logger.info(f"🎵 Starting background audio using LiveKit built-in clips...")
+            logger.debug(f"Current state: background_audio={self.background_audio}, music_handle={self.music_handle}")
+            
+            # Create background audio player with built-in clips (same as main.py)
+            if self.background_audio is None:
+                logger.debug("Creating new BackgroundAudioPlayer...")
+                self.background_audio = BackgroundAudioPlayer(thinking_sound=[
+                    AudioConfig(BuiltinAudioClip.KEYBOARD_TYPING2, volume=0.5),
+                    AudioConfig(BuiltinAudioClip.KEYBOARD_TYPING, volume=0.6)
+                ])
+                
+                # Start the background audio player
+                logger.debug("Starting background audio player...")
+                await self.background_audio.start(room=self.room)
+                logger.info("✅ Initialized background audio player")
+            else:
+                logger.debug("Background audio player already exists")
+            
+            # Play typing sound in loop (same as main.py)
+            if self.music_handle is None:
+                logger.debug("Starting typing sounds...")
+                self.music_handle = self.background_audio.play(BuiltinAudioClip.KEYBOARD_TYPING, loop=True)
+                logger.info("✅ Started continuous typing sounds")
+                self.stop_music = False
+            else:
+                logger.debug("Typing sounds already playing")
+            
+            return "Background audio is now playing in the room."
+            
         except Exception as e:
-            logger.error(f"Error publishing music: {e}")
-            return "Failed to play music."
+            logger.error(f"Error starting background audio: {e}")
+            return "Failed to start background audio."
 
     async def Stop_Music(self) -> str:
-        """Function to stop playing music in the LiveKit room."""
+        """Function to stop playing background audio in the LiveKit room."""
         if not self.room:
             return "No active room to stop music."
 
         try:
-            logger.info("🛑 Stopping music track in the LiveKit room...")
+            logger.info("🛑 Stopping background audio in the LiveKit room...")
             self.stop_music = True  # Set flag to stop music
+            
+            # Stop the music handle if it exists
+            if self.music_handle is not None:
+                self.music_handle.stop()
+                self.music_handle = None
+                logger.info("✅ Stopped typing sounds")
 
-            return "Music has been stopped."
+            return "Background audio has been stopped."
         except Exception as e:
-            logger.error(f"Error stopping music: {e}")
-            return "Failed to stop music."
+            logger.error(f"Error stopping background audio: {e}")
+            return "Failed to stop background audio."
 
     @function_tool()
     async def Close_Call(self) -> str:
@@ -2523,14 +2529,34 @@ class Assistant(Agent):
         """
 
         logger.info("book_trips function called...")
+        
+        # Start playing music during booking process
+        try:
+            await self.Play_Music()
+            logger.info("🎵 Started playing music during trip booking")
+        except Exception as e:
+            logger.warning(f"Failed to start music during booking: {e}")
+        
         try:
             # Check if function is called with empty arguments
             if not hasattr(self, 'main_leg') or not hasattr(self, 'return_leg'):
                 logger.warning("book_trips called but no leg attributes exist")
+                # Stop music before early return
+                try:
+                    await self.Stop_Music()
+                    logger.info("🔇 Stopped music - no leg attributes")
+                except Exception as e:
+                    logger.warning(f"Failed to stop music: {e}")
                 return "Please provide trip details before booking. You need to specify at least pickup and dropoff locations."
             # Check if legs exist but are empty
             if not self.main_leg and not self.return_leg:
                 logger.warning("Both legs are None or empty")
+                # Stop music before early return
+                try:
+                    await self.Stop_Music()
+                    logger.info("🔇 Stopped music - no trip details")
+                except Exception as e:
+                    logger.warning(f"Failed to stop music: {e}")
                 return "No trip details found. Please provide pickup and dropoff information before booking."
 
             # Prepare the payload based on available legs
@@ -2541,7 +2567,16 @@ class Assistant(Agent):
             elif self.return_leg:
                 payload = self.return_leg
             else:
-                logger.warning("No legs provided for booking.")
+                payload = None
+                
+            if not payload:
+                logger.warning("No booking payload available from any source")
+                # Stop music before early return
+                try:
+                    await self.Stop_Music()
+                    logger.info("🔇 Stopped music - no payload available")
+                except Exception as e:
+                    logger.warning(f"Failed to stop music: {e}")
                 return "Error: No valid trip details found. Please provide pickup and dropoff information."
 
             # Step 2: Set the endpoint
@@ -2559,6 +2594,12 @@ class Assistant(Agent):
                     # Check if response status is OK before trying to parse JSON
                     if response.status != 200:
                         logger.error(f"Booking API HTTP Error: {response.status}")
+                        # Stop music after HTTP error
+                        try:
+                            await self.Stop_Music()
+                            logger.info("🔇 Stopped music after HTTP error")
+                        except Exception as e:
+                            logger.warning(f"Failed to stop music after HTTP error: {e}")
                         return f"Trip booking failed with HTTP status {response.status}. Please try again later."
                     
                     # Try to parse the response as JSON with better error handling
@@ -2569,6 +2610,12 @@ class Assistant(Agent):
                         # Try to get text response as fallback
                         text_response = await response.text()
                         logger.debug(f"Raw response: {text_response[:200]}...")
+                        # Stop music after JSON parsing error
+                        try:
+                            await self.Stop_Music()
+                            logger.info("🔇 Stopped music after JSON parsing error")
+                        except Exception as e2:
+                            logger.warning(f"Failed to stop music after JSON parsing error: {e2}")
                         return f"Trip booking system returned an invalid response format. Please try again later."
 
                     # Continue processing if we successfully parsed JSON
@@ -2645,16 +2692,40 @@ class Assistant(Agent):
                             logger.warning(f"Unable to disable transfers after booking: {e}")
 
                         logger.info(f"Booking response: {response_text}")
+                        
+                        # Stop music after successful booking
+                        try:
+                            await self.Stop_Music()
+                            logger.info("🔇 Stopped music after successful trip booking")
+                        except Exception as e:
+                            logger.warning(f"Failed to stop music after booking: {e}")
+                        
                         return response_text
                     
                     else:
                         error_message = response_data.get("responseMessage", "Unknown error")
                         error_code = response_data.get("responseCode", "Unknown")
                         logger.error(f"Booking API Payload ERROR: Code {error_code} - {error_message}")
+                        
+                        # Stop music after booking error
+                        try:
+                            await self.Stop_Music()
+                            logger.info("🔇 Stopped music after booking error")
+                        except Exception as e:
+                            logger.warning(f"Failed to stop music after booking error: {e}")
+                        
                         return f"Trip has not been booked. Error: {error_message}"
 
         except Exception as e:
             logger.error(f"Booking API Server ERROR: {e}")
+            
+            # Stop music after server error
+            try:
+                await self.Stop_Music()
+                logger.info("🔇 Stopped music after server error")
+            except Exception as e2:
+                logger.warning(f"Failed to stop music after server error: {e2}")
+            
             return f"error in booking:{e}"
 
     @function_tool()
@@ -2713,6 +2784,11 @@ class Assistant(Agent):
         """
         logger.info("transfer_call_voice function called...")
         
+        # Step 0: Context generation is now handled cleanly by InitAssistant
+        logger.info(f"🔍 Starting transfer for call {self.call_sid}")
+        logger.info(f"   - InitAssistant will handle conversation context generation")
+        logger.info(f"   - Active conversations: {InitAssistant.get_active_calls()}")
+        
         # Step 1: Send complete booking payload with context to transfer API if available
         try:
             context_data = self.get_conversation_context()
@@ -2754,9 +2830,9 @@ class Assistant(Agent):
                         if 'tripInfo' in detail:
                             # Add context parameters to tripInfo (TRANSFER SCENARIOS ONLY)
                             detail['tripInfo']['ContextCallTitle'] = context_data.get('ContextCallTitle', '')
-                            # detail['tripInfo']['ContextCallSummary'] = context_data.get('ContextCallSummary', '')
-                            detail['tripInfo']['ContextCallSummary'] = "None"
-                            detail['tripInfo']['ContextCallDetail'] = context_data.get('JsonCallHistory', '')
+                            detail['tripInfo']['ContextCallSummary'] = context_data.get('ContextCallSummary', '')
+                            detail['tripInfo']['ContextCallDetail'] = context_data.get('ContextCallDetailJson', '')
+                            detail['tripInfo']['ContextCallDetailHtml'] = context_data.get('ContextCallDetailHtml', '')
                             logger.debug(f"Added context to {detail.get('StopType', 'unknown')} tripInfo in existing payload")
                 
                 # Log the complete transfer payload
@@ -2794,20 +2870,32 @@ class Assistant(Agent):
                                 detail['Name'] = rider_name
                     
                     # Add context information if available (TRANSFER ONLY)
-                    logger.debug(f"Transfer context check: context_data={context_data is not None}, has_values={any(context_data.values()) if context_data else False}")
+                    logger.info(f"🔍 Transfer context check for default payload:")
+                    logger.info(f"   - context_data exists: {context_data is not None}")
+                    logger.info(f"   - context_data type: {type(context_data)}")
+                    logger.info(f"   - context_data keys: {list(context_data.keys()) if context_data else 'None'}")
+                    logger.info(f"   - context_data has values: {any(context_data.values()) if context_data else False}")
+                    
                     if context_data and any(context_data.values()):
-                        logger.info("✅ Adding context information to transfer payload")
+                        logger.info("✅ Adding context information to default transfer payload")
+                        trips_updated = 0
                         for trip in default_payload.get('addressInfo', {}).get('Trips', []):
                             for detail in trip.get('Details', []):
                                 if 'tripInfo' in detail:
                                     # Add context parameters to tripInfo (TRANSFER SCENARIOS ONLY)
                                     detail['tripInfo']['ContextCallTitle'] = context_data.get('ContextCallTitle', '')
-                                    # detail['tripInfo']['ContextCallSummary'] = context_data.get('ContextCallSummary', '')
-                                    detail['tripInfo']['ContextCallSummary'] = "None"
-                                    detail['tripInfo']['ContextCallDetail'] = context_data.get('JsonCallHistory', '')
-                                    logger.debug(f"Added context to {detail.get('StopType', 'unknown')} tripInfo")
+                                    detail['tripInfo']['ContextCallSummary'] = context_data.get('ContextCallSummary', '')
+                                    detail['tripInfo']['ContextCallDetail'] = context_data.get('ContextCallDetailJson', '')
+                                    detail['tripInfo']['ContextCallDetailHtml'] = context_data.get('ContextCallDetailHtml', '')
+                                    trips_updated += 1
+                                    logger.info(f"   ✅ Added context to {detail.get('StopType', 'unknown')} tripInfo")
+                        logger.info(f"✅ Successfully added context to {trips_updated} trip details")
                     else:
-                        logger.warning("❌ No context data available for transfer payload")
+                        logger.warning("❌ No context data available for default transfer payload")
+                        if context_data:
+                            logger.warning(f"   - Context data exists but all values are empty: {context_data}")
+                        else:
+                            logger.warning("   - Context data is None or empty")
                     
                     # Log the updated default payload
                     complete_transfer_payload = default_payload
@@ -2828,16 +2916,15 @@ class Assistant(Agent):
             except Exception as e:
                 logger.warning(f"Warning: Could not save updated transfer payload to file: {e}")
             
-            # Send updated payload to transfer API
-            context_manager = ContextTransferManager(self.call_sid)
-            context_sent = await context_manager.send_context_to_api(complete_transfer_payload)
+            # Send updated payload to transfer API (clean approach)
+            context_sent = await self._send_context_to_transfer_api(complete_transfer_payload)
             if context_sent:
                 logger.info("✅ Updated booking payload with context sent to transfer API successfully")
             else:
                 logger.warning("⚠️ Failed to send updated booking payload to transfer API")
 
         except Exception as e:
-            logger.error(f"Error sending context to transfer API: {e}")
+            logger.error(f"⚠️ Error sending context to transfer API: {e}")
             # Continue with transfer even if context sending fails
         
         # Step 2: Perform the actual SIP transfer
