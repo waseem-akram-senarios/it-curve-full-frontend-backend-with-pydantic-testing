@@ -5,6 +5,7 @@ import uuid
 from bson.objectid import ObjectId
 from pathlib import Path
 from dotenv import load_dotenv
+from timezone_utils import now_eastern, format_eastern_timestamp, format_eastern_date, format_eastern_time_12h, parse_eastern_datetime
 from livekit import agents
 from livekit.agents import (
     AgentSession,
@@ -116,7 +117,7 @@ class PhoneNumberCollector:
         """Start collecting a phone number"""
         self.collecting_phone = True
         self.current_number = ""
-        self.collection_start_time = datetime.now()
+        self.collection_start_time = now_eastern()
         logger.info("Started phone number collection")
         
     def add_digit(self, digit: str):
@@ -329,7 +330,7 @@ async def entrypoint(ctx: agents.JobContext):
                     message_data = {
                     'speaker': 'Agent',
                     'transcription': event.item.text_content,
-                    'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    'timestamp': format_eastern_timestamp()
                     }
                     conversation_history.append(message_data)
                     # Also store in the Assistant instance for context generation
@@ -378,7 +379,7 @@ async def entrypoint(ctx: agents.JobContext):
                     user_message_data = {
                     'speaker': 'User',
                     'transcription': event.item.text_content,
-                    'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    'timestamp': format_eastern_timestamp(),
                     'universal_stt_validation': universal_validation
                     }
                     conversation_history.append(user_message_data)
@@ -464,11 +465,10 @@ async def entrypoint(ctx: agents.JobContext):
     
     # We'll re-enable audio input after APIs are fetched and personalized greeting is delivered
 
-    # Specify the US Eastern time zone
-    eastern = pytz.timezone('US/Eastern')
-    date_time = datetime.now(pytz.utc).astimezone(eastern)
-    today_date = date_time.strftime("%Y-%m-%d")
-    current_time = date_time.strftime("%I:%M %p")  # 12-hour format with AM/PM
+    # Get current Eastern time using timezone utilities
+    date_time = now_eastern()
+    today_date = format_eastern_date()
+    current_time = format_eastern_time_12h()
 
     try:
         # metadata = eval(participant.metadata)
@@ -478,7 +478,7 @@ async def entrypoint(ctx: agents.JobContext):
     except:
         pass
 
-    starting_time = date_time.strftime("%Y-%m-%d %H:%M:%S")
+    starting_time = format_eastern_timestamp()
 
     # all_riders_info = {}
     all_riders_info = {"number_of_riders":0}
@@ -1140,13 +1140,9 @@ async def entrypoint(ctx: agents.JobContext):
         logger.info(f"  Total tokens: {agent_input_tokens + supervisor_input_tokens + websearch_input_tokens} input, "
                    f"{agent_output_tokens + supervisor_output_tokens + websearch_output_tokens} output")
 
-        # Specify the US Eastern time zone
-        eastern = pytz.timezone('US/Eastern')
-        end_date_time = datetime.now(pytz.utc).astimezone(eastern)
-
-        fmt = "%Y-%m-%d %H:%M:%S"
-        ending_time = end_date_time.strftime("%Y-%m-%d %H:%M:%S")
-        elapsed_time = (datetime.strptime(ending_time, fmt) - datetime.strptime(starting_time, fmt)).total_seconds()
+        # Get ending time in Eastern timezone
+        ending_time = format_eastern_timestamp()
+        elapsed_time = (parse_eastern_datetime(ending_time) - parse_eastern_datetime(starting_time)).total_seconds()
         
         # Legacy cost calculations removed - now using comprehensive cost tracker
 
@@ -1182,8 +1178,8 @@ async def entrypoint(ctx: agents.JobContext):
             "call_sid_new": call_sid,
             "x_call_id": x_call_id,  # SIP X-Call-ID for correlation with external systems
             "recording_path": generate_reording_path(x_call_id, phone_number, recipient) if x_call_id else None,
-            "start_time": datetime.strptime(starting_time, "%Y-%m-%d %H:%M:%S"),
-            "end_time": datetime.strptime(ending_time, "%Y-%m-%d %H:%M:%S"),
+            "start_time": parse_eastern_datetime(starting_time),
+            "end_time": parse_eastern_datetime(ending_time),
             "duration_seconds": elapsed_time,
             "tokens": {
                 "agent": {
@@ -1228,7 +1224,7 @@ async def entrypoint(ctx: agents.JobContext):
                 "detailed_breakdown": cost_summary
             },
             "conversation_history": formatted_history,
-            "createdAt": datetime.now()
+            "createdAt": now_eastern()
         }
         logger.info(f"📊 Preparing to insert MongoDB document for call: {call_sid}")
         logger.debug(f"MongoDB Document: {mongo_doc}")
@@ -1311,7 +1307,7 @@ async def entrypoint(ctx: agents.JobContext):
         
         # Log call end and cleanup call-specific logs
         try:
-            duration = datetime.now() - datetime.strptime(starting_time, '%Y-%m-%d %H:%M:%S')
+            duration = now_eastern() - parse_eastern_datetime(starting_time)
             logger.info(f"📞 CALL ENDED - Total duration: {duration}")
             logger.info(f"📞 Final cleanup completed")
             cleanup_call_logs(call_sid)

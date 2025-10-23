@@ -11,6 +11,7 @@ from datetime import datetime
 import json
 import requests
 from typing import Annotated
+from timezone_utils import now_eastern, format_eastern_timestamp, format_eastern_datetime_iso
 import aiohttp
 from aiohttp import BasicAuth
 from openai import AsyncOpenAI
@@ -260,7 +261,7 @@ class Assistant(Agent):
             call_history = {
                 "call_metadata": {
                     "call_id": getattr(self, 'call_sid', 'unknown'),
-                    "generated_at": datetime.now().isoformat(),
+                    "generated_at": format_eastern_datetime_iso(),
                     "total_messages": len(formatted_history),
                     "participants": ["agent", "customer"]
                 },
@@ -1908,7 +1909,7 @@ class Assistant(Agent):
         pickup_phone_number = payload.pickup_phone_number
         dropoff_remarks = payload.dropoff_remarks
         dropoff_phone_number = payload.dropoff_phone_number
-        logger.info(f"Called collect_trip_payload function at: {datetime.now()}")
+        logger.info(f"Called collect_trip_payload function at: {now_eastern()}")
         phone_number = self.rider_phone
         family_id = self.family_id
 
@@ -2248,7 +2249,7 @@ class Assistant(Agent):
         pickup_phone_number = payload.pickup_phone_number
         dropoff_remarks = payload.dropoff_remarks
         dropoff_phone_number = payload.dropoff_phone_number
-        logger.info(f"Called collect_return_trip_payload function at: {datetime.now()}")
+        logger.info(f"Called collect_return_trip_payload function at: {now_eastern()}")
         # Start playing music asynchronously
         # _ = asyncio.create_task(self.Play_Music())
         # await asyncio.sleep(2)
@@ -2884,6 +2885,6 @@ class Assistant(Agent):
             str: Current date and time in 'YYYY-MM-DD HH:MM' format 
                 (e.g., '2025-10-03 19:00').
         """
-        logger.info("get_current_date_and_time function called...")
-        return datetime.now().strftime('%Y-%m-%d %H:%M')
+        logger.info("get_current_date_and_time eastern function called...")
+        return format_eastern_timestamp(format_str='%Y-%m-%d %H:%M')
 

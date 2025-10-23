@@ -7,6 +7,7 @@ import aiohttp
 from datetime import datetime
 from typing import List, Dict, Optional, Tuple
 from logging_config import get_logger
+from timezone_utils import now_eastern, format_eastern_datetime_iso
 
 logger = get_logger('context_manager')
 
@@ -16,7 +17,7 @@ class ConversationTracker:
     def __init__(self, call_sid: str):
         self.call_sid = call_sid
         self.conversation_history: List[Dict] = []
-        self.start_time = datetime.now()
+        self.start_time = now_eastern()
         
     def add_message(self, role: str, content: str, timestamp: Optional[datetime] = None):
         """
@@ -28,12 +29,12 @@ class ConversationTracker:
             timestamp: Optional timestamp, defaults to now
         """
         if timestamp is None:
-            timestamp = datetime.now()
+            timestamp = now_eastern()
             
         message = {
             'role': role,
             'content': content,
-            'timestamp': timestamp.isoformat()
+            'timestamp': format_eastern_datetime_iso(timestamp)
         }
         
         self.conversation_history.append(message)
@@ -41,7 +42,7 @@ class ConversationTracker:
         
     def get_conversation_duration(self) -> str:
         """Get the duration of the conversation"""
-        duration = datetime.now() - self.start_time
+        duration = now_eastern() - self.start_time
         minutes = int(duration.total_seconds() // 60)
         seconds = int(duration.total_seconds() % 60)
         return f"{minutes}m {seconds}s"

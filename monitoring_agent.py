@@ -4,6 +4,7 @@ from datetime import datetime
 import os
 from dotenv import load_dotenv
 from openai import AsyncOpenAI
+from timezone_utils import now_eastern
 from pydantic import BaseModel, Field
 from logging_config import get_logger
 
@@ -57,7 +58,7 @@ class MonitoringAgent:
         item = ConversationItem(
             speaker=speaker,
             text=text,
-            timestamp=datetime.now()
+            timestamp=now_eastern()
         )
         self.conversation_history.append(item)
         logger.debug(f"Added conversation item: {speaker} said: {text}")

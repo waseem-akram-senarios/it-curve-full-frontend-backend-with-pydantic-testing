@@ -16,6 +16,16 @@ from datetime import datetime
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+# Import timezone utilities
+try:
+    from timezone_utils import now_eastern, format_eastern_timestamp
+except ImportError:
+    # Fallback if timezone_utils not available
+    def now_eastern():
+        return datetime.now()
+    def format_eastern_timestamp():
+        return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
 # Configuration
 RECORDINGS_BASE_PATH = "/mnt"
 SERVER_HOST = "0.0.0.0"

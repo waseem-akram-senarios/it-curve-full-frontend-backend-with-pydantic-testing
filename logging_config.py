@@ -10,6 +10,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 import threading
+from timezone_utils import now_eastern, format_file_timestamp
 
 # Thread-local storage for session context
 _local = threading.local()
@@ -65,7 +66,7 @@ class CallSpecificHandler(logging.Handler):
             
         # Create or get handler for this call
         if call_sid not in self.call_handlers:
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            timestamp = format_file_timestamp()
             
             # Try to get X-Call-ID for better file naming
             x_call_id = getattr(record, 'x_call_id', None)
@@ -80,7 +81,7 @@ class CallSpecificHandler(logging.Handler):
             handler.setFormatter(self.formatter)
             
             self.call_handlers[call_sid] = handler
-            self.call_start_times[call_sid] = datetime.now()
+            self.call_start_times[call_sid] = now_eastern()
             
             # Log call start
             start_record = logging.LogRecord(
@@ -88,7 +89,7 @@ class CallSpecificHandler(logging.Handler):
                 level=logging.INFO,
                 pathname='',
                 lineno=0,
-                msg=f"=== Call {call_sid} started at {datetime.now()} ===",
+                msg=f"=== Call {call_sid} started at {now_eastern()} ===",
                 args=(),
                 exc_info=None
             )
@@ -116,8 +117,8 @@ class CallSpecificHandler(logging.Handler):
             handler = self.call_handlers[call_sid]
             
             # Calculate call duration
-            start_time = self.call_start_times.get(call_sid, datetime.now())
-            duration = datetime.now() - start_time
+            start_time = self.call_start_times.get(call_sid, now_eastern())
+            duration = now_eastern() - start_time
             
             # Log call end
             end_record = logging.LogRecord(
@@ -125,7 +126,7 @@ class CallSpecificHandler(logging.Handler):
                 level=logging.INFO,
                 pathname='',
                 lineno=0,
-                msg=f"=== Call {call_sid} ended at {datetime.now()} (Duration: {duration}) ===",
+                msg=f"=== Call {call_sid} ended at {now_eastern()} (Duration: {duration}) ===",
                 args=(),
                 exc_info=None
             )
