@@ -995,9 +995,6 @@ async def entrypoint(ctx: agents.JobContext):
     @ctx.room.on("disconnected")
     def on_room_disconnected():
         logger.info(f"[ROOM DISCONNECT] Room {ctx.room.name} disconnected for call {call_sid}")
-        # Clean up conversation history when call ends
-        InitAssistant.clear_conversation(call_sid)
-        logger.info(f" Cleaned up conversation history for call {call_sid}")
         logger.info(f"[ROOM DISCONNECT] Disconnect reason: Connection lost or terminated")
         
         # Clean up background audio to prevent generator issues
@@ -1306,6 +1303,9 @@ async def entrypoint(ctx: agents.JobContext):
         cleanup_call_tracker(call_sid)
         logger.info(f"Cleaned up cost tracker for call: {call_sid}")
         
+        # Clean up conversation history AFTER MongoDB document is created
+        InitAssistant.clear_conversation(call_sid)
+        logger.info(f"🧹 Cleaned up conversation history for call {call_sid}")
         
         # Log call end and cleanup call-specific logs
         try:

@@ -601,11 +601,11 @@ class Assistant(Agent):
                     # If profile name doesn't match any existing profile, return error only
                     if not name_exists:
                         self.client_id = -1
-                        logger.info(f"Client ID {self.client_id}")
+                        logger.info(f"Client ID: {self.client_id}")
                         if self.client_id not in [ "0", "None", "none"]:
                             logger.info(f"✅ Client ID set to: {self.client_id}")
                         else:            
-                            logger.warning(f"❌ Client ID not available (received: {client_id}) - self.client_id will be None")
+                            logger.warning(f"❌ Client ID not available (received: {self.client_id}) - self.client_id will be None")
                         return """That profile does not exist in our system. However, if you want to create a new profile you have to book a trip with us first."""
                 
                 # Check if the requested profile number exists
@@ -2832,7 +2832,7 @@ class Assistant(Agent):
                             detail['tripInfo']['ContextCallTitle'] = context_data.get('ContextCallTitle', '')
                             detail['tripInfo']['ContextCallSummary'] = context_data.get('ContextCallSummary', '')
                             detail['tripInfo']['ContextCallDetail'] = context_data.get('ContextCallDetailJson', '')
-                            detail['tripInfo']['ContextCallDetailHtml'] = context_data.get('ContextCallDetailHtml', '')
+                            # detail['tripInfo']['ContextCallDetailHtml'] = context_data.get('ContextCallDetailHtml', '')
                             logger.debug(f"Added context to {detail.get('StopType', 'unknown')} tripInfo in existing payload")
                 
                 # Log the complete transfer payload
@@ -2886,7 +2886,7 @@ class Assistant(Agent):
                                     detail['tripInfo']['ContextCallTitle'] = context_data.get('ContextCallTitle', '')
                                     detail['tripInfo']['ContextCallSummary'] = context_data.get('ContextCallSummary', '')
                                     detail['tripInfo']['ContextCallDetail'] = context_data.get('ContextCallDetailJson', '')
-                                    detail['tripInfo']['ContextCallDetailHtml'] = context_data.get('ContextCallDetailHtml', '')
+                                    # detail['tripInfo']['ContextCallDetailHtml'] = context_data.get('ContextCallDetailHtml', '')
                                     trips_updated += 1
                                     logger.info(f"   ✅ Added context to {detail.get('StopType', 'unknown')} tripInfo")
                         logger.info(f"✅ Successfully added context to {trips_updated} trip details")

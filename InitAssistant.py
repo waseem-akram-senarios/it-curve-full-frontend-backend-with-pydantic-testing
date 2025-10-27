@@ -104,7 +104,7 @@ class InitAssistant:
                 'ContextCallTitle': 'Generated title',
                 'ContextCallSummary': 'Generated summary', 
                 'ContextCallDetailHtml': 'HTML conversation history',
-                'ContextCallDetailJson': 'JSON conversation history'
+                'ContextCallDetailJson': 'Stringified JSON conversation history'
             }
         """
         logger.info(f"🔄 Generating transfer context for call {call_sid}")
@@ -293,7 +293,7 @@ class InitAssistant:
                     json_data["statistics"]["customer_message_count"] += 1
                     json_data["statistics"]["total_customer_characters"] += len(content)
             
-            return json_data
+            return json.dumps(json_data)
             
         except Exception as e:
             logger.error(f"Error generating JSON history: {e}")
