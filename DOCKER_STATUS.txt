@@ -1,0 +1,59 @@
+╔══════════════════════════════════════════════════════════════╗
+║          🐳 DOCKER SERVICES STATUS                           ║
+╚══════════════════════════════════════════════════════════════╝
+
+✅ YOUR SERVICES ARE RUNNING!
+
+Backend Status:  ✅ Running (registered with LiveKit)
+Frontend Status: ✅ Running (with warnings)
+
+═══════════════════════════════════════════════════════════════
+
+🌐 ACCESS YOUR SERVICES:
+───────────────────────────────────────────────────────────────
+Frontend: http://localhost:3000
+Backend:  http://localhost:11000
+
+═══════════════════════════════════════════════════════════════
+
+⚠️  CURRENT ISSUES:
+───────────────────────────────────────────────────────────────
+1. Frontend: Missing 'sharp' package for image optimization
+2. Backend: Missing turn-detector model (but working)
+
+═══════════════════════════════════════════════════════════════
+
+📊 TO WORK WITH DOCKER:
+───────────────────────────────────────────────────────────────
+
+# View status
+newgrp docker << 'EOF'
+docker compose ps
+EOF
+
+# View logs
+newgrp docker << 'EOF'
+docker compose logs -f
+EOF
+
+# Or use sudo
+sudo docker compose ps
+sudo docker compose logs -f
+
+═══════════════════════════════════════════════════════════════
+
+🔧 QUICK COMMANDS:
+───────────────────────────────────────────────────────────────
+
+Start:   newgrp docker << 'EOF' && cd /home/senarios/VoiceAgent8.1 && docker compose up -d && EOF
+Logs:    newgrp docker << 'EOF' && docker compose logs -f && EOF
+Stop:    newgrp docker << 'EOF' && docker compose down && EOF
+Rebuild: newgrp docker << 'EOF' && docker compose up -d --build && EOF
+
+═══════════════════════════════════════════════════════════════
+
+📝 FULL GUIDE:
+───────────────────────────────────────────────────────────────
+See HOW_TO_USE_DOCKER.md for complete instructions
+
+═══════════════════════════════════════════════════════════════

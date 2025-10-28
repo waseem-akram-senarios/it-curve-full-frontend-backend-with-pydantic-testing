@@ -1,0 +1,103 @@
+╔══════════════════════════════════════════════════════════════╗
+║           DOCKER COMPOSE - QUICK REFERENCE                   ║
+╚══════════════════════════════════════════════════════════════╝
+
+🚀 STARTING SERVICES
+─────────────────────────────────────────────────────────────
+docker-compose up -d              Start both services
+docker-compose up                 Start and show logs
+make up                           Start (using Makefile)
+
+
+⏹️  STOPPING SERVICES
+─────────────────────────────────────────────────────────────
+docker-compose down                Stop and remove containers
+docker-compose stop                Stop without removing
+make down                          Stop (using Makefile)
+
+
+📊 VIEWING LOGS
+─────────────────────────────────────────────────────────────
+docker-compose logs -f             Follow all logs
+docker-compose logs -f backend     Backend logs only
+docker-compose logs -f frontend    Frontend logs only
+make logs                          Logs (using Makefile)
+
+
+🔍 STATUS & INFO
+─────────────────────────────────────────────────────────────
+docker-compose ps                  Show running containers
+docker-compose ps -a               Show all (including stopped)
+docker-compose top                 Show process list
+make ps                            Status (using Makefile)
+
+
+🔄 RESTART
+─────────────────────────────────────────────────────────────
+docker-compose restart             Restart both services
+docker-compose restart backend     Restart backend only
+make restart                       Restart (using Makefile)
+
+
+🏗️  BUILDING
+─────────────────────────────────────────────────────────────
+docker-compose build               Build all images
+docker-compose build --no-cache    Clean build
+docker-compose build backend        Build backend only
+make build                         Build (using Makefile)
+
+
+🚀 BUILD + START
+─────────────────────────────────────────────────────────────
+docker-compose up -d --build       Build and start
+make rebuild                       Rebuild and restart
+
+
+💻 CONTAINER SHELL
+─────────────────────────────────────────────────────────────
+docker-compose exec backend bash   Backend shell
+docker-compose exec frontend sh    Frontend shell
+make shell-backend                 Backend shell (Makefile)
+make shell-frontend                Frontend shell (Makefile)
+
+
+🧹 CLEANUP
+─────────────────────────────────────────────────────────────
+docker-compose down -v              Stop and remove volumes
+docker-compose rm                  Remove stopped containers
+make clean                         Clean (using Makefile)
+
+
+🔧 USEFUL COMMANDS
+─────────────────────────────────────────────────────────────
+docker-compose config               Validate configuration
+docker-compose pull                 Pull images
+docker stats                        Show resource usage
+docker-compose top                  Show processes
+
+
+📝 ENVIRONMENT
+─────────────────────────────────────────────────────────────
+Backend .env:   IT_Curves_Bot/.env
+Frontend .env:  ncs_pvt-virtual-agent-frontend-2c4b49def913/.env.local
+
+
+🌐 PORTS
+─────────────────────────────────────────────────────────────
+Backend:   http://localhost:11000
+Frontend:  http://localhost:3000
+
+
+📚 DOCUMENTATION
+─────────────────────────────────────────────────────────────
+README_DOCKER_COMPOSE.md     Complete commands guide (this file)
+DOCKER_SETUP.md              Detailed setup guide
+DOCKER_USAGE.md              Usage patterns
+DOCKER_QUICKSTART.md         Quick start guide
+README_DOCKER.md              Overview
+
+
+╔══════════════════════════════════════════════════════════════╗
+║      For detailed information, see README_DOCKER_COMPOSE.md   ║
+╚══════════════════════════════════════════════════════════════╝
+

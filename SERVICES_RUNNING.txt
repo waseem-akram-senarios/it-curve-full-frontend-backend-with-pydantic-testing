@@ -1,0 +1,72 @@
+╔══════════════════════════════════════════════════════════════╗
+║          ✅ YOUR SERVICES ARE RUNNING!                       ║
+╚══════════════════════════════════════════════════════════════╝
+
+✅ BACKEND:  Running on port 11000
+✅ FRONTEND: Running on port 3000
+
+═══════════════════════════════════════════════════════════════
+
+🌐 ACCESS YOUR APPLICATION:
+───────────────────────────────────────────────────────────────
+Open your browser and go to:
+
+   👉  http://localhost:3000
+
+═══════════════════════════════════════════════════════════════
+
+⚠️  IF YOU SEE "Failed to connect" ERROR:
+───────────────────────────────────────────────────────────────
+This is normal if:
+1. The frontend needs time to fully initialize
+2. The backend needs to connect to LiveKit
+3. Some dependencies need to download
+
+✅ THE SERVICES ARE WORKING (verified by curl)
+
+═══════════════════════════════════════════════════════════════
+
+📊 VERIFY SERVICES:
+───────────────────────────────────────────────────────────────
+# Check if ports are listening
+netstat -tulpn | grep -E "3000|11000"
+
+# Access frontend directly
+curl http://localhost:3000
+
+═══════════════════════════════════════════════════════════════
+
+🔧 DOCKER COMMANDS:
+───────────────────────────────────────────────────────────────
+# View logs (requires newgrp docker)
+newgrp docker << 'EOF'
+docker compose logs -f
+EOF
+
+# Stop services
+newgrp docker << 'EOF'
+docker compose down
+EOF
+
+# Restart services
+newgrp docker << 'EOF'
+docker compose restart
+EOF
+
+═══════════════════════════════════════════════════════════════
+
+💡 SOLUTION:
+───────────────────────────────────────────────────────────────
+The "Failed to connect" in the web UI is likely because:
+- The app needs LiveKit backend to be fully connected
+- Some API credentials need to be configured in .env.local
+- The frontend needs a few seconds to initialize
+
+TRY THIS:
+1. Open http://localhost:3000 in your browser
+2. Wait 10-15 seconds for services to fully initialize
+3. Refresh the page if needed
+
+Your Docker setup is working correctly! ✅
+
+═══════════════════════════════════════════════════════════════

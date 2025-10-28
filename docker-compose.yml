@@ -1,0 +1,59 @@
+services:
+  # Backend Voice Agent Service
+  backend:
+    build:
+      context: ./IT_Curves_Bot
+      dockerfile: Dockerfile
+    container_name: voice-agent-backend
+    ports:
+      - "11000:11000"
+    env_file:
+      - ./IT_Curves_Bot/.env
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./IT_Curves_Bot/logs:/app/logs
+      - ./IT_Curves_Bot/cache:/app/cache
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - voice-agent-network
+
+  # Frontend Next.js Service
+  frontend:
+    build:
+      context: ./ncs_pvt-virtual-agent-frontend-2c4b49def913
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_LIVEKIT_URL=${NEXT_PUBLIC_LIVEKIT_URL:-wss://voiceagesnt-i9430gnx.livekit.cloud}
+        - NEXT_PUBLIC_DID_API_KEY=${NEXT_PUBLIC_DID_API_KEY:-aW5mb0BpdGN1cnZlcy5uZXQ:c88fS7UTHKIbU_Fwun9Bf}
+    container_name: voice-agent-frontend
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./IT_Curves_Bot/.env
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - LIVEKIT_API_KEY=APIB49ufGF6Tdru
+      - LIVEKIT_API_SECRET=NgVSTE2OcnH6XyJ03xh29FmGV0eNWNjU113Chm2yKZc
+    depends_on:
+      backend:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - voice-agent-network
+
+networks:
+  voice-agent-network:
+    driver: bridge
+
+# Optional: Add volumes for persistent data
+volumes:
+  backend-logs:
+  backend-cache:

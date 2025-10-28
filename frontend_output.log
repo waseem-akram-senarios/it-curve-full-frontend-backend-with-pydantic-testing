@@ -1,0 +1,46 @@
+
+> agents-playground@0.1.0 dev
+> next dev
+
+  ▲ Next.js 14.2.21
+  - Local:        http://localhost:3000
+  - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 3.4s
+ ○ Compiling / ...
+ ✓ Compiled / in 1669ms (331 modules)
+ GET / 200 in 1602ms
+ ⚠ The "images.domains" configuration is deprecated. Please use "images.remotePatterns" configuration instead.
+ GET / 200 in 37ms
+ ✓ Compiled /api/token in 312ms (101 modules)
+ GET /api/token?roomName=both-21-1-BARWOOD+%26+REGENCY+TAXI-1Xikc&participantName=BARWOOD+%26+REGENCY+TAXI&metadata=%7B%22phoneNo%22%3A%22%22%2C%22clientID%22%3A%22%22%2C%22userID%22%3A%22%22%2C%22affiliateId%22%3A%2221%22%2C%22familyId%22%3A%221%22%2C%22affiliateName%22%3A%22BARWOOD+%26+REGENCY+TAXI%22%7D 200 in 588ms
+ GET /api/token?roomName=both-21-1-BARWOOD+%26+REGENCY+TAXI-0z3wC&participantName=BARWOOD+%26+REGENCY+TAXI&metadata=%7B%22phoneNo%22%3A%22%22%2C%22clientID%22%3A%22%22%2C%22userID%22%3A%22%22%2C%22affiliateId%22%3A%2221%22%2C%22familyId%22%3A%221%22%2C%22affiliateName%22%3A%22BARWOOD+%26+REGENCY+TAXI%22%7D 200 in 21ms
+ ⚠ Found a change in next.config.js. Restarting the server to apply the changes...
+  ▲ Next.js 14.2.21
+  - Local:        http://localhost:3000
+  - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 5.4s
+ ○ Compiling / ...
+ ✓ Compiled / in 19.9s (333 modules)
+ GET /_next/static/webpack/50eef7a5480831ea.webpack.hot-update.json 404 in 20146ms
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ GET / 200 in 20239ms
+ GET / 200 in 149ms
+ ⚠ The "images.domains" configuration is deprecated. Please use "images.remotePatterns" configuration instead.
+ ⚠ Found a change in next.config.js. Restarting the server to apply the changes...
+  ▲ Next.js 14.2.21
+  - Local:        http://localhost:3000
+  - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 2.9s
+ ○ Compiling / ...
+ ✓ Compiled / in 4.9s (333 modules)
+ GET /_next/static/webpack/8648cbd41ade36d6.webpack.hot-update.json 404 in 5281ms
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ GET / 200 in 5366ms
+ GET / 200 in 102ms
+ ⚠ The "images.domains" configuration is deprecated. Please use "images.remotePatterns" configuration instead.

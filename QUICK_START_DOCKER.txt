@@ -1,0 +1,66 @@
+╔══════════════════════════════════════════════════════════════╗
+║              DOCKER COMPOSE - QUICK START                    ║
+╚══════════════════════════════════════════════════════════════╝
+
+⚠️  IMPORTANT: Use "docker compose" (space) not "docker-compose" (hyphen)
+
+═══════════════════════════════════════════════════════════════
+
+🔧 FIX PERMISSIONS FIRST
+───────────────────────────────────────────────────────────────
+sudo usermod -aG docker $USER
+newgrp docker
+
+# OR use sudo
+sudo docker compose up -d
+
+═══════════════════════════════════════════════════════════════
+
+🚀 START SERVICES
+───────────────────────────────────────────────────────────────
+docker compose up -d
+
+# Or with sudo
+sudo docker compose up -d
+
+═══════════════════════════════════════════════════════════════
+
+📊 VIEW LOGS
+───────────────────────────────────────────────────────────────
+docker compose logs -f
+
+# Specific service
+docker compose logs -f backend
+docker compose logs -f frontend
+
+═══════════════════════════════════════════════════════════════
+
+🛑 STOP SERVICES
+───────────────────────────────────────────────────────────────
+docker compose down
+
+# Remove volumes too
+docker compose down -v
+
+═══════════════════════════════════════════════════════════════
+
+🔄 REBUILD AFTER CODE CHANGES
+───────────────────────────────────────────────────────────────
+docker compose up -d --build
+
+═══════════════════════════════════════════════════════════════
+
+🌐 ACCESS SERVICES
+───────────────────────────────────────────────────────────────
+Frontend: http://localhost:3000
+Backend:  http://localhost:11000
+
+═══════════════════════════════════════════════════════════════
+
+📝 MORE INFO
+───────────────────────────────────────────────────────────────
+See FIX_DOCKER_PERMISSIONS.md for permission issues
+See README_DOCKER_COMPOSE.md for complete command reference
+
+═══════════════════════════════════════════════════════════════
+
