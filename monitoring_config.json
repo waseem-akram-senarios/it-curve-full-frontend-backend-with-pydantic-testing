@@ -1,0 +1,7 @@
+{
+    "confusion_threshold": 0.7,
+    "monitoring_interval_seconds": 10,
+    "analysis_window_size": 4,
+    "auto_transfer_threshold": 0.85,
+    "enabled": true
+}

@@ -4,6 +4,7 @@ import {
   useChat,
   useLocalParticipant,
   useTrackTranscription,
+  useConnectionState,
 } from "@livekit/components-react";
 import {
   LocalParticipant,
@@ -24,6 +25,7 @@ export function TranscriptionTile({
 }) {
   const agentMessages = useTrackTranscription(agentAudioTrack || undefined);
   const localParticipant = useLocalParticipant();
+  const connectionState = useConnectionState();
   const localMessages = useTrackTranscription({
     publication: localParticipant.microphoneTrack,
     source: Track.Source.Microphone,
@@ -47,13 +49,31 @@ export function TranscriptionTile({
   // Custom send function to track user messages
   const handleSend = async (message: string) => {
     console.log("User sent message, setting thinking state");
+    
+    // Check if we're connected before attempting to send
+    if (connectionState !== 'connected') {
+      console.warn("Cannot send message: not connected to room");
+      // Return a rejected promise instead of throwing to handle gracefully
+      return Promise.reject(new Error("Not connected to room. Please connect first."));
+    }
+    
     const currentTime = Date.now();
     setLastUserMessageTime(currentTime);
     lastUserMessageRef.current = currentTime;
     setShowThinking(true);
     isWaitingForResponse.current = true;
     setHasAgentResponded(false);
-    return sendChat(message);
+    
+    try {
+      return await sendChat(message);
+    } catch (error) {
+      console.error("Error sending chat message:", error);
+      // Reset thinking state on error
+      setShowThinking(false);
+      isWaitingForResponse.current = false;
+      setHasAgentResponded(true);
+      throw error;
+    }
   };
 
   // Process update rate based on typing speed
@@ -192,6 +212,7 @@ export function TranscriptionTile({
       onSend={handleSend}
       showThinking={showThinking && isWaitingForResponse.current}
       agentIsTyping={agentIsTyping}
+      isConnected={connectionState === 'connected'}
     />
   );
 }

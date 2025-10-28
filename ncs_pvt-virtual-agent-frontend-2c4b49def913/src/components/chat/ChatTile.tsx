@@ -20,6 +20,7 @@ type ChatTileProps = {
   onSend?: (message: string) => Promise<ComponentsChatMessage>;
   showThinking?: boolean;
   agentIsTyping?: boolean;
+  isConnected?: boolean;
 };
 
 export const ChatTile = ({ 
@@ -27,7 +28,8 @@ export const ChatTile = ({
   accentColor, 
   onSend,
   showThinking = false,
-  agentIsTyping = false
+  agentIsTyping = false,
+  isConnected = false
 }: ChatTileProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [lastSentTime, setLastSentTime] = useState(0);
@@ -54,8 +56,14 @@ export const ChatTile = ({
     setLastSentTime(currentTime);
     console.log("Message sent, timestamp:", currentTime);
     
-    // Send the message to LiveKit
-    return onSend(message);
+    try {
+      // Send the message to LiveKit
+      return await onSend(message);
+    } catch (error) {
+      console.error("Error in ChatTile handleSend:", error);
+      // Don't re-throw the error, let the UI handle it gracefully
+      return null;
+    }
   };
 
   // Check if we should show the thinking indicator
@@ -86,9 +94,8 @@ export const ChatTile = ({
   // Determine whether to show the thinking indicator
   const displayThinking = shouldShowThinking();
 
-  // Determine if we should disable the input - ONLY disable if agent is actively typing
-  // Not when just showing the thinking indicator
-  const isInputDisabled = agentIsTyping;
+  // Determine if we should disable the input - disable if agent is actively typing OR not connected
+  const isInputDisabled = agentIsTyping || !isConnected;
 
   // Log thinking state and input disabled state for debugging
   useEffect(() => {
@@ -147,7 +154,7 @@ export const ChatTile = ({
         onSend={handleSend}
         inputTextColor={typeof window !== 'undefined' && window.location.pathname === '/bot-chat-page' ? 'white' : undefined}
         disabled={isInputDisabled}
-        disabledText="Please wait while the agent is typing..."
+        disabledText={!isConnected ? "Please connect first to start chatting..." : "Please wait while the agent is typing..."}
       />
     </div>
   );

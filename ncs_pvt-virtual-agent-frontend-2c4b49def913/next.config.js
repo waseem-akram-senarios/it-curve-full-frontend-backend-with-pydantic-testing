@@ -4,6 +4,7 @@ const withNextPluginPreval = createNextPluginPreval();
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: false,
+  output: 'standalone', // Enable standalone output for Docker
   images: {
     domains: [
       'd-id.com',

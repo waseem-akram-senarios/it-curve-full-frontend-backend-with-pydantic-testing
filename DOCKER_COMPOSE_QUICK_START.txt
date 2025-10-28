@@ -1,0 +1,95 @@
+╔══════════════════════════════════════════════════════════════╗
+║        DOCKER COMPOSE - QUICK START GUIDE                   ║
+╚══════════════════════════════════════════════════════════════╝
+
+🚀 START YOUR SERVICES
+───────────────────────────────────────────────────────────────
+./RUN_DOCKER_COMPOSE.sh start
+
+This will:
+✅ Build the Docker images (if needed)
+✅ Start backend on port 11000
+✅ Start frontend on port 3000
+
+═══════════════════════════════════════════════════════════════
+
+📊 VIEW STATUS
+───────────────────────────────────────────────────────────────
+./RUN_DOCKER_COMPOSE.sh status
+
+Shows:
+- Which containers are running
+- Port mappings
+- Health status
+
+═══════════════════════════════════════════════════════════════
+
+📋 VIEW LOGS
+───────────────────────────────────────────────────────────────
+./RUN_DOCKER_COMPOSE.sh logs
+
+Shows logs from both services in real-time
+Press Ctrl+C to exit
+
+═══════════════════════════════════════════════════════════════
+
+🛑 STOP SERVICES
+───────────────────────────────────────────────────────────────
+./RUN_DOCKER_COMPOSE.sh stop
+
+═══════════════════════════════════════════════════════════════
+
+🔄 RESTART SERVICES
+───────────────────────────────────────────────────────────────
+./RUN_DOCKER_COMPOSE.sh restart
+
+═══════════════════════════════════════════════════════════════
+
+🏗️  REBUILD AFTER CODE CHANGES
+───────────────────────────────────────────────────────────────
+./RUN_DOCKER_COMPOSE.sh rebuild
+
+Rebuilds images and restarts containers
+
+═══════════════════════════════════════════════════════════════
+
+🌐 ACCESS YOUR SERVICES
+───────────────────────────────────────────────────────────────
+Frontend: http://localhost:3000
+Backend:  http://localhost:11000
+
+═══════════════════════════════════════════════════════════════
+
+⚡ ALL COMMANDS
+───────────────────────────────────────────────────────────────
+./RUN_DOCKER_COMPOSE.sh start    # Start services
+./RUN_DOCKER_COMPOSE.sh stop     # Stop services
+./RUN_DOCKER_COMPOSE.sh restart  # Restart services
+./RUN_DOCKER_COMPOSE.sh logs     # View logs
+./RUN_DOCKER_COMPOSE.sh status   # Check status
+./RUN_DOCKER_COMPOSE.sh rebuild  # Rebuild and start
+
+═══════════════════════════════════════════════════════════════
+
+🔧 MANUAL DOCKER COMPOSE COMMANDS
+───────────────────────────────────────────────────────────────
+# You can also use docker compose directly:
+newgrp docker << 'EOF'
+docker compose up -d
+docker compose down
+docker compose logs -f
+docker compose ps
+EOF
+
+# Or with sudo if you prefer:
+sudo docker compose up -d
+sudo docker compose logs -f
+
+═══════════════════════════════════════════════════════════════
+
+✅ CURRENT STATUS:
+───────────────────────────────────────────────────────────────
+Your services are already running! 
+Check with: ./RUN_DOCKER_COMPOSE.sh status
+
+═══════════════════════════════════════════════════════════════

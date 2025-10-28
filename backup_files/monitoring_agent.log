@@ -1,0 +1,241 @@
+2025-09-04 16:34:59,544 - asyncio - DEBUG - Using selector: EpollSelector
+2025-09-04 16:34:59,545 - livekit.agents - DEV - Watching /home/rtx/Desktop/IT Curves/IT_Curves_Bot
+2025-09-04 16:35:01,052 - asyncio - DEBUG - Using selector: EpollSelector
+2025-09-04 16:35:01,057 - livekit.agents - INFO - starting worker
+2025-09-04 16:35:01,057 - livekit.agents - INFO - preloading plugins
+2025-09-04 16:35:01,059 - livekit.agents - INFO - starting inference executor
+2025-09-04 16:35:02,217 - livekit.agents - INFO - initializing process
+2025-09-04 16:35:02,570 - livekit.agents - DEBUG - initializing inference runner
+2025-09-04 16:35:02,570 - livekit.agents - DEBUG - initializing inference runner
+2025-09-04 16:35:03,625 - livekit.agents - DEBUG - inference runner initialized
+2025-09-04 16:35:03,626 - livekit.agents - INFO - process initialized
+2025-09-04 16:35:03,625 - asyncio - DEBUG - Using selector: EpollSelector
+2025-09-04 16:35:03,625 - livekit.agents - DEBUG - inference runner initialized
+2025-09-04 16:35:03,628 - livekit.agents - INFO - [1msee tracing information at http://localhost:11000/debug[0m
+2025-09-04 16:35:03,625 - asyncio - DEBUG - Using selector: EpollSelector
+2025-09-04 16:35:04,894 - livekit.agents - INFO - registered worker
+2025-09-04 16:35:08,280 - livekit.agents - INFO - received job request
+2025-09-04 16:35:08,546 - livekit.agents - INFO - initializing process
+2025-09-04 16:35:08,921 - livekit.agents - INFO - process initialized
+2025-09-04 16:35:08,921 - asyncio - DEBUG - Using selector: EpollSelector
+2025-09-04 16:35:08,921 - asyncio - DEBUG - Using selector: EpollSelector
+2025-09-04 16:35:08,925 - livekit - INFO - livekit_ffi::server:139:livekit_ffi::server - initializing ffi server v0.12.30
+2025-09-04 16:35:08,925 - livekit - INFO - livekit_ffi::cabi:36:livekit_ffi::cabi - initializing ffi server v0.12.30
+2025-09-04 16:35:08,927 - livekit - INFO - livekit_api::signal_client::signal_stream:106:livekit_api::signal_client::signal_stream - connecting to wss://ivr-production-eastern-uiawbfpu.livekit.cloud/rtc?sdk=python&protocol=16&auto_subscribe=1&adaptive_stream=0&version=1.0.12&access_token=...
+2025-09-04 16:35:10,241 - livekit - DEBUG - rustls::anchors:150:rustls::anchors - add_parsable_certificates processed 146 valid and 0 invalid certs
+2025-09-04 16:35:10,241 - livekit - DEBUG - tokio_tungstenite::tls::encryption::rustls:103:tokio_tungstenite::tls::encryption::rustls - Added 146/146 native root certificates (ignored 0)
+2025-09-04 16:35:10,242 - livekit - DEBUG - rustls::client::hs:73:rustls::client::hs - No cached session for DnsName("ivr-production-eastern-uiawbfpu.livekit.cloud")
+2025-09-04 16:35:10,242 - livekit - DEBUG - rustls::client::hs:132:rustls::client::hs - Not resuming any session
+2025-09-04 16:35:10,530 - livekit - DEBUG - rustls::client::hs:615:rustls::client::hs - Using ciphersuite TLS13_AES_128_GCM_SHA256
+2025-09-04 16:35:10,531 - livekit - DEBUG - rustls::client::tls13:142:rustls::client::tls13 - Not resuming
+2025-09-04 16:35:10,532 - livekit - DEBUG - rustls::client::tls13:381:rustls::client::tls13 - TLS1.3 encrypted extensions: []
+2025-09-04 16:35:10,533 - livekit - DEBUG - rustls::client::hs:472:rustls::client::hs - ALPN protocol is None
+2025-09-04 16:35:11,552 - livekit - DEBUG - tungstenite::handshake::client:95:tungstenite::handshake::client - Client handshake done.
+2025-09-04 16:35:17,414 - livekit.agents - ERROR - unhandled exception while running the job task
+Traceback (most recent call last):
+  File "/home/rtx/Desktop/IT Curves/IT_Curves_Bot/main_with_monitoring.py", line 335, in entrypoint
+    session = await ctx.create_session(
+                    ^^^^^^^^^^^^^^^^^^
+AttributeError: 'JobContext' object has no attribute 'create_session'
+2025-09-04 16:35:17,414 - livekit.agents - ERROR - unhandled exception while running the job task
+Traceback (most recent call last):
+  File "/home/rtx/Desktop/IT Curves/IT_Curves_Bot/main_with_monitoring.py", line 335, in entrypoint
+    session = await ctx.create_session(
+                    ^^^^^^^^^^^^^^^^^^
+AttributeError: 'JobContext' object has no attribute 'create_session'
+2025-09-04 16:35:27,935 - livekit.agents - INFO - received job request
+2025-09-04 16:35:28,156 - livekit.agents - INFO - initializing process
+2025-09-04 16:35:29,034 - livekit.agents - INFO - process initialized
+2025-09-04 16:35:29,035 - asyncio - DEBUG - Using selector: EpollSelector
+2025-09-04 16:35:29,035 - asyncio - DEBUG - Using selector: EpollSelector
+2025-09-04 16:35:29,039 - livekit - INFO - livekit_ffi::server:139:livekit_ffi::server - initializing ffi server v0.12.30
+2025-09-04 16:35:29,039 - livekit - INFO - livekit_ffi::cabi:36:livekit_ffi::cabi - initializing ffi server v0.12.30
+2025-09-04 16:35:29,042 - livekit - INFO - livekit_api::signal_client::signal_stream:106:livekit_api::signal_client::signal_stream - connecting to wss://ivr-production-eastern-uiawbfpu.livekit.cloud/rtc?sdk=python&protocol=16&auto_subscribe=1&adaptive_stream=0&version=1.0.12&access_token=...
+2025-09-04 16:35:29,383 - livekit - DEBUG - rustls::anchors:150:rustls::anchors - add_parsable_certificates processed 146 valid and 0 invalid certs
+2025-09-04 16:35:29,384 - livekit - DEBUG - tokio_tungstenite::tls::encryption::rustls:103:tokio_tungstenite::tls::encryption::rustls - Added 146/146 native root certificates (ignored 0)
+2025-09-04 16:35:29,386 - livekit - DEBUG - rustls::client::hs:73:rustls::client::hs - No cached session for DnsName("ivr-production-eastern-uiawbfpu.livekit.cloud")
+2025-09-04 16:35:29,387 - livekit - DEBUG - rustls::client::hs:132:rustls::client::hs - Not resuming any session
+2025-09-04 16:35:29,546 - livekit - DEBUG - rustls::client::hs:615:rustls::client::hs - Using ciphersuite TLS13_AES_128_GCM_SHA256
+2025-09-04 16:35:29,546 - livekit - DEBUG - rustls::client::tls13:142:rustls::client::tls13 - Not resuming
+2025-09-04 16:35:29,547 - livekit - DEBUG - rustls::client::tls13:381:rustls::client::tls13 - TLS1.3 encrypted extensions: []
+2025-09-04 16:35:29,547 - livekit - DEBUG - rustls::client::hs:472:rustls::client::hs - ALPN protocol is None
+2025-09-04 16:35:30,190 - livekit - DEBUG - tungstenite::handshake::client:95:tungstenite::handshake::client - Client handshake done.
+2025-09-04 16:35:33,420 - livekit.agents - ERROR - unhandled exception while running the job task
+Traceback (most recent call last):
+  File "/home/rtx/Desktop/IT Curves/IT_Curves_Bot/main_with_monitoring.py", line 335, in entrypoint
+    session = await ctx.create_session(
+                    ^^^^^^^^^^^^^^^^^^
+AttributeError: 'JobContext' object has no attribute 'create_session'
+2025-09-04 16:35:33,420 - livekit.agents - ERROR - unhandled exception while running the job task
+Traceback (most recent call last):
+  File "/home/rtx/Desktop/IT Curves/IT_Curves_Bot/main_with_monitoring.py", line 335, in entrypoint
+    session = await ctx.create_session(
+                    ^^^^^^^^^^^^^^^^^^
+AttributeError: 'JobContext' object has no attribute 'create_session'
+2025-09-04 16:35:40,846 - livekit.agents - INFO - shutting down worker
+2025-09-04 16:35:40,851 - livekit.agents - DEBUG - shutting down job task
+2025-09-04 16:35:40,851 - livekit.agents - DEBUG - shutting down job task
+2025-09-04 16:35:40,853 - livekit.agents - INFO - process exiting
+2025-09-04 16:35:40,851 - livekit.agents - DEBUG - shutting down job task
+2025-09-04 16:35:40,851 - livekit.agents - DEBUG - shutting down job task
+2025-09-04 16:35:40,855 - livekit.agents - INFO - process exiting
+2025-09-04 16:35:41,049 - livekit - DEBUG - tungstenite::protocol:666:tungstenite::protocol - Received close frame: Some(CloseFrame { code: Normal, reason: "" })
+2025-09-04 16:35:41,049 - livekit - DEBUG - tungstenite::protocol:666:tungstenite::protocol - Received close frame: Some(CloseFrame { code: Normal, reason: "" })
+2025-09-04 16:35:41,053 - livekit - INFO - livekit::room:1388:livekit::room - disconnected from room with reason: ClientInitiated
+2025-09-04 16:35:41,053 - livekit.agents - DEBUG - http_session(): closing the httpclient ctx
+2025-09-04 16:35:41,053 - livekit.agents - DEBUG - http_session(): creating a new httpclient ctx
+2025-09-04 16:35:41,053 - livekit.agents - DEBUG - http_session(): closing the httpclient ctx
+2025-09-04 16:35:41,054 - livekit.agents - DEBUG - http_session(): closing the httpclient ctx
+2025-09-04 16:35:41,054 - livekit.agents - DEBUG - http_session(): creating a new httpclient ctx
+2025-09-04 16:35:41,054 - livekit.agents - DEBUG - http_session(): closing the httpclient ctx
+2025-09-04 16:35:41,053 - livekit.agents - DEBUG - http_session(): creating a new httpclient ctx
+2025-09-04 16:35:41,054 - livekit.agents - DEBUG - http_session(): creating a new httpclient ctx
+2025-09-04 16:35:41,073 - livekit.agents - INFO - process exiting
+2025-09-04 16:35:41,097 - livekit.agents - WARNING - exiting forcefully
+2025-09-04 16:39:54,853 - asyncio - DEBUG - Using selector: EpollSelector
+2025-09-04 16:39:54,855 - livekit.agents - DEV - Watching /home/rtx/Desktop/IT Curves/IT_Curves_Bot
+2025-09-04 16:39:56,580 - asyncio - DEBUG - Using selector: EpollSelector
+2025-09-04 16:39:56,585 - livekit.agents - INFO - starting worker
+2025-09-04 16:39:56,585 - livekit.agents - INFO - preloading plugins
+2025-09-04 16:39:56,587 - livekit.agents - INFO - starting inference executor
+2025-09-04 16:39:57,731 - livekit.agents - INFO - initializing process
+2025-09-04 16:39:58,110 - livekit.agents - DEBUG - initializing inference runner
+2025-09-04 16:39:58,110 - livekit.agents - DEBUG - initializing inference runner
+2025-09-04 16:39:59,196 - livekit.agents - DEBUG - inference runner initialized
+2025-09-04 16:39:59,197 - livekit.agents - INFO - process initialized
+2025-09-04 16:39:59,197 - asyncio - DEBUG - Using selector: EpollSelector
+2025-09-04 16:39:59,196 - livekit.agents - DEBUG - inference runner initialized
+2025-09-04 16:39:59,197 - asyncio - DEBUG - Using selector: EpollSelector
+2025-09-04 16:39:59,200 - livekit.agents - INFO - [1msee tracing information at http://localhost:11000/debug[0m
+2025-09-04 16:40:00,310 - livekit.agents - INFO - registered worker
+2025-09-04 16:40:12,612 - livekit.agents - INFO - received job request
+2025-09-04 16:40:12,796 - livekit.agents - INFO - initializing process
+2025-09-04 16:40:13,377 - livekit.agents - INFO - process initialized
+2025-09-04 16:40:13,377 - asyncio - DEBUG - Using selector: EpollSelector
+2025-09-04 16:40:13,377 - asyncio - DEBUG - Using selector: EpollSelector
+2025-09-04 16:40:13,382 - livekit - INFO - livekit_ffi::server:139:livekit_ffi::server - initializing ffi server v0.12.30
+2025-09-04 16:40:13,382 - livekit - INFO - livekit_ffi::cabi:36:livekit_ffi::cabi - initializing ffi server v0.12.30
+2025-09-04 16:40:13,385 - livekit - INFO - livekit_api::signal_client::signal_stream:106:livekit_api::signal_client::signal_stream - connecting to wss://ivr-production-eastern-uiawbfpu.livekit.cloud/rtc?sdk=python&protocol=16&auto_subscribe=1&adaptive_stream=0&version=1.0.12&access_token=...
+2025-09-04 16:40:13,695 - livekit - DEBUG - rustls::anchors:150:rustls::anchors - add_parsable_certificates processed 146 valid and 0 invalid certs
+2025-09-04 16:40:13,696 - livekit - DEBUG - tokio_tungstenite::tls::encryption::rustls:103:tokio_tungstenite::tls::encryption::rustls - Added 146/146 native root certificates (ignored 0)
+2025-09-04 16:40:13,696 - livekit - DEBUG - rustls::client::hs:73:rustls::client::hs - No cached session for DnsName("ivr-production-eastern-uiawbfpu.livekit.cloud")
+2025-09-04 16:40:13,697 - livekit - DEBUG - rustls::client::hs:132:rustls::client::hs - Not resuming any session
+2025-09-04 16:40:13,924 - livekit - DEBUG - rustls::client::hs:615:rustls::client::hs - Using ciphersuite TLS13_AES_128_GCM_SHA256
+2025-09-04 16:40:13,925 - livekit - DEBUG - rustls::client::tls13:142:rustls::client::tls13 - Not resuming
+2025-09-04 16:40:13,927 - livekit - DEBUG - rustls::client::tls13:381:rustls::client::tls13 - TLS1.3 encrypted extensions: []
+2025-09-04 16:40:13,928 - livekit - DEBUG - rustls::client::hs:472:rustls::client::hs - ALPN protocol is None
+2025-09-04 16:40:14,425 - livekit - DEBUG - tungstenite::handshake::client:95:tungstenite::handshake::client - Client handshake done.
+2025-09-04 16:40:17,829 - livekit.agents - ERROR - unhandled exception while running the job task
+Traceback (most recent call last):
+  File "/home/rtx/Desktop/IT Curves/IT_Curves_Bot/main_with_monitoring.py", line 363, in entrypoint
+    voice_config=AudioConfig(
+                 ^^^^^^^^^^^^
+TypeError: AudioConfig.__new__() got an unexpected keyword argument 'default_voice'
+2025-09-04 16:40:17,829 - livekit.agents - ERROR - unhandled exception while running the job task
+Traceback (most recent call last):
+  File "/home/rtx/Desktop/IT Curves/IT_Curves_Bot/main_with_monitoring.py", line 363, in entrypoint
+    voice_config=AudioConfig(
+                 ^^^^^^^^^^^^
+TypeError: AudioConfig.__new__() got an unexpected keyword argument 'default_voice'
+2025-09-04 16:40:59,595 - livekit.agents - DEBUG - shutting down job task
+2025-09-04 16:40:59,597 - livekit.agents - INFO - process exiting
+2025-09-04 16:40:59,599 - livekit - DEBUG - tungstenite::protocol:666:tungstenite::protocol - Received close frame: Some(CloseFrame { code: Normal, reason: "" })
+2025-09-04 16:40:59,595 - livekit.agents - DEBUG - shutting down job task
+2025-09-04 16:40:59,600 - livekit - DEBUG - tungstenite::protocol:683:tungstenite::protocol - Replying to close with Frame { header: FrameHeader { is_final: true, rsv1: false, rsv2: false, rsv3: false, opcode: Control(Close), mask: None }, payload: [3, 232] }
+2025-09-04 16:40:59,604 - livekit - WARNING - livekit::rtc_engine:453:livekit::rtc_engine - received session close: "signal client closed: \"stream closed\"" UnknownReason Resume
+2025-09-04 16:40:59,604 - livekit - WARNING - livekit::rtc_engine:453:livekit::rtc_engine - received session close: "signal client closed: \"stream closed\"" UnknownReason Resume
+2025-09-04 16:40:59,619 - livekit.agents - DEBUG - http_session(): closing the httpclient ctx
+2025-09-04 16:40:59,620 - livekit.agents - DEBUG - http_session(): creating a new httpclient ctx
+2025-09-04 16:40:59,622 - livekit - INFO - livekit::room:1388:livekit::room - disconnected from room with reason: RoomClosed
+2025-09-04 16:40:59,619 - livekit.agents - DEBUG - http_session(): closing the httpclient ctx
+2025-09-04 16:40:59,620 - livekit.agents - DEBUG - http_session(): creating a new httpclient ctx
+2025-09-04 16:50:04,495 - livekit.agents - INFO - shutting down worker
+2025-09-04 16:50:04,496 - livekit.agents - INFO - process exiting
+2025-09-04 16:50:07,539 - asyncio - DEBUG - Using selector: EpollSelector
+2025-09-04 16:50:07,544 - livekit.agents - INFO - starting worker
+2025-09-04 16:50:07,545 - livekit.agents - INFO - preloading plugins
+2025-09-04 16:50:07,546 - livekit.agents - INFO - starting inference executor
+2025-09-04 16:50:08,774 - livekit.agents - INFO - initializing process
+2025-09-04 16:50:09,125 - livekit.agents - DEBUG - initializing inference runner
+2025-09-04 16:50:09,125 - livekit.agents - DEBUG - initializing inference runner
+2025-09-04 16:50:10,209 - livekit.agents - DEBUG - inference runner initialized
+2025-09-04 16:50:10,210 - livekit.agents - INFO - process initialized
+2025-09-04 16:50:10,209 - livekit.agents - DEBUG - inference runner initialized
+2025-09-04 16:50:10,210 - asyncio - DEBUG - Using selector: EpollSelector
+2025-09-04 16:50:10,210 - asyncio - DEBUG - Using selector: EpollSelector
+2025-09-04 16:50:10,212 - livekit.agents - INFO - [1msee tracing information at http://localhost:11000/debug[0m
+2025-09-04 16:50:11,550 - livekit.agents - INFO - registered worker
+2025-09-04 16:50:17,630 - livekit.agents - INFO - shutting down worker
+2025-09-04 16:50:17,631 - livekit.agents - INFO - process exiting
+2025-09-04 16:50:20,259 - asyncio - DEBUG - Using selector: EpollSelector
+2025-09-04 16:50:20,263 - livekit.agents - INFO - starting worker
+2025-09-04 16:50:20,264 - livekit.agents - INFO - preloading plugins
+2025-09-04 16:50:20,265 - livekit.agents - INFO - starting inference executor
+2025-09-04 16:50:21,540 - livekit.agents - INFO - initializing process
+2025-09-04 16:50:21,913 - livekit.agents - DEBUG - initializing inference runner
+2025-09-04 16:50:21,913 - livekit.agents - DEBUG - initializing inference runner
+2025-09-04 16:50:22,998 - livekit.agents - DEBUG - inference runner initialized
+2025-09-04 16:50:22,998 - livekit.agents - INFO - process initialized
+2025-09-04 16:50:22,998 - asyncio - DEBUG - Using selector: EpollSelector
+2025-09-04 16:50:22,998 - livekit.agents - DEBUG - inference runner initialized
+2025-09-04 16:50:22,998 - asyncio - DEBUG - Using selector: EpollSelector
+2025-09-04 16:50:23,001 - livekit.agents - INFO - [1msee tracing information at http://localhost:11000/debug[0m
+2025-09-04 16:50:24,118 - livekit.agents - INFO - registered worker
+2025-09-04 16:51:23,919 - livekit.agents - INFO - shutting down worker
+2025-09-04 16:51:23,923 - livekit.agents - INFO - process exiting
+2025-09-04 16:51:28,642 - asyncio - DEBUG - Using selector: EpollSelector
+2025-09-04 16:51:28,643 - livekit.agents - DEV - Watching /home/rtx/Desktop/IT Curves/IT_Curves_Bot
+2025-09-04 16:51:30,099 - asyncio - DEBUG - Using selector: EpollSelector
+2025-09-04 16:51:30,103 - livekit.agents - INFO - starting worker
+2025-09-04 16:51:30,103 - livekit.agents - INFO - preloading plugins
+2025-09-04 16:51:30,104 - livekit.agents - INFO - starting inference executor
+2025-09-04 16:51:31,273 - livekit.agents - INFO - initializing process
+2025-09-04 16:51:31,782 - livekit.agents - DEBUG - initializing inference runner
+2025-09-04 16:51:31,782 - livekit.agents - DEBUG - initializing inference runner
+2025-09-04 16:51:32,882 - livekit.agents - DEBUG - inference runner initialized
+2025-09-04 16:51:32,883 - livekit.agents - INFO - process initialized
+2025-09-04 16:51:32,883 - asyncio - DEBUG - Using selector: EpollSelector
+2025-09-04 16:51:32,882 - livekit.agents - DEBUG - inference runner initialized
+2025-09-04 16:51:32,883 - asyncio - DEBUG - Using selector: EpollSelector
+2025-09-04 16:51:32,885 - livekit.agents - INFO - [1msee tracing information at http://localhost:11000/debug[0m
+2025-09-04 16:51:33,755 - livekit.agents - INFO - registered worker
+2025-09-04 16:51:37,997 - livekit.agents - INFO - received job request
+2025-09-04 16:51:38,317 - livekit.agents - INFO - initializing process
+2025-09-04 16:51:38,715 - livekit.agents - INFO - process initialized
+2025-09-04 16:51:38,715 - asyncio - DEBUG - Using selector: EpollSelector
+2025-09-04 16:51:38,715 - asyncio - DEBUG - Using selector: EpollSelector
+2025-09-04 16:51:38,720 - livekit - INFO - livekit_ffi::server:139:livekit_ffi::server - initializing ffi server v0.12.30
+2025-09-04 16:51:38,720 - livekit - INFO - livekit_ffi::cabi:36:livekit_ffi::cabi - initializing ffi server v0.12.30
+2025-09-04 16:51:38,723 - livekit - INFO - livekit_api::signal_client::signal_stream:106:livekit_api::signal_client::signal_stream - connecting to wss://ivr-production-eastern-uiawbfpu.livekit.cloud/rtc?sdk=python&protocol=16&auto_subscribe=1&adaptive_stream=0&version=1.0.12&access_token=...
+2025-09-04 16:51:38,954 - livekit - DEBUG - rustls::anchors:150:rustls::anchors - add_parsable_certificates processed 146 valid and 0 invalid certs
+2025-09-04 16:51:38,956 - livekit - DEBUG - tokio_tungstenite::tls::encryption::rustls:103:tokio_tungstenite::tls::encryption::rustls - Added 146/146 native root certificates (ignored 0)
+2025-09-04 16:51:38,957 - livekit - DEBUG - rustls::client::hs:73:rustls::client::hs - No cached session for DnsName("ivr-production-eastern-uiawbfpu.livekit.cloud")
+2025-09-04 16:51:38,959 - livekit - DEBUG - rustls::client::hs:132:rustls::client::hs - Not resuming any session
+2025-09-04 16:51:39,114 - livekit - DEBUG - rustls::client::hs:615:rustls::client::hs - Using ciphersuite TLS13_AES_128_GCM_SHA256
+2025-09-04 16:51:39,115 - livekit - DEBUG - rustls::client::tls13:142:rustls::client::tls13 - Not resuming
+2025-09-04 16:51:39,116 - livekit - DEBUG - rustls::client::tls13:381:rustls::client::tls13 - TLS1.3 encrypted extensions: []
+2025-09-04 16:51:39,117 - livekit - DEBUG - rustls::client::hs:472:rustls::client::hs - ALPN protocol is None
+2025-09-04 16:51:39,844 - livekit - DEBUG - tungstenite::handshake::client:95:tungstenite::handshake::client - Client handshake done.
+2025-09-04 16:51:43,567 - livekit.agents - ERROR - unhandled exception while running the job task
+Traceback (most recent call last):
+  File "/home/rtx/Desktop/IT Curves/IT_Curves_Bot/main_with_monitoring.py", line 361, in entrypoint
+    agent=agent_with_instructions,
+          ^^^^^^^^^^^^^^^^^^^^^^^
+NameError: name 'agent_with_instructions' is not defined
+2025-09-04 16:51:43,567 - livekit.agents - ERROR - unhandled exception while running the job task
+Traceback (most recent call last):
+  File "/home/rtx/Desktop/IT Curves/IT_Curves_Bot/main_with_monitoring.py", line 361, in entrypoint
+    agent=agent_with_instructions,
+          ^^^^^^^^^^^^^^^^^^^^^^^
+NameError: name 'agent_with_instructions' is not defined
+2025-09-04 16:51:47,921 - livekit.agents - INFO - shutting down worker
+2025-09-04 16:51:47,925 - livekit.agents - DEBUG - shutting down job task
+2025-09-04 16:51:47,927 - livekit.agents - INFO - process exiting
+2025-09-04 16:51:47,925 - livekit.agents - DEBUG - shutting down job task
+2025-09-04 16:51:48,086 - livekit - DEBUG - tungstenite::protocol:666:tungstenite::protocol - Received close frame: Some(CloseFrame { code: Normal, reason: "" })
+2025-09-04 16:51:48,091 - livekit.agents - DEBUG - http_session(): closing the httpclient ctx
+2025-09-04 16:51:48,091 - livekit.agents - DEBUG - http_session(): creating a new httpclient ctx
+2025-09-04 16:51:48,091 - livekit.agents - DEBUG - http_session(): closing the httpclient ctx
+2025-09-04 16:51:48,091 - livekit.agents - DEBUG - http_session(): creating a new httpclient ctx
+2025-09-04 16:51:48,110 - livekit.agents - INFO - process exiting
+2025-09-04 16:51:48,128 - livekit.agents - WARNING - exiting forcefully
