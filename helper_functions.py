@@ -585,7 +585,7 @@ class Assistant(Agent):
             if response["responseCode"] == 200:
                 client_object = response["responseJSON"]
                 client_list = json.loads(client_object)
-                
+                selected_client = None
                 # Check if profile_name matches any existing profile
                 if profile_name:
                     provided_name_lower = profile_name.strip().lower()
@@ -597,6 +597,7 @@ class Assistant(Agent):
                         
                         if provided_name_lower == existing_name:
                             name_exists = True
+                            selected_client = client
                             break
                     # If profile name doesn't match any existing profile, return error only
                     if not name_exists:
@@ -607,14 +608,18 @@ class Assistant(Agent):
                         else:            
                             logger.warning(f"❌ Client ID not available (received: {self.client_id}) - self.client_id will be None")
                         return """That profile does not exist in our system. However, if you want to create a new profile you have to book a trip with us first."""
-                
-                # Check if the requested profile number exists
-                if profile_number < 1 or profile_number > len(client_list):
-                    return f"Invalid profile number. Please select a number between 1 and {len(client_list)}."
-                
-                # Get the selected profile (profile_number is 1-indexed)
-                selected_client = client_list[profile_number - 1]
-                
+                    else:
+                        logger.info(f"Profile name: {profile_name} exists in our system client id {selected_client['Id']}.")
+                        
+                else:
+                    # Check if the requested profile number exists
+                    if profile_number < 1 or profile_number > len(client_list):
+                        logger.info(f"Invalid profile number. Please select a number between 1 and {len(client_list)}.")
+                        return f"Invalid profile number. Please select a number between 1 and {len(client_list)}."
+                    
+                    # Get the selected profile (profile_number is 1-indexed)
+                    selected_client = client_list[profile_number - 1]
+                    
                 # Update self.client_id and self.rider_id with selected profile
                 selected_client_id = selected_client.get('Id', 0)
                 
@@ -651,6 +656,7 @@ class Assistant(Agent):
                     I have updated your profile information. You can now proceed with booking trips or checking your ride information."""
                 
             else:
+                logger.info("Error: Could not retrieve profiles. Please try again.")
                 return "Error: Could not retrieve profiles. Please try again."
                 
         except Exception as e:
