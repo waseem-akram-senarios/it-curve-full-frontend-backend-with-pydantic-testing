@@ -30,4 +30,3 @@ logs/trip_book_payload/*.txt
 logs/context_transfer_payload/*.txt
 logs/*.log
 logs/*.log.*
-ncs_pvt-virtual-agent-frontend-2c4b49def913/
