@@ -1,0 +1,24 @@
+# 🚀 QUICK FIX: Run These Commands
+
+## Fix Applied
+Fixed UnboundLocalError in main.py (line 525)
+- Problem: x_call_id not initialized before use
+- Solution: Added x_call_id = None early in entrypoint function
+
+## Commands to Rebuild and Restart
+
+sudo docker compose down
+sudo docker compose build backend --no-cache
+sudo docker compose up -d
+sudo docker compose logs -f backend
+
+## After Restart: What to Look For
+
+✅ "Initial greeting sent"
+✅ "Audio input RE-ENABLED"  ← CRITICAL
+❌ No "UnboundLocalError"
+
+## Test
+Call the agent and say "I want to book a ride"
+It should respond instead of getting stuck in "Thinking..."
+
